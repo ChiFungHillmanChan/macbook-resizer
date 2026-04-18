@@ -37,10 +37,10 @@ Slot 全部用 **unit rect**（x/y/w/h ∈ [0, 1]），apply 時乘以當前 scr
 | 4b | 「最近 slot」定義 | 窗口 **center point** 同邊個 slot center **距離最短** |
 | 5 | Spaces / Stage Manager | 只處理**當前 Space** 嘅窗口；Stage Manager V0.1 唔特別處理 |
 | 6 | 動畫 | V0.1 **冇動畫**（即時 snap）；V0.2 再加 interpolation |
-| 7a | 0 個可見窗口 | 彈 `NSUserNotification`「No windows to arrange」 |
+| 7a | 0 個可見窗口 | 用 `UNUserNotificationCenter` 彈「No windows to arrange」 |
 | 7b | 1 個窗口 + 多 slot preset | 放 slot 1，其餘 slot 留空 |
 | 8 | Settings 視窗 | V0.1 **冇**；menu bar dropdown 淨係 7 個 preset + Quit |
-| 9 | Permission UX | 第一次開**彈 onboarding sheet**；權限冇咗 icon **變灰** + dropdown 變 grant 按鈕 |
+| 9 | Permission UX | 第一次開**彈 onboarding window**（獨立 `NSWindow`，唔係 sheet——menu bar-only app 冇 main window 掛唔到 sheet）；權限冇咗 icon **變灰** + dropdown 變 grant 按鈕 |
 
 ## 4. Architecture
 
@@ -118,6 +118,8 @@ public enum AXWindowEnumerator {
 
 底層用 `CGWindowListCopyWindowInfo(.optionOnScreenOnly, kCGNullWindowID)` 攞 z-order，配合 `AXUIElementCreateApplication(pid)` + `kAXWindowsAttribute` 攞 AX handle。只保留 frame center 落喺 `screen.frame` 嘅窗口；filter 走 minimized / fullscreen。
 
+**重要：** slot rect apply 時乘以 `screen.visibleFrame`（排除 menu bar + Dock），**唔係** `screen.frame`，避免窗口排到 menu bar / Dock 下面。
+
 ### 5.3 `Layout` + `Slot`
 
 ```swift
@@ -158,6 +160,8 @@ public struct Plan: Sendable {
     public let placements: [Placement]
     public let toMinimize: [CGWindowID]
     public let leftEmptySlotCount: Int
+
+    public var isEmpty: Bool { placements.isEmpty && toMinimize.isEmpty }
 }
 
 public enum Outcome: Sendable {
@@ -167,9 +171,11 @@ public enum Outcome: Sendable {
 }
 
 public struct LayoutEngine {
+    /// 純函數——空窗口情境返 Plan(placements: [], toMinimize: [], leftEmptySlotCount: slots.count)
+    /// 係 apply() 先將 Plan.isEmpty → Outcome.noWindows
     public static func plan(
         windows: [any WindowRef],
-        screen: CGRect,
+        visibleFrame: CGRect,       // 要求 caller 傳 screen.visibleFrame（排 menu bar + Dock）
         layout: Layout
     ) -> Plan
 
@@ -181,7 +187,7 @@ public struct LayoutEngine {
 }
 ```
 
-`plan()` 純函數；`apply()` 先 touch AX API。
+`plan()` 純函數，永遠返 `Plan`（空窗口就係空 `Plan`）；`apply()` 睇 `Plan.isEmpty` 決定返 `.noWindows`。呢樣解決「`Plan.noWindows` vs `Outcome.noWindows` 概念混咗」嘅問題。
 
 ### 5.5 `HotkeyManager`（Carbon）
 
@@ -212,7 +218,7 @@ public final class DragSwapController {
 SceneApp.init
   → AppDelegate.applicationDidFinishLaunching
   → AXPermission.check()
-      ├─ denied  → 彈 OnboardingView sheet → "Open System Settings" → 每 2 秒 poll
+      ├─ denied  → 開獨立 OnboardingView window（NSWindow）→ "Open System Settings" → 每 2 秒 poll
       └─ granted → HotkeyManager.register × 7
                    DragSwapController.start()
                    MenuBarExtra icon 顯示正常色
@@ -225,14 +231,14 @@ SceneApp.init
       → applyLayout(id)
       → screen = ScreenResolver.activeScreen()          // 滑鼠所在
       → windows = AXWindowEnumerator.listVisibleWindows(on: screen)
-      → plan = LayoutEngine.plan(windows, screen.frame, layout)
-          ├─ windows.empty              → Plan.noWindows
+      → plan = LayoutEngine.plan(windows, screen.visibleFrame, layout)
+          ├─ windows.empty              → Plan(placements: [], toMinimize: [], leftEmptySlotCount: slots)
           ├─ windows.count > slots.count → 頭 N 個 placements，其餘 toMinimize
           └─ windows.count < slots.count → N 個 placements，leftEmpty = slots - N
       → outcome = LayoutEngine.apply(plan, on: windows)
+          ├─ plan.isEmpty → .noWindows → UNUserNotificationCenter 彈 notification
           ├─ .applied → 冇 UI feedback（靜雞雞）
-          ├─ .noWindows → NSUserNotification
-          └─ .noPermission → 彈 onboarding
+          └─ .noPermission → 開返 onboarding window
 ```
 
 ### 6.3 Drag-to-Swap
@@ -259,7 +265,7 @@ NSEvent.addGlobalMonitorForEvents(.leftMouseUp)
 
 | 情境 | 行為 |
 |---|---|
-| 第一次開 | `OnboardingView` sheet + "Open System Settings" button（跳 Privacy pane） |
+| 第一次開 | `OnboardingView` **獨立 NSWindow**（menu bar-only app 冇 main window 掛唔到 sheet）+ "Open System Settings" button（跳 Privacy pane） |
 | 中途撤銷 | Icon 變灰；dropdown 只剩 Grant + Quit；unregister hotkey |
 | 重新授予 | 每 2 秒 poll `AXIsProcessTrusted()`；granted 就重新 register |
 
