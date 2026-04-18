@@ -88,7 +88,7 @@ macbook-resizer/
 | `SceneCore` | Foundation, AppKit, ApplicationServices, Carbon | 純邏輯 + 系統 API；**冇 SwiftUI** |
 | `SceneApp` | `SceneCore` + SwiftUI | UI shell、lifecycle、連接 core 同用家 |
 
-**點解咁分：** `LayoutEngine.plan()` 係純函數，俾 `[MockWindow]` + screen frame，返回 `Plan`——可以 `swift test` 跑，唔使 Xcode。AX API 實際 call 包喺 `AXWindow`（implement `WindowRef` protocol），test 嗰陣 mock。
+**點解咁分：** `LayoutEngine.plan()` 係純函數，俾 `[MockWindow]` + `screen.visibleFrame`，返回 `Plan`——可以 `swift test` 跑，唔使 Xcode。AX API 實際 call 包喺 `AXWindow`（implement `WindowRef` protocol），test 嗰陣 mock。
 
 ## 5. Core Components（Public API）
 
@@ -116,9 +116,9 @@ public enum AXWindowEnumerator {
 }
 ```
 
-底層用 `CGWindowListCopyWindowInfo(.optionOnScreenOnly, kCGNullWindowID)` 攞 z-order，配合 `AXUIElementCreateApplication(pid)` + `kAXWindowsAttribute` 攞 AX handle。只保留 frame center 落喺 `screen.frame` 嘅窗口；filter 走 minimized / fullscreen。
+底層用 `CGWindowListCopyWindowInfo(.optionOnScreenOnly, kCGNullWindowID)` 攞 z-order，配合 `AXUIElementCreateApplication(pid)` + `kAXWindowsAttribute` 攞 AX handle。只保留 frame center 落喺 `screen.visibleFrame` 嘅窗口；filter 走 minimized / fullscreen。
 
-**重要：** slot rect apply 時乘以 `screen.visibleFrame`（排除 menu bar + Dock），**唔係** `screen.frame`，避免窗口排到 menu bar / Dock 下面。
+**座標語義統一：** 整個 pipeline（filter、plan、apply）全部用 `screen.visibleFrame`——選窗口、計 slot、落 frame 都喺同一 rect 內。咁就唔會出現「窗口被納入 plan 但 target 區域唔包含佢現時位置」嘅邊界情況。絕對唔用 `screen.frame`。
 
 ### 5.3 `Layout` + `Slot`
 
@@ -305,24 +305,26 @@ if abs(window.frame - target) > 5 {
 | Screen 排列改變 | 下次 apply 用最新 `NSScreen` |
 | AX 偶發 `.cannotComplete` | Retry 一次後 skip |
 
-### 7.6 Notification Fallback
+### 7.5 Notification Fallback
 
 `UNUserNotificationCenter` 要用戶授權。如果用戶拒絕通知 permission，「No windows to arrange」會靜默失敗。Fallback 策略：
 
 ```
-notifyNoWindows():
+notifyNoWindows():   // 記住喺 main thread 更新 NSStatusItem（thread-safe）
     UNUserNotificationCenter.current().getNotificationSettings { settings in
-        if settings.authorizationStatus == .authorized:
-            發 UN notification
-        else:
-            Menu bar icon 短暫閃動（0.5 秒 dim → restore）
-            Icon tooltip 暫時改做「No windows to arrange」（3 秒後復原）
+        DispatchQueue.main.async {
+            if settings.authorizationStatus == .authorized:
+                發 UN notification
+            else:
+                Menu bar icon 短暫閃動（0.5 秒 dim → restore）
+                Icon tooltip 暫時改做「No windows to arrange」（3 秒後復原）
+        }
     }
 ```
 
 咁樣確保用戶至少會見到 feedback，唔會 click 咗 preset 好似無反應咁。
 
-### 7.5 Logging
+### 7.6 Logging
 
 用 `os.Logger`，`subsystem = "com.scene.app"`。Console.app 可睇。唔寫檔、唔 leak 窗口 title。
 
