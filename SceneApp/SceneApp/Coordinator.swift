@@ -37,6 +37,7 @@ final class Coordinator: ObservableObject {
     private var lastPlacedWindows: [any SceneWindowRef] = []
     private var lastAppliedLayout: Layout?
     private var lastScreen: NSScreen?
+    private var lastWindowToSlotIdx: [CGWindowID: Int] = [:]
     /// Disambiguated from `Combine.Cancellable` (which is brought in by
     /// `import Combine` above) — SceneCore ships its own closure-based token.
     private var layoutStoreObserver: SceneCancellable?
@@ -174,7 +175,8 @@ final class Coordinator: ObservableObject {
                 return DragSwapController.Context(
                     layout: layout,
                     screen: screen,
-                    windows: self.lastPlacedWindows
+                    windows: self.lastPlacedWindows,
+                    windowToSlotIdx: self.lastWindowToSlotIdx
                 )
             },
             config: { [weak self] in self?.settingsStore.dragSwap ?? .default },
@@ -210,6 +212,12 @@ final class Coordinator: ObservableObject {
         }
         lastAppliedLayout = layout
         lastScreen = screen
+        // Snapshot window→slot mapping. Plan.placements is parallel to layout.slots,
+        // so index in the array = slot index. finishDrag uses this to recover the
+        // dragged window's original slot without trusting AX-live `source.frame`.
+        lastWindowToSlotIdx = Dictionary(
+            uniqueKeysWithValues: plan.placements.enumerated().map { ($1.windowID, $0) }
+        )
         let placedIDs = Set(lastPlacedWindows.map { $0.id })
         guard settingsStore.dragSwap.enabled, !placedIDs.isEmpty else {
             stopDragSwapInfrastructure()

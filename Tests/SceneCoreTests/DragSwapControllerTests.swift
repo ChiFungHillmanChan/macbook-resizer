@@ -42,7 +42,15 @@ final class DragSwapControllerTests: XCTestCase {
         pressedButtons: Int = 0b1
     ) -> (DragSwapController, RecordingSink) {
         let sink = RecordingSink()
-        let ctx = DragSwapController.Context(layout: layout, screen: screen, windows: windows)
+        // Test convention: windows[i] occupies slot i. Mirrors what the production
+        // Coordinator builds from `Plan.placements` after `applyLayout`.
+        let map = Dictionary(uniqueKeysWithValues: windows.enumerated().map { ($1.id, $0) })
+        let ctx = DragSwapController.Context(
+            layout: layout,
+            screen: screen,
+            windows: windows,
+            windowToSlotIdx: map
+        )
         let controller = DragSwapController(
             contextProvider: { ctx },
             config: { config },
@@ -201,6 +209,37 @@ final class DragSwapControllerTests: XCTestCase {
         XCTAssertEqual(sink.calls.first?.target, slot0Rect)
     }
 
+    /// Regression: in production `AXWindow.frame` reads AX live, so by mouseUp time
+    /// `source.frame` reflects the dragged position (≈ targetRect), not the original
+    /// slot. An earlier finishDrag implementation inferred sourceOriginalSlotIdx by
+    /// rect-matching `source.frame` against slots — that produced the target slot
+    /// instead of the original, and the displaced window was animated to where the
+    /// source had just landed (visually a no-op). Simulate live AX by `setFrame`-ing
+    /// the source between threshold-crossing and mouseUp.
+    func testFinishDragWithLiveAXFrameStillSwapsCorrectly() {
+        let wA = MockWindow(id: 1, frame: slot0Rect)
+        let wB = MockWindow(id: 2, frame: slot1Rect)
+        let (controller, sink) = makeController(
+            layout: makeLayout(),
+            windows: [wA, wB],
+            screen: makeScreen()
+        )
+        controller.handleWindowMoved(windowID: 1, currentFrame: slot0Rect)
+        let dragged = slot0Rect.offsetBy(dx: 400, dy: 0)
+        controller.handleWindowMoved(windowID: 1, currentFrame: dragged)
+        // Mirror what AX would report after the user dragged wA: by mouseUp time the
+        // window's live frame is wherever the user dropped it, no longer slot0Rect.
+        try? wA.setFrame(dragged)
+
+        controller.simulateMouseUp()
+
+        XCTAssertEqual(wA.frame, slot1Rect, "source still snaps to target slot")
+        XCTAssertEqual(sink.calls.count, 1, "displaced window must animate exactly once")
+        XCTAssertEqual(sink.calls.first?.windowID, 2, "displaced window is wB")
+        XCTAssertEqual(sink.calls.first?.target, slot0Rect,
+                       "displaced window must animate to source's ORIGINAL slot — not where source landed")
+    }
+
     func testFinishDragOnEmptyTargetSlotJustSnapsSource() {
         // "Empty target slot" = a slot in the placed layout with no window currently
         // occupying it. We use a 2-slot layout but place only wA (in slot 0), so
@@ -234,7 +273,12 @@ final class DragSwapControllerTests: XCTestCase {
         // mid-scenario without rebuilding the controller.
         let pressed = MutableButtonsBox(value: 0b1)
         let sink = RecordingSink()
-        let ctx = DragSwapController.Context(layout: makeLayout(), screen: makeScreen(), windows: [wA, wB])
+        let ctx = DragSwapController.Context(
+            layout: makeLayout(),
+            screen: makeScreen(),
+            windows: [wA, wB],
+            windowToSlotIdx: [1: 0, 2: 1]
+        )
         let controller = DragSwapController(
             contextProvider: { ctx },
             config: { .default },

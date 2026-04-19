@@ -8,11 +8,22 @@ public final class DragSwapController {
         public let layout: Layout
         public let screen: NSScreen
         public let windows: [any WindowRef]
+        /// Snapshot of which slot index each placed window occupied immediately after
+        /// the most recent successful `applyLayout`. Used by `finishDrag` to recover
+        /// the dragged window's original slot — `source.frame` reads AX live and by
+        /// mouseUp time reflects the dragged position, not the original slot.
+        public let windowToSlotIdx: [CGWindowID: Int]
 
-        public init(layout: Layout, screen: NSScreen, windows: [any WindowRef]) {
+        public init(
+            layout: Layout,
+            screen: NSScreen,
+            windows: [any WindowRef],
+            windowToSlotIdx: [CGWindowID: Int]
+        ) {
             self.layout = layout
             self.screen = screen
             self.windows = windows
+            self.windowToSlotIdx = windowToSlotIdx
         }
     }
 
@@ -160,13 +171,17 @@ public final class DragSwapController {
         guard let source = drag.ctx.windows.first(where: { $0.id == drag.windowID }) else { return }
 
         let targetRect = slots[drag.targetSlotIdx].absoluteRect(in: vf)
-        let sourceOriginalSlotIdx = slots.enumerated().first(where: { (_, slot) in
-            rectsApproxEqual(slot.absoluteRect(in: vf), source.frame, tolerance: 5)
-        })?.offset
 
-        let other = drag.ctx.windows.first { w in
-            w.id != source.id && rectsApproxEqual(w.frame, targetRect, tolerance: 5)
-        }
+        // Look up source's original slot from the snapshot built at applyLayout time.
+        // Don't infer from `source.frame` — `AXWindow.frame` reads AX live and at this
+        // point reflects the dragged position (≈ targetRect), not the original slot.
+        let sourceOriginalSlotIdx = drag.ctx.windowToSlotIdx[source.id]
+
+        // Identify the displaced window by which placed window currently sits in the
+        // target slot — also from the snapshot, not by frame matching (same reason).
+        let otherID = drag.ctx.windowToSlotIdx
+            .first(where: { $0.value == drag.targetSlotIdx && $0.key != source.id })?.key
+        let other = otherID.flatMap { id in drag.ctx.windows.first(where: { $0.id == id }) }
 
         do { try source.setFrame(targetRect) }
         catch { log.error("swap source setFrame failed: \(String(describing: error), privacy: .public)") }
