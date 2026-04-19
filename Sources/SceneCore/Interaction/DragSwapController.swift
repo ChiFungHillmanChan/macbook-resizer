@@ -17,19 +17,38 @@ public final class DragSwapController {
     }
 
     private let contextProvider: () -> Context?
+    private let config: () -> DragSwapConfig
+    private weak var animationSink: (any WindowAnimationSink)?
+    private let modifierFlagsProbe: () -> NSEvent.ModifierFlags
+    private let mouseButtonsProbe: () -> Int
+    private let visibleFrameOverride: ((NSScreen) -> CGRect)?
     private let preview: DragPreviewOverlay
     private var mouseUpMonitor: Any?
     private var activeDrag: ActiveDrag?
+    private var dragOrigin: DragOrigin?
     private let log = Logger(subsystem: "com.scene.core", category: "drag-swap")
 
     @MainActor
-    public init(contextProvider: @escaping () -> Context?) {
+    public init(
+        contextProvider: @escaping () -> Context?,
+        config: @escaping () -> DragSwapConfig = { .default },
+        animationSink: (any WindowAnimationSink)? = nil,
+        modifierFlagsProbe: @escaping () -> NSEvent.ModifierFlags = { NSEvent.modifierFlags },
+        mouseButtonsProbe: @escaping () -> Int = { NSEvent.pressedMouseButtons },
+        visibleFrameOverride: ((NSScreen) -> CGRect)? = nil
+    ) {
         self.contextProvider = contextProvider
+        self.config = config
+        self.animationSink = animationSink
+        self.modifierFlagsProbe = modifierFlagsProbe
+        self.mouseButtonsProbe = mouseButtonsProbe
+        self.visibleFrameOverride = visibleFrameOverride
         self.preview = DragPreviewOverlay()
     }
 
     @MainActor
     public func start() {
+        if mouseUpMonitor != nil { return }
         mouseUpMonitor = NSEvent.addGlobalMonitorForEvents(matching: .leftMouseUp) { [weak self] _ in
             Task { @MainActor in self?.finishDrag() }
         }
@@ -41,16 +60,29 @@ public final class DragSwapController {
         mouseUpMonitor = nil
         preview.hide()
         activeDrag = nil
+        dragOrigin = nil
+    }
+
+    @MainActor
+    internal func simulateMouseUp() { finishDrag() }
+
+    internal var _testActiveDrag: ActiveDragSnapshot? {
+        guard let drag = activeDrag else { return nil }
+        return ActiveDragSnapshot(windowID: drag.windowID, targetSlotIdx: drag.targetSlotIdx)
     }
 
     @MainActor
     public func handleWindowMoved(windowID: CGWindowID, currentFrame: CGRect) {
+        let cfg = config()
+        guard cfg.enabled else { return }
         guard let ctx = contextProvider() else { return }
-        guard NSEvent.pressedMouseButtons & 0b1 != 0 else { return }
+        guard mouseButtonsProbe() & 0b1 != 0 else { return }
+
+        let vf = visibleFrameOverride?(ctx.screen) ?? ctx.screen.visibleFrame
         let center = CGPoint(x: currentFrame.midX, y: currentFrame.midY)
-        let targetIdx = nearestSlot(to: center, layout: ctx.layout, visibleFrame: ctx.screen.visibleFrame)
+        let targetIdx = nearestSlot(to: center, layout: ctx.layout, visibleFrame: vf)
         activeDrag = ActiveDrag(windowID: windowID, targetSlotIdx: targetIdx, ctx: ctx)
-        preview.show(at: ctx.layout.slots[targetIdx].absoluteRect(in: ctx.screen.visibleFrame))
+        preview.show(at: ctx.layout.slots[targetIdx].absoluteRect(in: vf))
     }
 
     @MainActor
@@ -58,10 +90,11 @@ public final class DragSwapController {
         defer {
             preview.hide()
             activeDrag = nil
+            dragOrigin = nil
         }
         guard let drag = activeDrag else { return }
+        let vf = visibleFrameOverride?(drag.ctx.screen) ?? drag.ctx.screen.visibleFrame
         let slots = drag.ctx.layout.slots
-        let vf = drag.ctx.screen.visibleFrame
         guard let source = drag.ctx.windows.first(where: { $0.id == drag.windowID }) else { return }
 
         let targetRect = slots[drag.targetSlotIdx].absoluteRect(in: vf)
@@ -89,6 +122,16 @@ private struct ActiveDrag {
     let windowID: CGWindowID
     let targetSlotIdx: Int
     let ctx: DragSwapController.Context
+}
+
+private struct DragOrigin {
+    let windowID: CGWindowID
+    let frame: CGRect
+}
+
+internal struct ActiveDragSnapshot: Equatable {
+    let windowID: CGWindowID
+    let targetSlotIdx: Int
 }
 
 @MainActor
