@@ -114,3 +114,33 @@ Then build & launch and verify:
 - [ ] **Disable animation** — toggle off. Fire layout hotkey → windows snap instantly
 - [ ] **> 6 windows fallback** — open 8+ windows. Fire layout hotkey → windows snap instantly (no animation)
 - [ ] **Interrupt** — fire layout A, then within 200 ms fire layout B → animation retargets without jump; lands on B's positions
+
+---
+
+## V0.3 — Drag-to-Swap Smoke Test
+
+Run in this order after `swift test` passes locally (114 tests expected).
+
+1. Build the app: `xcodebuild -project SceneApp/SceneApp.xcodeproj -scheme SceneApp -configuration Debug CODE_SIGNING_REQUIRED=NO build`
+2. Launch from `~/Library/Developer/Xcode/DerivedData/SceneApp-*/Build/Products/Debug/SceneApp.app`
+3. Grant AX permission if prompted (System Settings → Privacy → Accessibility)
+4. Open 4 windows (e.g., Safari, Terminal, Notes, Finder)
+5. ⌘⇧4 (2x2 preset) → windows animate into a 2x2 layout
+6. Grab one window by title bar, drag onto another placed window's slot → preview rectangle appears → release → swap executes (source snaps, displaced window animates via V0.2 engine)
+7. Drag a placed window with ⌥ held → no preview, no swap (free-move)
+8. Drag a placed window < 30pt → no preview, window returns naturally (sub-threshold)
+9. Drag a placed window into a region outside any slot (far off-screen) → preview disappears, no swap on release
+10. Start a drag, press Esc mid-drag → window animates back to origin slot
+11. Open Settings → Interaction tab → toggle "Enable drag-to-swap" off → drag placed window → no preview, no swap
+12. Restore toggle; set threshold slider to 80pt → drag 50pt → no swap; drag 100pt → swap fires
+13. Fire another layout (⌘⇧1) while a drag preview is showing → preview hides cleanly, new observer set installed
+14. Revoke AX permission (System Settings → Privacy → Accessibility → uncheck Scene) → onboarding reappears; verify Console shows observer group `stop` log line
+15. Re-grant AX permission → fire layout → drag-to-swap works again
+16. Open Stage Manager → fire layout → drag-to-swap still works on visible windows
+17. Quit Scene → no leaked AXObservers (Activity Monitor sample: no AXObserverRef retain-count growth across 10 layout fires)
+
+Expected: all 17 pass. Record any failures on the V0.3 release issue.
+
+### V0.3 Settings migration smoke
+
+18. Start from V0.2 install with an existing `~/Library/Application Support/Scene/settings.json` (version: 1) → launch V0.3 → file auto-upgrades to version: 2 with `dragSwap: { enabled: true, distanceThresholdPt: 30 }` appended. Verify with `cat ~/Library/Application\ Support/Scene/settings.json | jq`.

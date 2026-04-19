@@ -6,6 +6,13 @@ A macOS menu bar app for instant window layouts. Click one of seven presets and 
 
 > 繁體中文版本： [README.zh-HK.md](README.zh-HK.md)
 
+### V0.3 — Drag-to-Swap
+
+- **Drag to rearrange**: grab any placed window and drag it onto another — swap executes with the displaced window animating via the V0.2 engine (250ms easeOut, respects the Animation tab toggle).
+- **Interaction tab**: enable / disable drag-to-swap; tune drag-distance threshold (10–100pt).
+- **Escape hatches**: hold ⌥ while dragging to free-move without swap; press Esc mid-drag to cancel and snap back to origin.
+- **Test count**: 92 → 114 unit tests.
+
 ## Features (V0.2)
 
 - **7 built-in layout presets** — Full, Halves, Thirds, Quads, Main + Side (70/30), LeftSplit + Right, Left + RightSplit
@@ -71,7 +78,7 @@ The layout logic lives in `SceneCore`, a Swift package that works without Xcode:
 swift test
 ```
 
-92 unit tests cover layout math, window-to-slot mapping, animation state machine, JSON persistence, hotkey conflicts, and edge cases.
+114 unit tests cover layout math, window-to-slot mapping, animation state machine, JSON persistence, hotkey conflicts, drag-to-swap logic, and edge cases.
 
 ## Usage
 
@@ -142,11 +149,8 @@ V0.2 writes two JSON files atomically into:
 
 Delete this folder to reset to factory state.
 
-## Roadmap (V0.3+)
+## Roadmap (V0.4+)
 
-Deferred from V0.2:
-
-- **Drag-to-swap** — after applying a preset, drag any window and it snaps to the nearest slot, swapping with whoever lives there. `DragSwapController` is already in `SceneCore`; only the `AXObserver` bridge remains.
 - **Per-display layouts** — apply different presets to each monitor independently.
 - **Pattern learning** — observe manual window arrangements and suggest presets ("you usually split 70/30 in the afternoon — save?").
 - **AI / natural-language input** — type "cursor left, chrome right" → LLM → layout JSON.
