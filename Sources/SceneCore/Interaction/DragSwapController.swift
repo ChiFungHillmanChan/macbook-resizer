@@ -75,14 +75,43 @@ public final class DragSwapController {
     public func handleWindowMoved(windowID: CGWindowID, currentFrame: CGRect) {
         let cfg = config()
         guard cfg.enabled else { return }
-        guard let ctx = contextProvider() else { return }
+        guard !modifierFlagsProbe().contains(.option) else { return }
         guard mouseButtonsProbe() & 0b1 != 0 else { return }
+
+        if dragOrigin?.windowID != windowID {
+            dragOrigin = DragOrigin(windowID: windowID, frame: currentFrame)
+        }
+        guard let origin = dragOrigin else { return }
+
+        let widthDelta = abs(currentFrame.width - origin.frame.width)
+        let heightDelta = abs(currentFrame.height - origin.frame.height)
+        if widthDelta > 5 || heightDelta > 5 {
+            activeDrag = nil
+            preview.hide()
+            return
+        }
+
+        let dx = currentFrame.origin.x - origin.frame.origin.x
+        let dy = currentFrame.origin.y - origin.frame.origin.y
+        let dist = (dx * dx + dy * dy).squareRoot()
+        guard dist >= cfg.distanceThresholdPt else { return }
+
+        guard let ctx = contextProvider() else { return }
+        guard ctx.windows.contains(where: { $0.id == windowID }) else { return }
 
         let vf = visibleFrameOverride?(ctx.screen) ?? ctx.screen.visibleFrame
         let center = CGPoint(x: currentFrame.midX, y: currentFrame.midY)
         let targetIdx = nearestSlot(to: center, layout: ctx.layout, visibleFrame: vf)
+        let targetRect = ctx.layout.slots[targetIdx].absoluteRect(in: vf)
+
+        guard targetRect.contains(center) else {
+            activeDrag = nil
+            preview.hide()
+            return
+        }
+
         activeDrag = ActiveDrag(windowID: windowID, targetSlotIdx: targetIdx, ctx: ctx)
-        preview.show(at: ctx.layout.slots[targetIdx].absoluteRect(in: vf))
+        preview.show(at: targetRect)
     }
 
     @MainActor
