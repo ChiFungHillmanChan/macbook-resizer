@@ -92,3 +92,25 @@ Run after installing (from `Scene.app`) or after a local Xcode build. All tests 
 
 - **Apple System Settings** has a hard minimum size and ignores AX size requests below it. Position still snaps correctly.
 - Electron apps may settle ±1–4 px off even after the tolerance retry; this is within spec.
+
+---
+
+## V0.2 manual smoke checklist
+
+Reset state first:
+```
+rm -rf ~/Library/Application\ Support/Scene
+killall SceneApp 2>/dev/null; true
+```
+
+Then build & launch and verify:
+
+- [ ] **First-launch seeding** — Settings → Layouts shows exactly 7 presets (Full / Halves / Thirds / Quads / Main + Side / LeftSplit + Right / Left + RightSplit)
+- [ ] **Edit + Reset preset** — drag the slider on Halves to 70/30. "(modified)" appears next to the name. Click Reset → slider snaps back to 50/50; the bound hotkey is unchanged
+- [ ] **Delete persistence** — delete Quads. Quit and relaunch the app. Quads is still gone. Click "Restore Default Presets" → Quads is back
+- [ ] **Hotkey conflict block-save** — try to record ⌘⇧2 (used by Halves) on another layout → alert: "This chord is already used by Halves. Unbind it first or pick another."
+- [ ] **Animated apply** — open 4 windows. Bind ⌘⌥A to a custom layout. Fire it → windows interpolate smoothly into place
+- [ ] **Animation config live** — open Animation tab. Drag duration to 500ms, switch easing to Spring → preview rectangle reflects immediately. Fire layout hotkey → animation matches
+- [ ] **Disable animation** — toggle off. Fire layout hotkey → windows snap instantly
+- [ ] **> 6 windows fallback** — open 8+ windows. Fire layout hotkey → windows snap instantly (no animation)
+- [ ] **Interrupt** — fire layout A, then within 200 ms fire layout B → animation retargets without jump; lands on B's positions

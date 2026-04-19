@@ -9,6 +9,7 @@ struct SceneAppEntry: App {
         MenuBarExtra("Scene", systemImage: "rectangle.3.group") {
             MenuBarContentView()
                 .environmentObject(delegate.coordinator)
+                .environmentObject(delegate)
         }
         .menuBarExtraStyle(.menu)
     }

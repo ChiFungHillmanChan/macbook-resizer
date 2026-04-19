@@ -1,8 +1,10 @@
+import AppKit
 import SwiftUI
 import SceneCore
 
 struct OnboardingView: View {
     var onGrant: () -> Void
+    @State private var checkAttempts: Int = 0
 
     var body: some View {
         VStack(spacing: 16) {
@@ -21,10 +23,31 @@ struct OnboardingView: View {
                 }
             }
             .keyboardShortcut(.defaultAction)
-            Button("Check again") { onGrant() }
-                .buttonStyle(.link)
+            Button("Check again") {
+                checkAttempts += 1
+                onGrant()
+            }
+            .buttonStyle(.link)
+
+            if checkAttempts >= 2 {
+                Divider().padding(.vertical, 4)
+                VStack(spacing: 8) {
+                    Text("Still not detected?")
+                        .font(.callout)
+                        .bold()
+                    Text("macOS sometimes needs Scene to relaunch after the toggle. Try quitting and reopening.")
+                        .font(.caption)
+                        .multilineTextAlignment(.center)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: 380)
+                    Button("Quit Scene") {
+                        NSApplication.shared.terminate(nil)
+                    }
+                    .controlSize(.small)
+                }
+            }
         }
         .padding(32)
-        .frame(width: 460, height: 340)
+        .frame(width: 460, height: 380)
     }
 }

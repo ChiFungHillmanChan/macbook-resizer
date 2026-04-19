@@ -6,15 +6,19 @@ A macOS menu bar app for instant window layouts. Click one of seven presets and 
 
 > 繁體中文版本： [README.zh-HK.md](README.zh-HK.md)
 
-## Features
+## Features (V0.2)
 
-- **7 preset layouts** — Full, Halves, Thirds, Quads, Main+Side (70/30), LeftSplit+Right, Left+RightSplit
+- **7 built-in layout presets** — Full, Halves, Thirds, Quads, Main + Side (70/30), LeftSplit + Right, Left + RightSplit
+- **Build your own layouts** — 11 grid templates (columns / rows / 2×2 / 3×2 / 4 L-shape variants) with proportion sliders
+- **Per-layout custom hotkeys** with conflict detection (block-save: one chord per layout)
+- **Smooth window animation** with adjustable duration (100–500 ms) and easing (Linear / Ease Out / Spring)
+- **Settings window** — Layouts / Hotkeys / Animation / About (open via menu bar icon → Settings… or ⌘,)
 - **One click, all windows** — frontmost window goes to slot 1, the rest follow z-order
-- **Global hotkeys** — ⌘⇧1 through ⌘⇧7
 - **Overflow handling** — windows beyond slot count get minimized
-- **Electron-aware** — retries ±5px corrections for Cursor, VS Code, Slack, etc.
+- **Electron-aware** — retries ±5 px corrections for Cursor, VS Code, Slack, etc.
 - **Multi-display** — only rearranges windows on the screen under the mouse
 - **Dock/menu-bar-aware** — uses `visibleFrame` so windows never slide under the menu bar or Dock
+- **Animation perf safety** — falls back to instant placement when 7+ windows are visible
 - **Zero external dependencies** — pure Foundation, AppKit, SwiftUI, Carbon
 
 ## Layouts

@@ -12,7 +12,7 @@ public final class HotkeyManager {
     public init() {}
 
     public func register(
-        id: LayoutID,
+        uuid: UUID,
         keyCode: UInt32,
         modifiers: UInt32,
         handler: @escaping () -> Void
@@ -24,7 +24,7 @@ public final class HotkeyManager {
         let status = RegisterEventHotKey(keyCode, modifiers, hotKeyID, GetApplicationEventTarget(), 0, &ref)
 
         guard status == noErr, let ref else {
-            log.error("RegisterEventHotKey failed for \(id.rawValue, privacy: .public) status=\(status)")
+            log.error("RegisterEventHotKey failed for \(uuid.uuidString, privacy: .public) status=\(status)")
             return
         }
 
@@ -80,16 +80,4 @@ private func fourCharCode(_ s: String) -> UInt32 {
 
 public enum HotkeyModifiers {
     public static let cmdShift: UInt32 = UInt32(cmdKey | shiftKey)
-}
-
-public enum DefaultHotkeyKeys {
-    public static let mapping: [(LayoutID, UInt32)] = [
-        (.full,            UInt32(kVK_ANSI_1)),
-        (.halves,          UInt32(kVK_ANSI_2)),
-        (.thirds,          UInt32(kVK_ANSI_3)),
-        (.quads,           UInt32(kVK_ANSI_4)),
-        (.mainSide,        UInt32(kVK_ANSI_5)),
-        (.leftSplitRight,  UInt32(kVK_ANSI_6)),
-        (.leftRightSplit,  UInt32(kVK_ANSI_7)),
-    ]
 }
