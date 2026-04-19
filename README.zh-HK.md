@@ -1,45 +1,49 @@
 # Scene
 
-一個 macOS menu bar app，click 一下就將所有可見窗口瞬間排成 7 種 preset layout 之一。
+一個 macOS menu bar app — click 一下，所有可見窗口即刻入位。V0.2 加咗自訂 layout、自訂 hotkey、smooth animation、設定視窗。
 
-**要求 macOS 14 (Sonoma) 或以上。**
+**需要 macOS 14（Sonoma）或以上。**
 
 > English version: [README.md](README.md)
 
-## 功能
+## V0.2 功能
 
-- **7 個 preset layout** — Full、Halves、Thirds、Quads、Main+Side（70/30）、LeftSplit+Right、Left+RightSplit
-- **一 click，全部窗口搞掂** — frontmost 窗口入 slot 1，其餘按 z-order 排
-- **Global hotkey** — ⌘⇧1 至 ⌘⇧7
-- **窗口多過 slot 自動 minimize**
-- **Electron-aware** — Cursor、VS Code、Slack 等做 ±5px retry
-- **Multi-display** — 只處理滑鼠所在 screen 嘅窗口
-- **避開 Dock / menu bar** — 用 `visibleFrame` 確保窗口唔滑入佢哋下面
-- **零 external dependency** — 純 Foundation、AppKit、SwiftUI、Carbon
+- **7 個內建 layout preset** — Full / Halves / Thirds / Quads / Main + Side（70/30）/ LeftSplit + Right / Left + RightSplit
+- **自己整 layout** — 11 種 grid template（columns / rows / 2×2 / 3×2 / 4 種 L-shape），用 slider 拖比例
+- **每個 layout 自訂 hotkey**，撞 chord 會 block-save（一個 chord 只屬於一個 layout）
+- **Smooth window animation** — duration 100–500ms 可調，easing 揀 Linear / Ease Out / Spring
+- **設定視窗** — Layouts / Hotkeys / Animation / About（menu bar icon → Settings… 或 ⌘,）
+- **一 click 整齊** — frontmost window 入 slot 1，其餘按 z-order 排
+- **Overflow 處理** — 多過 slot count 嘅 window 自動 minimize
+- **Electron-aware** — Cursor、VS Code、Slack 等做 ±5px retry 修正
+- **Multi-display** — 只 rearrange 滑鼠所在 screen 嘅 window
+- **Dock / menu bar aware** — 用 `visibleFrame`，window 永遠唔會滑入去佢哋下面
+- **Animation 性能保護** — 7+ 個 window fall back 到 instant placement
+- **零外部 dependency** — 純 Foundation、AppKit、SwiftUI、Carbon
 
-## Layout 列表
+## Layout 表
 
-| ID | 名 | Slot 數 |
+| ID | 名 | Slot |
 |---|---|---|
-| 1 | Full | 1（100%） |
-| 2 | Halves | 2（50/50） |
-| 3 | Thirds | 3 等寬直欄 |
+| 1 | Full | 1（100%）|
+| 2 | Halves | 2（50/50）|
+| 3 | Thirds | 3 個等闊 column |
 | 4 | Quads | 2×2 grid |
 | 5 | Main + Side | 70% / 30% |
-| 6 | LeftSplit + Right | 左欄上下分，右欄 full |
-| 7 | Left + RightSplit | 左欄 full，右欄上下分 |
+| 6 | LeftSplit + Right | 左邊 column 上下分，右邊全高 |
+| 7 | Left + RightSplit | 左邊 column 全高，右邊上下分 |
 
-## 安裝
+## Install
 
-**用家：** 去 [Releases](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) 下載 DMG（或者本地跑 `scripts/build-dmg.sh`），drag `Scene.app` 入 `/Applications`，然後跟 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性 Gatekeeper bypass 同 Accessibility 授權。
+End user：去 [Releases](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
 
-## 由 source 編譯
+## 由 source build
 
-### 準備
+### Prerequisites
 
 - macOS 14+
-- Xcode 16+（Mac App Store 免費）
-- Swift 5.9+（隨 Xcode 入面）
+- Xcode 16+（Mac App Store 免費下載）
+- Swift 5.9+（Xcode 入面有）
 
 ### 用 Xcode build
 
@@ -49,26 +53,37 @@ cd macbook-resizer
 open SceneApp/SceneApp.xcodeproj
 ```
 
-Xcode 揀 `SceneApp` scheme，⌘R。App 以 menu bar extra 身份行（冇 Dock icon）。
+Xcode 揀 `SceneApp` scheme → ⌘R。App 以 menu bar extra 形式行（冇 Dock icon）。
 
-### Build 分發 DMG
+### Build distributable DMG
 
 ```bash
-./scripts/build-dmg.sh          # 出 dist/Scene-0.1.0.dmg
+./scripts/build-dmg.sh 0.2.0    # 出 dist/Scene-0.2.0.dmg
 ```
 
-Universal binary（arm64 + x86_64），ad-hoc signed，帶 `Applications` drop shortcut。**唔需要** Apple Developer account。
+Build universal binary（arm64 + x86_64），ad-hoc sign，pack 入 DMG 連 `Applications` drop shortcut。唔使 Apple Developer account。
+
+### 跑 SceneCore 嘅 unit test
+
+Layout / animation / store / hotkey 全部 logic 喺 `SceneCore`，係 Swift package，唔使 Xcode：
+
+```bash
+swift test
+```
+
+92 個 unit test 覆蓋 layout 數學、window-to-slot mapping、animation 狀態機、JSON persistence、hotkey 衝突、edge case。
 
 ## 用法
 
-1. 第一次 launch，Scene 會要**Accessibility permission**。喺 System Settings → Privacy & Security → Accessibility 授權。
-2. Click menu bar Scene icon（`rectangle.3.group`）→ 7 個 preset。
+1. 第一次 launch，Scene 會問 **Accessibility permission**。喺 System Settings → Privacy & Security → Accessibility 開咗佢。
+2. Click menu bar 嘅 Scene icon（`rectangle.3.group`）→ 會見到 7 個 preset，下面有 Settings…
 3. Click 任何 preset，或者按 ⌘⇧1 – ⌘⇧7。
-4. 用完 menu 嘅 **Quit Scene** 退出。
+4. 開 Settings…（⌘,）整自己嘅 layout、改 hotkey、調 animation。
+5. Quit 用 menu 嘅 **Quit Scene**。
 
-### Hotkey 對照
+### Default hotkey 表
 
-| 快捷鍵 | Layout |
+| Shortcut | Layout |
 |---|---|
 | ⌘⇧1 | Full |
 | ⌘⇧2 | Halves |
@@ -78,56 +93,80 @@ Universal binary（arm64 + x86_64），ad-hoc signed，帶 `Applications` drop s
 | ⌘⇧6 | LeftSplit + Right |
 | ⌘⇧7 | Left + RightSplit |
 
-### 邊緣情況
+V0.2 你可以改任何 chord（要至少一個非 Shift modifier，避免撞 typing）。
 
-| 情境 | 行為 |
+### Edge case 行為
+
+| 情況 | 行為 |
 |---|---|
-| 窗口多過 slot | 頭 N 個按 z-order 入 slot，其餘最小化 |
-| 窗口少過 slot | 窗口入 slot，剩餘 slot 留空 |
-| 冇可見窗口 | macOS notification（未授權時 menu bar icon 閃 + tooltip） |
-| 中途撤權 | Menu bar icon 變灰，2 秒內 hotkey unregister |
-| Electron app | 第一次 setFrame 偏差 → 一次 ±5px retry |
-| System Settings | macOS 強制最細 size，只 set 到 position 唔 set 到 size |
+| Window 多過 slot | 前 N 個按 z-order 入 slot，其餘 minimize |
+| Window 少過 slot | Window 入晒，多餘 slot 留空 |
+| 冇 visible window | macOS 通知（或 menu bar icon 閃，如果通知被禁）|
+| 中途 revoke permission | Menu bar icon 變灰；hotkey 2 秒內 unregister |
+| Electron app | Window 偏離 target 做一次 ±5px 修正 |
+| System Settings | Apple 強制最細尺寸——position 入位但 size 縮唔細 |
+| 8+ 個 window | Animation 自動 fall back 到 instant（性能保護） |
+| 連續撳 hotkey | Animation interrupt + retarget，唔會 jump |
+
+## 設定持久化
+
+兩個 JSON 檔，atomic write 入：
+
+```
+~/Library/Application Support/Scene/
+├── layouts.json     # 7 個 seed + 你 add 嘅 custom layout + 每個嘅 hotkey
+└── settings.json    # animation 設定
+```
+
+刪呢個 folder 就 reset 返出廠 state。
 
 ## 架構
 
 ```
 macbook-resizer/
 ├── Package.swift
-├── Sources/SceneCore/          # 純邏輯，唔使 Xcode 都 unit-test
-│   ├── AX/                     # Accessibility API wrappers
+├── Sources/SceneCore/          # 純邏輯，唔使 Xcode unit test 得
+│   ├── AX/                     # Accessibility API wrapper
+│   ├── Animation/              # Clock, FrameInterpolator, AnimationRunner（V0.2）
 │   ├── Display/                # screen picker
-│   ├── Interaction/            # hotkey + drag-swap
-│   └── Layout/                 # Slot, Layout, LayoutEngine, Plan, Geometry
-├── Tests/SceneCoreTests/       # 26 個 XCTest
-├── SceneApp/                   # Xcode project — menu bar shell
+│   ├── Interaction/            # hotkey + drag-swap controller
+│   ├── Layout/                 # Slot, Layout, LayoutEngine + LayoutTemplate, CustomLayout, PresetSeeds, LayoutStore（V0.2）
+│   └── Settings/               # AnimationConfig, HotkeyBinding, SettingsStore, Cancellable（V0.2）
+├── Tests/SceneCoreTests/       # 92 個 XCTest case
+├── SceneApp/                   # Xcode project — menu bar shell + 設定視窗
 │   └── SceneApp/
-│       ├── SceneAppApp.swift          # @main + MenuBarExtra
+│       ├── Animation/          # WindowAnimator（CVDisplayLink + AX bridge）
+│       ├── Settings/           # SettingsWindowController + 4 個 tab + LayoutEditorView + HotkeyCaptureView
+│       ├── Stores/             # LayoutStoreViewModel, SettingsStoreViewModel
+│       ├── SceneAppApp.swift   # @main + MenuBarExtra
 │       ├── AppDelegate.swift
-│       ├── Coordinator.swift          # orchestration 層
+│       ├── Coordinator.swift   # orchestration 層
 │       ├── MenuBarContentView.swift
 │       ├── OnboardingView.swift
 │       ├── OnboardingWindowController.swift
 │       └── NotificationHelper.swift
 └── docs/
-    ├── INSTALL.md                     # end-user 安裝指引
-    └── TESTING.md                     # manual smoke-test checklist
+    ├── INSTALL.md              # 用戶安裝步驟
+    └── TESTING.md              # 手動 smoke test checklist（V0.1 + V0.2）
 ```
 
-呢個分法係特登嘅：`SceneCore` 掌握全部硬 logic（AX call、layout math、hotkey plumbing），有 26 個 unit test cover。`SceneApp` 係薄 SwiftUI/AppKit shell，只 wire UI 同 app lifecycle。`SceneCore` 可以 `swift test` 跑，唔使裝 Xcode——只有最後 `.app` build 先需要 Xcode。
+故意分層：**`SceneCore` 完全 framework-neutral**——冇 SwiftUI、冇 Combine、冇 ObservableObject。所有 hard logic（AX call、layout 數學、animation 狀態機、store CRUD）住喺度，92 個 unit test 覆蓋。**`SceneApp` 係薄殼**，只負責 SwiftUI binding + AppKit lifecycle。SceneCore 用 closure-based observation 同 SceneApp 通訊（`@MainActor class FooStoreViewModel: ObservableObject` 做 adapter）。
+
+`swift test` 由 command line 跑得，唔使 Xcode；只有最後 `.app` build 先要。
 
 詳細架構 + 進階文檔：[Wiki（繁體中文）](https://github.com/ChiFungHillmanChan/macbook-resizer/wiki/Home-zh-HK)
 
-## 路線圖（V0.2+）
+## V0.3 路線圖（未做）
 
-V0.1 defer 嘅嘢：
-
-- **Drag-to-swap** — apply preset 後 drag 任何窗口，自動 snap 去最近 slot 同嗰個位嘅窗口對換。`DragSwapController` 已寫好，只欠 `AXObserver` bridge。
-- **動畫** — 用 ~150ms interpolate 取代即時 snap。
-- **Per-display layout** — 同時喺唔同 mon apply 唔同 preset。
-- **Settings 視窗** — Launch at Login、自訂 hotkey、rename/hide preset。
-- **Per-app rule** — 例如「Slack 永遠放 slot 3」。
+- **Drag-to-swap** — applyLayout 之後拖 window，自動 snap 去最近 slot 同其他 window 對調。`DragSwapController` 喺 SceneCore 已經寫好，剩 `AXObserver` bridge 未 wire。
+- **Per-display layouts** — 唔同 monitor apply 唔同 preset。
+- **Pattern learning** — 觀察用家手動拖 window 嘅 pattern，建議 "下午 2-5pm 通常 Cursor 70+Chrome 30，要唔要 save 做 preset?"
+- **AI / 自然語言 input** — 打 "cursor 左 chrome 右" → LLM → layout JSON。
+- **Per-app rule** — e.g.「Slack 永遠入 slot 4」。
+- **Launch at Login** UI。
+- **Free-form canvas drag** layout editor（EpycZones 嗰種）。
+- **Notarization**（需要 Developer ID）— end user 就唔使做 Gatekeeper bypass。
 
 ## License
 
-待定。
+TBD。

@@ -71,7 +71,7 @@ The layout logic lives in `SceneCore`, a Swift package that works without Xcode:
 swift test
 ```
 
-26 unit tests cover layout math, window-to-slot mapping, and edge cases.
+92 unit tests cover layout math, window-to-slot mapping, animation state machine, JSON persistence, hotkey conflicts, and edge cases.
 
 ## Usage
 
@@ -130,15 +130,30 @@ macbook-resizer/
 
 The split is deliberate: `SceneCore` owns all the hard logic (AX calls, layout math, hotkey plumbing) and is covered by 26 unit tests. `SceneApp` is a thin SwiftUI/AppKit shell that only wires UI and app lifecycle. You can run `swift test` on `SceneCore` from the command line without installing Xcode — only the final `.app` build needs it.
 
-## Roadmap (V0.2+)
+## Persistence
 
-Deferred from V0.1:
+V0.2 writes two JSON files atomically into:
 
-- **Drag-to-swap** — drag any window after applying a preset; it snaps to the nearest slot and swaps with whoever lives there. The `DragSwapController` is already implemented in `SceneCore`; only the `AXObserver` bridge remains.
-- **Animation** — interpolate frame changes over ~150 ms instead of snapping instantly.
+```
+~/Library/Application Support/Scene/
+├── layouts.json     # 7 seeds + your custom layouts + each layout's hotkey
+└── settings.json    # animation enabled/duration/easing
+```
+
+Delete this folder to reset to factory state.
+
+## Roadmap (V0.3+)
+
+Deferred from V0.2:
+
+- **Drag-to-swap** — after applying a preset, drag any window and it snaps to the nearest slot, swapping with whoever lives there. `DragSwapController` is already in `SceneCore`; only the `AXObserver` bridge remains.
 - **Per-display layouts** — apply different presets to each monitor independently.
-- **Settings window** — toggle launch-at-login, customize hotkeys, rename/hide presets.
-- **Per-app rules** — e.g., "always put Slack in slot 3".
+- **Pattern learning** — observe manual window arrangements and suggest presets ("you usually split 70/30 in the afternoon — save?").
+- **AI / natural-language input** — type "cursor left, chrome right" → LLM → layout JSON.
+- **Per-app rules** — e.g., "always put Slack in slot 4".
+- **Launch-at-Login** UI.
+- **Free-form canvas-drag** layout editor (the EpycZones approach).
+- **Notarization** (requires Developer ID) — eliminates the Gatekeeper bypass step.
 
 ## License
 
