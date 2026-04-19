@@ -138,4 +138,36 @@ final class DragSwapControllerTests: XCTestCase {
 
         XCTAssertNil(controller._testActiveDrag)
     }
+
+    // MARK: - Task 6: placed-set filter
+
+    func testDragOfNonPlacedWindowIsIgnored() {
+        let wA = MockWindow(id: 1, frame: slot0Rect)
+        let wB = MockWindow(id: 2, frame: slot1Rect)
+        let (controller, _) = makeController(
+            layout: makeLayout(),
+            windows: [wA, wB],
+            screen: makeScreen()
+        )
+        controller.handleWindowMoved(windowID: 99, currentFrame: slot0Rect)
+        controller.handleWindowMoved(windowID: 99, currentFrame: slot0Rect.offsetBy(dx: 400, dy: 0))
+
+        XCTAssertNil(controller._testActiveDrag)
+    }
+
+    func testDragLandingOutsideAnySlotIsIgnored() {
+        let wA = MockWindow(id: 1, frame: slot0Rect)
+        let wB = MockWindow(id: 2, frame: slot1Rect)
+        let (controller, _) = makeController(
+            layout: makeLayout(),
+            windows: [wA, wB],
+            screen: makeScreen()
+        )
+        controller.handleWindowMoved(windowID: 1, currentFrame: slot0Rect)
+        let offscreen = CGRect(x: 2000, y: 0, width: 500, height: 800)
+        controller.handleWindowMoved(windowID: 1, currentFrame: offscreen)
+
+        XCTAssertNil(controller._testActiveDrag,
+                     "center outside every slot's absolute rect must not arm")
+    }
 }
