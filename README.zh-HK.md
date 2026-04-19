@@ -6,6 +6,12 @@
 
 > English version: [README.md](README.md)
 
+## 示範片
+
+<video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
+  你個 browser 唔 render 到 embed 嘅 video。<a href="docs/media/scene-marketing.mp4">撳呢度 download 示範片（MP4，13 MB）</a>。
+</video>
+
 ## V0.4 新功能
 
 - **Workspaces（情境）** — 一嚿 bundle 包住 layout + apps + Focus 模式 + 自動觸發（手動 / monitor / 時間 / 日曆），撳一下就切換成個工作情境
@@ -186,4 +192,4 @@ macbook-resizer/
 
 ## License
 
-TBD。
+MIT —睇 [`LICENSE`](LICENSE)。

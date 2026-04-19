@@ -6,6 +6,12 @@ A macOS menu bar app for instant window layouts. Click one of seven presets and 
 
 > 繁體中文版本： [README.zh-HK.md](README.zh-HK.md)
 
+## Demo
+
+<video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
+  Your browser does not render embedded video. <a href="docs/media/scene-marketing.mp4">Download the demo clip (MP4, 13 MB)</a>.
+</video>
+
 ## New in v0.4
 
 - **Workspaces** — bundle layout + apps + Focus mode + auto-triggers (manual / monitor / time / calendar) into a one-click context switcher
@@ -180,4 +186,4 @@ Delete this folder to reset to factory state.
 
 ## License
 
-TBD.
+MIT — see [`LICENSE`](LICENSE).
