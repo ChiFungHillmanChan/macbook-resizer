@@ -27,15 +27,19 @@ A macOS menu bar app for instant window layouts. Click one of seven presets and 
 | 6 | LeftSplit + Right | left column split top/bottom, right column full |
 | 7 | Left + RightSplit | left column full, right column split top/bottom |
 
-## Install / Build
+## Install
+
+End users: download the DMG from the releases page (or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
+
+## Build from source
 
 ### Prerequisites
 
 - macOS 14+
-- Xcode 16+ (for building the app)
+- Xcode 16+ (for building the app — free from the Mac App Store)
 - Swift 5.9+ (bundled with Xcode)
 
-### Build the app
+### Build via Xcode
 
 ```bash
 git clone <repo-url>
@@ -44,6 +48,14 @@ open SceneApp/SceneApp.xcodeproj
 ```
 
 In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu bar extra (no Dock icon).
+
+### Build a distributable DMG
+
+```bash
+./scripts/build-dmg.sh          # produces dist/Scene-0.1.0.dmg
+```
+
+This builds a universal binary (arm64 + x86_64), ad-hoc signs it, and packages it into a DMG with an `Applications` drop shortcut. No Apple Developer account required.
 
 ### Run the core library tests
 

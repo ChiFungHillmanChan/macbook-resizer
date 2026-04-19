@@ -20,3 +20,7 @@ Package.resolved
 *.ipa
 *.dSYM.zip
 *.dSYM
+
+# Release pipeline outputs
+/build/
+/dist/
