@@ -1,17 +1,25 @@
 # Scene
 
-一個 macOS menu bar app — click 一下，所有可見窗口即刻入位。V0.3 加咗 drag-to-swap（拖 window 即刻對調位），建基於 V0.2 嘅自訂 layout、自訂 hotkey、smooth animation、設定視窗。
+一個 macOS menu bar app — click 一下，所有可見窗口即刻入位。V0.4 新加咗 Workspaces（情境切換）、layout thumbnail、3 個縱向 preset 同多語 UI，建基於 V0.3 嘅 drag-to-swap、V0.2 嘅自訂 layout、自訂 hotkey、smooth animation、設定視窗。
 
 **需要 macOS 14（Sonoma）或以上。**
 
 > English version: [README.md](README.md)
+
+## V0.4 新功能
+
+- **Workspaces（情境）** — 一嚿 bundle 包住 layout + apps + Focus 模式 + 自動觸發（手動 / monitor / 時間 / 日曆），撳一下就切換成個工作情境
+- **Layout thumbnail** — menu bar 同設定度每個 layout 都即時 render 出 slot 比例嘅小圖
+- **3 個新縱向 preset** — Main + Side Vertical（⌘⌃8）、Halves Vertical（⌘⌃9）、Thirds Vertical（⌘⌃0）
+- **多語 UI** — 完整支援 English + 繁體中文（香港）；部分支援 繁體中文（台灣）同 日本語
+- 連埋 V0.2（自訂 + 動畫）、V0.3（drag-to-swap）一齊出，係首次公開 release
 
 ## V0.3 — 拖拉交換
 
 - **拖視窗就可以重排**：揸住任何 placed window 拖落另一個 placed window 嘅位，source 即時 snap，被換走嗰個行 V0.2 動畫引擎（250ms easeOut，跟 Animation tab 嘅設定）。
 - **Interaction tab**：開 / 閂 drag-to-swap；拖拉距離 threshold 可調（10–100pt）。
 - **逃生出口**：揸住 ⌥ 拖就唔 swap（free-move）；drag 中途撳 Esc 就 cancel，視窗 snap 返原位。
-- **Unit test 數目**：92 → 114 個。
+- **Unit test 數目**：92 → 116 個（V0.4 再加到 157）。
 
 ## V0.2 功能
 
@@ -65,10 +73,10 @@ Xcode 揀 `SceneApp` scheme → ⌘R。App 以 menu bar extra 形式行（冇 Do
 ### Build distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.2.0    # 出 dist/Scene-0.2.0.dmg
+./scripts/build-dmg.sh 0.4.0    # 出 dist/Scene-0.4.0.dmg
 ```
 
-Build universal binary（arm64 + x86_64），ad-hoc sign，pack 入 DMG 連 `Applications` drop shortcut。唔使 Apple Developer account。
+Build Apple Silicon（arm64）binary，ad-hoc sign，pack 入 DMG 連 `Applications` drop shortcut。唔使 Apple Developer account。macOS 14 嘅機絕大多數都係 Apple Silicon；如果要兼容 Intel Mac，喺 build script 加返 `ARCHS="arm64 x86_64"`。
 
 ### 跑 SceneCore 嘅 unit test
 
@@ -78,13 +86,13 @@ Layout / animation / store / hotkey 全部 logic 喺 `SceneCore`，係 Swift pac
 swift test
 ```
 
-114 個 unit test 覆蓋 layout 數學、window-to-slot mapping、animation 狀態機、JSON persistence、hotkey 衝突、drag-to-swap 邏輯、edge case。
+157 個 unit test 覆蓋 layout 數學、window-to-slot mapping、animation 狀態機、JSON persistence、hotkey 衝突、drag-to-swap 邏輯、edge case。
 
 ## 用法
 
 1. 第一次 launch，Scene 會問 **Accessibility permission**。喺 System Settings → Privacy & Security → Accessibility 開咗佢。
 2. Click menu bar 嘅 Scene icon（`rectangle.3.group`）→ 會見到 7 個 preset，下面有 Settings…
-3. Click 任何 preset，或者按 ⌘⇧1 – ⌘⇧7。
+3. Click 任何 preset，或者按 ⌘⌃1 – ⌘⌃7。
 4. 開 Settings…（⌘,）整自己嘅 layout、改 hotkey、調 animation。
 5. Quit 用 menu 嘅 **Quit Scene**。
 
@@ -92,13 +100,13 @@ swift test
 
 | Shortcut | Layout |
 |---|---|
-| ⌘⇧1 | Full |
-| ⌘⇧2 | Halves |
-| ⌘⇧3 | Thirds |
-| ⌘⇧4 | Quads |
-| ⌘⇧5 | Main + Side |
-| ⌘⇧6 | LeftSplit + Right |
-| ⌘⇧7 | Left + RightSplit |
+| ⌘⌃1 | Full |
+| ⌘⌃2 | Halves |
+| ⌘⌃3 | Thirds |
+| ⌘⌃4 | Quads |
+| ⌘⌃5 | Main + Side |
+| ⌘⌃6 | LeftSplit + Right |
+| ⌘⌃7 | Left + RightSplit |
 
 V0.2 你可以改任何 chord（要至少一個非 Shift modifier，避免撞 typing）。
 
@@ -136,13 +144,16 @@ macbook-resizer/
 │   ├── AX/                     # Accessibility API wrapper
 │   ├── Animation/              # Clock, FrameInterpolator, AnimationRunner（V0.2）
 │   ├── Display/                # screen picker
-│   ├── Interaction/            # hotkey + drag-swap controller
+│   ├── Interaction/            # HotkeyManager, DragSwapController,
+│   │                           #   WindowAnimationSink, WindowMoveObserving
 │   ├── Layout/                 # Slot, Layout, LayoutEngine + LayoutTemplate, CustomLayout, PresetSeeds, LayoutStore（V0.2）
-│   └── Settings/               # AnimationConfig, HotkeyBinding, SettingsStore, Cancellable（V0.2）
-├── Tests/SceneCoreTests/       # 114 個 XCTest case
+│   └── Settings/               # AnimationConfig, HotkeyBinding, DragSwapConfig,
+│                               #   SettingsStore, Cancellable
+├── Tests/SceneCoreTests/       # 157 個 XCTest case
 ├── SceneApp/                   # Xcode project — menu bar shell + 設定視窗
 │   └── SceneApp/
 │       ├── Animation/          # WindowAnimator（CVDisplayLink + AX bridge）
+│       ├── Interaction/        # AXMoveObserverGroup, AXWindowLookup, DragSwapAnimationSink（V0.3）
 │       ├── Settings/           # SettingsWindowController + 4 個 tab + LayoutEditorView + HotkeyCaptureView
 │       ├── Stores/             # LayoutStoreViewModel, SettingsStoreViewModel
 │       ├── SceneAppApp.swift   # @main + MenuBarExtra
@@ -154,16 +165,16 @@ macbook-resizer/
 │       └── NotificationHelper.swift
 └── docs/
     ├── INSTALL.md              # 用戶安裝步驟
-    └── TESTING.md              # 手動 smoke test checklist（V0.1 + V0.2）
+    └── TESTING.md              # 手動 smoke test checklist（V0.1–V0.4）
 ```
 
-故意分層：**`SceneCore` 完全 framework-neutral**——冇 SwiftUI、冇 Combine、冇 ObservableObject。所有 hard logic（AX call、layout 數學、animation 狀態機、store CRUD、drag-to-swap）住喺度，114 個 unit test 覆蓋。**`SceneApp` 係薄殼**，只負責 SwiftUI binding + AppKit lifecycle。SceneCore 用 closure-based observation 同 SceneApp 通訊（`@MainActor class FooStoreViewModel: ObservableObject` 做 adapter）。
+故意分層：**`SceneCore` 完全 framework-neutral**——冇 SwiftUI、冇 Combine、冇 ObservableObject。所有 hard logic（AX call、layout 數學、animation 狀態機、store CRUD、drag-to-swap）住喺度，157 個 unit test 覆蓋。**`SceneApp` 係薄殼**，只負責 SwiftUI binding、AppKit lifecycle，同埋 framework-neutral library 做唔到嘅 AppKit/AX bridge（`WindowAnimator`、`AXMoveObserverGroup`、`AXWindowLookup`、`DragSwapAnimationSink`）。SceneCore 用 closure-based observation 同 SceneApp 通訊（`@MainActor class FooStoreViewModel: ObservableObject` 做 adapter）。
 
 `swift test` 由 command line 跑得，唔使 Xcode；只有最後 `.app` build 先要。
 
 詳細架構 + 進階文檔：[Wiki（繁體中文）](https://github.com/ChiFungHillmanChan/macbook-resizer/wiki/Home-zh-HK)
 
-## V0.4 路線圖（未做）
+## V0.5 路線圖（未做）
 
 - **Per-display layouts** — 唔同 monitor apply 唔同 preset。
 - **Pattern learning** — 觀察用家手動拖 window 嘅 pattern，建議 "下午 2-5pm 通常 Cursor 70+Chrome 30，要唔要 save 做 preset?"

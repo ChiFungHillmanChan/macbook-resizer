@@ -1,0 +1,35 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSCalendarsUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scene uses your calendar to activate Workspaces automatically when matching events begin."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scene 會用你嘅日曆，喺配對到嘅事件開始時自動啟動情境。"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scene 會使用您的行事曆,在符合條件的事件開始時自動啟動工作空間。"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scene はカレンダーを使用し、一致するイベントが始まったときにワークスペースを自動的に起動します。"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

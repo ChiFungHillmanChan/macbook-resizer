@@ -23,11 +23,12 @@ final class Coordinator: ObservableObject {
     private let log = Logger(subsystem: "com.scene.app", category: "coordinator")
     private let hotkeyManager = HotkeyManager()
     private let onboarding = OnboardingWindowController()
-    private var notification: NotificationHelper?
+    private(set) var notification: NotificationHelper?
     private var permissionPoll: Timer?
     private let onPermissionChange: (Bool) -> Void
 
     let layoutStore: LayoutStore
+    let workspaceStore: WorkspaceStore?
     let settingsStore: SettingsStore
     private let animator = WindowAnimator()
     private let observerGroup = AXMoveObserverGroup()
@@ -44,12 +45,26 @@ final class Coordinator: ObservableObject {
 
     var statusItem: NSStatusItem?
 
+    /// V0.4: set by `AppDelegate` (Block D Task 17) once `WorkspaceStore` and
+    /// `WorkspaceActivator` exist. Until then, `applyWorkspace(id:)` no-ops
+    /// with a log line. `Coordinator` owns the supervisor so its lifecycle
+    /// (start/stop) tracks the app session; the supervisor's own watchers hold
+    /// Timer and NotificationCenter observers that are released on `stop()`.
+    private(set) var triggerSupervisor: TriggerSupervisor?
+
+    /// Observes the V0.4 `WorkspaceStore` so workspace hotkey bindings flow
+    /// through the same `HotkeyManager` that already routes layout chords.
+    /// Registered by `AppDelegate` on launch via `configure(workspaceStore:)`.
+    private var workspaceStoreObserver: SceneCancellable?
+
     init(
         layoutStore: LayoutStore,
+        workspaceStore: WorkspaceStore? = nil,
         settingsStore: SettingsStore,
         onPermissionChange: @escaping (Bool) -> Void
     ) {
         self.layoutStore = layoutStore
+        self.workspaceStore = workspaceStore
         self.settingsStore = settingsStore
         self.onPermissionChange = onPermissionChange
         self.onboarding.onCheck = { [weak self] in
@@ -58,6 +73,16 @@ final class Coordinator: ObservableObject {
     }
 
     func start() {
+        // V0.4: apply any new preset seeds that have been added since the user last
+        // launched. For V0.1 users on first V0.4 launch, this adds the 3 vertical seeds
+        // (⌘⇧8/9/0). For users who previously deleted a V0.1 seed, that seed stays
+        // deleted (LayoutStore's `knownSeedUUIDs` tombstone preserves intent).
+        do {
+            try layoutStore.applyFutureSeeds(candidates: PresetSeeds.all)
+        } catch {
+            log.error("applyFutureSeeds failed: \(String(describing: error), privacy: .public)")
+        }
+
         self.notification = NotificationHelper { [weak self] in self?.statusItem }
         notification?.requestAuthorizationIfNeeded()
         refreshPermission()
@@ -69,9 +94,35 @@ final class Coordinator: ObservableObject {
                 self.registerHotkeysFromStore()
             }
         }
+        if let workspaceStore {
+            workspaceStoreObserver = workspaceStore.onChange { [weak self] in
+                Task { @MainActor in self?.registerHotkeysFromStore() }
+            }
+        }
     }
 
     func openOnboarding() { onboarding.show() }
+
+    /// Inject the supervisor after `AppDelegate` has constructed both the
+    /// `WorkspaceStore` and `WorkspaceActivator`. Starts the supervisor (arming
+    /// all 3 watchers) on first call. Idempotent — second call is a no-op.
+    func configure(triggerSupervisor supervisor: TriggerSupervisor) {
+        guard triggerSupervisor == nil else { return }
+        triggerSupervisor = supervisor
+        supervisor.start()
+    }
+
+    /// Manually activate a Workspace (via hotkey or menu click). Bypasses the
+    /// 30s cooldown. No-op with log line if the supervisor has not been wired
+    /// yet (Block C runs before Block D's `AppDelegate` wiring).
+    @MainActor
+    func applyWorkspace(id: UUID) async {
+        guard let supervisor = triggerSupervisor else {
+            log.info("applyWorkspace: supervisor not configured, dropping \(id.uuidString, privacy: .public)")
+            return
+        }
+        supervisor.activateManually(workspaceID: id)
+    }
 
     func applyLayout(id: UUID) {
         guard let layout = layoutStore.layouts.first(where: { $0.id == id }) else {
@@ -149,8 +200,19 @@ final class Coordinator: ObservableObject {
     private func registerHotkeysFromStore() {
         guard permissionGranted else { return }
         hotkeyManager.unregisterAll()
+        // Track claimed chords to skip any duplicates in the combined set.
+        // Cross-store conflicts are already rejected at save time by each
+        // store's `hotkeyConflictProbe`; this belt-and-suspenders guard
+        // protects against same-store duplicates that would otherwise
+        // double-register with `RegisterEventHotKey`.
+        var claimedChords: [HotkeyBinding] = []
+        func claim(_ chord: HotkeyBinding) -> Bool {
+            if claimedChords.contains(where: { $0 == chord }) { return false }
+            claimedChords.append(chord)
+            return true
+        }
         for layout in layoutStore.layouts {
-            guard let binding = layout.hotkey else { continue }
+            guard let binding = layout.hotkey, claim(binding) else { continue }
             let captured = layout.id
             hotkeyManager.register(
                 uuid: captured,
@@ -160,6 +222,20 @@ final class Coordinator: ObservableObject {
                     Task { @MainActor in self?.applyLayout(id: captured) }
                 }
             )
+        }
+        if let workspaceStore {
+            for workspace in workspaceStore.workspaces {
+                guard let binding = workspace.hotkey, claim(binding) else { continue }
+                let captured = workspace.id
+                hotkeyManager.register(
+                    uuid: captured,
+                    keyCode: binding.keyCode,
+                    modifiers: binding.carbonModifiers,
+                    handler: { [weak self] in
+                        Task { @MainActor in await self?.applyWorkspace(id: captured) }
+                    }
+                )
+            }
         }
     }
 
@@ -231,5 +307,9 @@ final class Coordinator: ObservableObject {
 
     deinit {
         if let escMonitor { NSEvent.removeMonitor(escMonitor) }
+        // Note: triggerSupervisor?.stop() would require @MainActor hop; its
+        // watchers also clean up in their own `deinit` via Timer invalidation
+        // and NotificationCenter observer removal on `stop()`. AppDelegate's
+        // `applicationWillTerminate` (Block D) is the explicit stop hook.
     }
 }

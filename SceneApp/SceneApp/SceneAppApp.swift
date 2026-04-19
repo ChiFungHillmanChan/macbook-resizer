@@ -7,9 +7,12 @@ struct SceneAppEntry: App {
 
     var body: some Scene {
         MenuBarExtra("Scene", systemImage: "rectangle.3.group") {
-            MenuBarContentView()
-                .environmentObject(delegate.coordinator)
-                .environmentObject(delegate)
+            MenuBarContentView(
+                workspaceStore: delegate.workspaceVM,
+                layoutStore: delegate.layoutVM
+            )
+            .environmentObject(delegate.coordinator)
+            .environmentObject(delegate)
         }
         .menuBarExtraStyle(.menu)
     }

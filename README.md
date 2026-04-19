@@ -6,12 +6,20 @@ A macOS menu bar app for instant window layouts. Click one of seven presets and 
 
 > 繁體中文版本： [README.zh-HK.md](README.zh-HK.md)
 
+## New in v0.4
+
+- **Workspaces** — bundle layout + apps + Focus mode + auto-triggers (manual / monitor / time / calendar) into a one-click context switcher
+- **Layout thumbnails** — every layout reference in the menu and settings now shows a live rendering of its slot proportions
+- **3 new vertical preset layouts** — Main + Side Vertical (⌘⌃8), Halves Vertical (⌘⌃9), Thirds Vertical (⌘⌃0)
+- **Multilingual UI** — full English + 繁體中文 (香港) support; partial 繁體中文 (台灣) and 日本語
+- Bundled with V0.2 (customization + animation) and V0.3 (drag-to-swap) for one big first public release
+
 ### V0.3 — Drag-to-Swap
 
 - **Drag to rearrange**: grab any placed window and drag it onto another — swap executes with the displaced window animating via the V0.2 engine (250ms easeOut, respects the Animation tab toggle).
 - **Interaction tab**: enable / disable drag-to-swap; tune drag-distance threshold (10–100pt).
 - **Escape hatches**: hold ⌥ while dragging to free-move without swap; press Esc mid-drag to cancel and snap back to origin.
-- **Test count**: 92 → 114 unit tests.
+- **Test count**: 92 → 116 unit tests (V0.4 raises total to 157).
 
 ## Features (V0.2)
 
@@ -65,10 +73,10 @@ In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu ba
 ### Build a distributable DMG
 
 ```bash
-./scripts/build-dmg.sh          # produces dist/Scene-0.1.0.dmg
+./scripts/build-dmg.sh 0.4.0    # produces dist/Scene-0.4.0.dmg
 ```
 
-This builds a universal binary (arm64 + x86_64), ad-hoc signs it, and packages it into a DMG with an `Applications` drop shortcut. No Apple Developer account required.
+This builds an Apple Silicon (arm64) binary, ad-hoc signs it, and packages it into a DMG with an `Applications` drop shortcut. No Apple Developer account required. macOS 14 devices are overwhelmingly Apple Silicon; Intel users can add `ARCHS="arm64 x86_64"` back to the build script.
 
 ### Run the core library tests
 
@@ -78,26 +86,26 @@ The layout logic lives in `SceneCore`, a Swift package that works without Xcode:
 swift test
 ```
 
-114 unit tests cover layout math, window-to-slot mapping, animation state machine, JSON persistence, hotkey conflicts, drag-to-swap logic, and edge cases.
+157 unit tests cover layout math, window-to-slot mapping, animation state machine, JSON persistence, hotkey conflicts, drag-to-swap logic, and edge cases.
 
 ## Usage
 
 1. On first launch, Scene asks for **Accessibility permission**. Grant it in System Settings → Privacy & Security → Accessibility.
 2. Click the Scene icon in the menu bar (`rectangle.3.group`) to see the 7 presets.
-3. Click any preset, or press ⌘⇧1 – ⌘⇧7.
+3. Click any preset, or press ⌘⌃1 – ⌘⌃7.
 4. Quit via the menu's **Quit Scene** item.
 
 ### Hotkey reference
 
 | Shortcut | Layout |
 |---|---|
-| ⌘⇧1 | Full |
-| ⌘⇧2 | Halves |
-| ⌘⇧3 | Thirds |
-| ⌘⇧4 | Quads |
-| ⌘⇧5 | Main + Side |
-| ⌘⇧6 | LeftSplit + Right |
-| ⌘⇧7 | Left + RightSplit |
+| ⌘⌃1 | Full |
+| ⌘⌃2 | Halves |
+| ⌘⌃3 | Thirds |
+| ⌘⌃4 | Quads |
+| ⌘⌃5 | Main + Side |
+| ⌘⌃6 | LeftSplit + Right |
+| ⌘⌃7 | Left + RightSplit |
 
 ### Edge-case behavior
 
@@ -117,12 +125,23 @@ macbook-resizer/
 ├── Package.swift
 ├── Sources/SceneCore/          # pure logic, unit-testable without Xcode
 │   ├── AX/                     # Accessibility API wrappers
+│   ├── Animation/              # Clock, FrameInterpolator, AnimationRunner
 │   ├── Display/                # screen picker
-│   ├── Interaction/            # hotkey + drag-swap controllers
-│   └── Layout/                 # Slot, Layout, LayoutEngine, Plan, Geometry
-├── Tests/SceneCoreTests/       # 26 XCTest cases
-├── SceneApp/                   # Xcode project — menu bar shell
+│   ├── Interaction/            # HotkeyManager, DragSwapController,
+│   │                           #   WindowAnimationSink, WindowMoveObserving
+│   ├── Layout/                 # Slot, Layout, LayoutEngine, Plan, Geometry,
+│   │                           #   LayoutTemplate, CustomLayout, PresetSeeds, LayoutStore
+│   └── Settings/               # AnimationConfig, HotkeyBinding, DragSwapConfig,
+│                               #   SettingsStore, Cancellable
+├── Tests/SceneCoreTests/       # 157 XCTest cases
+├── SceneApp/                   # Xcode project — menu bar shell + settings window
 │   └── SceneApp/
+│       ├── Animation/                 # WindowAnimator (CVDisplayLink + AX bridge)
+│       ├── Interaction/               # AXMoveObserverGroup, AXWindowLookup,
+│       │                              #   DragSwapAnimationSink
+│       ├── Settings/                  # SettingsWindowController + 4 tabs +
+│       │                              #   LayoutEditorView + HotkeyCaptureView
+│       ├── Stores/                    # LayoutStoreViewModel, SettingsStoreViewModel
 │       ├── SceneAppApp.swift          # @main + MenuBarExtra
 │       ├── AppDelegate.swift
 │       ├── Coordinator.swift          # orchestration layer
@@ -132,10 +151,10 @@ macbook-resizer/
 │       └── NotificationHelper.swift
 └── docs/
     ├── INSTALL.md                     # end-user install walkthrough
-    └── TESTING.md                     # manual smoke-test checklist
+    └── TESTING.md                     # manual smoke-test checklist (V0.1–V0.4)
 ```
 
-The split is deliberate: `SceneCore` owns all the hard logic (AX calls, layout math, hotkey plumbing) and is covered by 26 unit tests. `SceneApp` is a thin SwiftUI/AppKit shell that only wires UI and app lifecycle. You can run `swift test` on `SceneCore` from the command line without installing Xcode — only the final `.app` build needs it.
+The split is deliberate: `SceneCore` is framework-neutral and owns all the hard logic (AX calls, layout math, hotkey plumbing, animation state machine, JSON persistence, drag-swap). 157 unit tests run via `swift test` without Xcode. `SceneApp` is a thin SwiftUI/AppKit shell — only UI, app lifecycle, and the AppKit/AX bridges (`WindowAnimator`, `AXMoveObserverGroup`, `AXWindowLookup`, `DragSwapAnimationSink`) that can't live in a framework-neutral library. Only the final `.app` build needs Xcode.
 
 ## Persistence
 
@@ -149,7 +168,7 @@ V0.2 writes two JSON files atomically into:
 
 Delete this folder to reset to factory state.
 
-## Roadmap (V0.4+)
+## Roadmap (V0.5+)
 
 - **Per-display layouts** — apply different presets to each monitor independently.
 - **Pattern learning** — observe manual window arrangements and suggest presets ("you usually split 70/30 in the afternoon — save?").

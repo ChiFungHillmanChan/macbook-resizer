@@ -51,7 +51,7 @@ Scene needs Accessibility access to move other apps' windows.
 ## Using Scene
 
 - **Click** the menu bar icon → pick one of seven preset layouts.
-- Or press **⌘⇧1** through **⌘⇧7** as global hotkeys.
+- Or press **⌘⌃1** through **⌘⌃7** as global hotkeys.
 
 Full feature list: see [`README.md`](../README.md).
 

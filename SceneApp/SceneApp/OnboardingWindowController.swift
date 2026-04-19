@@ -11,7 +11,7 @@ final class OnboardingWindowController {
             let view = OnboardingView(onGrant: { [weak self] in self?.onCheck() })
             let host = NSHostingController(rootView: view)
             let w = NSWindow(contentViewController: host)
-            w.title = "Scene"
+            w.title = String(localized: "about.app_name")
             w.styleMask = [.titled, .closable]
             w.center()
             w.isReleasedWhenClosed = false

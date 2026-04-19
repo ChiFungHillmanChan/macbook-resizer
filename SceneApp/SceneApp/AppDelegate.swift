@@ -7,23 +7,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @Published private(set) var permissionGranted: Bool = false
 
     let layoutStore: LayoutStore
+    let workspaceStore: WorkspaceStore
     let settingsStore: SettingsStore
 
+    let layoutVM: LayoutStoreViewModel
+    let workspaceVM: WorkspaceStoreViewModel
+    let settingsVM: SettingsStoreViewModel
+
+    /// V0.4: Coordinator gains a reference to `WorkspaceStore` so its hotkey
+    /// registrar can fold Workspace chords into `HotkeyManager` alongside
+    /// Layout chords.
     lazy var coordinator: Coordinator = Coordinator(
         layoutStore: layoutStore,
+        workspaceStore: workspaceStore,
         settingsStore: settingsStore,
         onPermissionChange: { [weak self] granted in
             DispatchQueue.main.async { self?.permissionGranted = granted }
         }
     )
 
+    /// V0.4 app-layer bridges. Constructed lazily — `applicationDidFinishLaunching`
+    /// wires them in after `coordinator.start()` so `NotificationHelper` exists.
+    private(set) var appLauncher: AppLauncher?
+    private(set) var focusController: FocusController?
+    private(set) var workspaceActivator: WorkspaceActivator?
+    private(set) var triggerSupervisor: TriggerSupervisor?
+
     /// Single shared instance — re-shown on subsequent "Settings…" clicks
     /// rather than recreated, so view-model state survives close/reopen.
     @MainActor
     private lazy var settingsWindow: SettingsWindowController = {
         SettingsWindowController(
-            layoutVM: LayoutStoreViewModel(store: layoutStore),
-            settingsVM: SettingsStoreViewModel(store: settingsStore)
+            layoutVM: layoutVM,
+            settingsVM: settingsVM,
+            workspaceVM: workspaceVM,
+            calendarPermissionRequester: { [weak self] in
+                guard let watcher = self?.triggerSupervisor?.calendar else { return false }
+                return await watcher.requestAccess()
+            }
         )
     }()
 
@@ -31,19 +52,77 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         let supportDir = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
             .appendingPathComponent("Scene", isDirectory: true)
-        let layoutsURL  = supportDir.appendingPathComponent("layouts.json")
-        let settingsURL = supportDir.appendingPathComponent("settings.json")
+        let layoutsURL    = supportDir.appendingPathComponent("layouts.json")
+        let settingsURL   = supportDir.appendingPathComponent("settings.json")
+        let workspacesURL = supportDir.appendingPathComponent("workspaces.json")
         do {
-            self.layoutStore = try LayoutStore(fileURL: layoutsURL)
-            self.settingsStore = try SettingsStore(fileURL: settingsURL)
+            // Phase 1 (see Cross-cutting §3): both stores constructed with the
+            // default no-op `hotkeyConflictProbe`. The real cross-probes are
+            // installed below in `applicationDidFinishLaunching` once both
+            // stores exist and can be captured by `[weak]`.
+            self.layoutStore    = try LayoutStore(fileURL: layoutsURL)
+            self.workspaceStore = try WorkspaceStore(fileURL: workspacesURL)
+            self.settingsStore  = try SettingsStore(fileURL: settingsURL)
         } catch {
             fatalError("Scene: failed to initialize stores at \(supportDir.path): \(error)")
         }
+        self.layoutVM    = LayoutStoreViewModel(store: layoutStore)
+        self.workspaceVM = WorkspaceStoreViewModel(store: workspaceStore)
+        self.settingsVM  = SettingsStoreViewModel(store: settingsStore)
         super.init()
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Phase 2 (see Cross-cutting §3): now that both stores exist, install
+        // the cross-store hotkey conflict probes. Each probe captures the
+        // OPPOSITE store by `[weak]` — strong captures would be safe here too
+        // (stores outlive the AppDelegate and AppDelegate outlives the
+        // process), but `[weak]` keeps the dependency graph symmetric and
+        // matches the plan's locked approach.
+        layoutStore.setHotkeyConflictProbe { [weak workspaceStore] chord in
+            workspaceStore?.workspaces.first(where: { $0.hotkey == chord })?.name
+        }
+        workspaceStore.setHotkeyConflictProbe { [weak layoutStore] chord in
+            layoutStore?.layouts.first(where: { $0.hotkey == chord })?.name
+        }
+
+        // Starts permission polling + notification helper + hotkey registrar.
         coordinator.start()
+
+        // Wire V0.4 app-layer bridges. NotificationHelper lives on the
+        // Coordinator and is created in `start()`, so this chain runs
+        // strictly after `coordinator.start()`.
+        guard let notifier = coordinator.notification else {
+            NSLog("[Scene] AppDelegate: NotificationHelper missing after coordinator.start()")
+            return
+        }
+        let launcher = AppLauncher()
+        let focus = FocusController()
+        self.appLauncher = launcher
+        self.focusController = focus
+
+        let activator = WorkspaceActivator(
+            appLauncher: launcher,
+            focusController: focus,
+            workspaceStore: workspaceStore,
+            layoutStore: layoutStore,
+            applyLayout: { [weak self] id in
+                await MainActor.run { self?.coordinator.applyLayout(id: id) }
+            },
+            notifier: notifier
+        )
+        self.workspaceActivator = activator
+
+        let supervisor = TriggerSupervisor(
+            workspaceStore: workspaceStore,
+            activator: activator
+        )
+        self.triggerSupervisor = supervisor
+        coordinator.configure(triggerSupervisor: supervisor)
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        triggerSupervisor?.stop()
     }
 
     @MainActor

@@ -8,10 +8,10 @@ struct LayoutEditorView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            TextField("Name", text: $draft.name)
+            TextField("layouts.editor.name", text: $draft.name)
                 .textFieldStyle(.roundedBorder)
 
-            Picker("Template", selection: $draft.template) {
+            Picker("layouts.editor.template", selection: $draft.template) {
                 ForEach(LayoutTemplate.allCases, id: \.self) { tpl in
                     Text(displayName(tpl)).tag(tpl)
                 }
@@ -57,8 +57,8 @@ struct LayoutEditorView: View {
 
             HStack {
                 Spacer()
-                Button("Cancel", action: onCancel)
-                Button("Save", action: onSave).keyboardShortcut(.defaultAction)
+                Button("settings.action.cancel", action: onCancel)
+                Button("settings.action.save", action: onSave).keyboardShortcut(.defaultAction)
             }
         }
         .padding()
@@ -66,28 +66,28 @@ struct LayoutEditorView: View {
 
     private func displayName(_ tpl: LayoutTemplate) -> String {
         switch tpl {
-        case .single:        return "Single"
-        case .twoCol:        return "2 Columns"
-        case .threeCol:      return "3 Columns"
-        case .twoRow:        return "2 Rows"
-        case .threeRow:      return "3 Rows"
-        case .grid2x2:       return "2 \u{00D7} 2 Grid"
-        case .grid3x2:       return "3 \u{00D7} 2 Grid"
-        case .lShapeLeft:    return "L-shape (Main Left)"
-        case .lShapeRight:   return "L-shape (Main Right)"
-        case .lShapeTop:     return "L-shape (Main Top)"
-        case .lShapeBottom:  return "L-shape (Main Bottom)"
+        case .single:        return String(localized: "layouts.template.single")
+        case .twoCol:        return String(localized: "layouts.template.two_col")
+        case .threeCol:      return String(localized: "layouts.template.three_col")
+        case .twoRow:        return String(localized: "layouts.template.two_row")
+        case .threeRow:      return String(localized: "layouts.template.three_row")
+        case .grid2x2:       return String(localized: "layouts.template.grid_2x2")
+        case .grid3x2:       return String(localized: "layouts.template.grid_3x2")
+        case .lShapeLeft:    return String(localized: "layouts.template.l_left")
+        case .lShapeRight:   return String(localized: "layouts.template.l_right")
+        case .lShapeTop:     return String(localized: "layouts.template.l_top")
+        case .lShapeBottom:  return String(localized: "layouts.template.l_bottom")
         }
     }
 
     private func sliderLabel(template: LayoutTemplate, index: Int) -> String {
         switch template {
-        case .twoCol, .threeCol:                return "Column divider \(index + 1)"
-        case .twoRow, .threeRow:                return "Row divider \(index + 1)"
-        case .grid2x2:                          return index == 0 ? "Column split" : "Row split"
-        case .grid3x2:                          return index < 2 ? "Column divider \(index + 1)" : "Row split"
-        case .lShapeLeft, .lShapeRight:         return index == 0 ? "Main width" : "Stack split"
-        case .lShapeTop, .lShapeBottom:         return index == 0 ? "Main height" : "Pair split"
+        case .twoCol, .threeCol:                return String(format: String(localized: "layouts.slider.column_divider"), index + 1)
+        case .twoRow, .threeRow:                return String(format: String(localized: "layouts.slider.row_divider"), index + 1)
+        case .grid2x2:                          return index == 0 ? String(localized: "layouts.slider.column_split") : String(localized: "layouts.slider.row_split")
+        case .grid3x2:                          return index < 2 ? String(format: String(localized: "layouts.slider.column_divider"), index + 1) : String(localized: "layouts.slider.row_split")
+        case .lShapeLeft, .lShapeRight:         return index == 0 ? String(localized: "layouts.slider.main_width") : String(localized: "layouts.slider.stack_split")
+        case .lShapeTop, .lShapeBottom:         return index == 0 ? String(localized: "layouts.slider.main_height") : String(localized: "layouts.slider.pair_split")
         case .single:                           return ""
         }
     }

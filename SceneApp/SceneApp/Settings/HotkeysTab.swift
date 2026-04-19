@@ -22,10 +22,12 @@ struct HotkeysTab: View {
                             .foregroundStyle(layout.hotkey == nil ? .secondary : .primary)
                     }
                     Spacer()
-                    Button(recordingForID == layout.id ? "Cancel" : "Record") {
+                    Button(recordingForID == layout.id
+                           ? LocalizedStringKey("settings.action.cancel")
+                           : LocalizedStringKey("hotkeys.record")) {
                         recordingForID = (recordingForID == layout.id ? nil : layout.id)
                     }
-                    Button("Clear") {
+                    Button("hotkeys.clear") {
                         var copy = layout
                         copy.hotkey = nil
                         do { try layoutVM.store.update(copy) }
@@ -36,8 +38,8 @@ struct HotkeysTab: View {
                 .padding(.vertical, 2)
             }
         }
-        .alert("Error", isPresented: .constant(errorMessage != nil)) {
-            Button("OK") { errorMessage = nil }
+        .alert("common.error", isPresented: .constant(errorMessage != nil)) {
+            Button("common.ok") { errorMessage = nil }
         } message: {
             Text(errorMessage ?? "")
         }
@@ -49,9 +51,8 @@ struct HotkeysTab: View {
         do {
             try layoutVM.store.update(copy)
             recordingForID = nil
-        } catch let LayoutStoreError.hotkeyConflict(existingID) {
-            let other = layoutVM.layouts.first(where: { $0.id == existingID })?.name ?? "another layout"
-            errorMessage = "This chord is already used by \(other). Unbind it first or pick another."
+        } catch let LayoutStoreError.hotkeyConflict(existingResource) {
+            errorMessage = String(format: String(localized: "hotkeys.conflict"), existingResource)
         } catch {
             errorMessage = String(describing: error)
         }

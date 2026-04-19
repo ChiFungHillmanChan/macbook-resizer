@@ -1,23 +1,27 @@
 import SwiftUI
 
-/// Root view of the Settings window. Sidebar nav with 4 tabs.
+/// Root view of the Settings window. Sidebar nav with 5 tabs in the V0.4 order
+/// locked by spec §4.15: Workspaces (first-class marquee) → Layouts → Hotkeys
+/// → Interaction → About.
 struct SettingsRoot: View {
     enum Tab: String, CaseIterable, Identifiable {
-        case layouts, hotkeys, interaction, about
+        case workspaces, layouts, hotkeys, interaction, about
 
         var id: String { rawValue }
 
-        var label: String {
+        var label: LocalizedStringKey {
             switch self {
-            case .layouts:     return "Layouts"
-            case .hotkeys:     return "Hotkeys"
-            case .interaction: return "Interaction"
-            case .about:       return "About"
+            case .workspaces:  return "settings.tab.workspaces"
+            case .layouts:     return "settings.tab.layouts"
+            case .hotkeys:     return "settings.tab.hotkeys"
+            case .interaction: return "settings.tab.interaction"
+            case .about:       return "settings.tab.about"
             }
         }
 
         var symbol: String {
             switch self {
+            case .workspaces:  return "square.stack.3d.up"
             case .layouts:     return "rectangle.split.2x2"
             case .hotkeys:     return "command"
             case .interaction: return "hand.draw"
@@ -26,7 +30,11 @@ struct SettingsRoot: View {
         }
     }
 
-    @State private var selection: Tab = .layouts
+    @EnvironmentObject var layoutVM: LayoutStoreViewModel
+    @EnvironmentObject var workspaceVM: WorkspaceStoreViewModel
+    let calendarPermissionRequester: () async -> Bool
+
+    @State private var selection: Tab = .workspaces
 
     var body: some View {
         NavigationSplitView {
@@ -37,6 +45,12 @@ struct SettingsRoot: View {
         } detail: {
             Group {
                 switch selection {
+                case .workspaces:
+                    WorkspacesTab(
+                        workspaceStore: workspaceVM,
+                        layoutStore: layoutVM,
+                        calendarPermissionRequester: calendarPermissionRequester
+                    )
                 case .layouts:     LayoutsTab()
                 case .hotkeys:     HotkeysTab()
                 case .interaction: InteractionTab()

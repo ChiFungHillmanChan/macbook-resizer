@@ -12,9 +12,11 @@ struct LayoutsTab: View {
             List(selection: $selectedID) {
                 ForEach(layoutVM.layouts) { layout in
                     HStack {
+                        LayoutThumbnail(layout: layout, size: CGSize(width: 32, height: 22))
+                            .padding(.trailing, 8)
                         Text(layout.name)
                         if layout.isPresetSeed && layout.isModified {
-                            Text("(modified)").font(.caption).foregroundStyle(.secondary)
+                            Text("layouts.modified").font(.caption).foregroundStyle(.secondary)
                         }
                         Spacer()
                         if let h = layout.hotkey { Text(h.displayString).foregroundStyle(.secondary) }
@@ -28,8 +30,8 @@ struct LayoutsTab: View {
                 .frame(minWidth: 320)
         }
         .toolbar { toolbarContent }
-        .alert("Error", isPresented: .constant(errorMessage != nil)) {
-            Button("OK") { errorMessage = nil }
+        .alert("common.error", isPresented: .constant(errorMessage != nil)) {
+            Button("common.ok") { errorMessage = nil }
         } message: {
             Text(errorMessage ?? "")
         }
@@ -59,7 +61,7 @@ struct LayoutsTab: View {
                 onCancel: {}
             )
         } else {
-            Text("Select a layout or create a new one")
+            Text("layouts.detail.empty")
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
@@ -71,7 +73,7 @@ struct LayoutsTab: View {
             Button {
                 draft = CustomLayout(
                     id: UUID(),
-                    name: "New Layout",
+                    name: String(localized: "layouts.new.default_name"),
                     template: .twoCol,
                     slotProportions: LayoutTemplate.twoCol.defaultProportions,
                     hotkey: nil,
@@ -96,7 +98,7 @@ struct LayoutsTab: View {
             } label: { Image(systemName: "arrow.counterclockwise") }
                 .disabled(!isResettableSeedSelected)
 
-            Button("Restore Default Presets") {
+            Button("layouts.restore_defaults") {
                 do { try layoutVM.store.restoreDefaultPresets() }
                 catch { errorMessage = String(describing: error) }
             }

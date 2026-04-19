@@ -20,11 +20,13 @@ final class LayoutStoreTests: XCTestCase {
 
     func testFirstLaunchSeedsSevenPresets() throws {
         let store = try LayoutStore(fileURL: fileURL)
-        XCTAssertEqual(store.layouts.count, 7)
+        XCTAssertEqual(store.layouts.count, PresetSeeds.all.count)
         let names = Set(store.layouts.map(\.name))
         XCTAssertEqual(names, Set(["Full", "Halves", "Thirds", "Quads",
                                    "Main + Side", "LeftSplit + Right",
-                                   "Left + RightSplit"]))
+                                   "Left + RightSplit",
+                                   "Main + Side (Vertical)", "Halves (Vertical)",
+                                   "Thirds (Vertical)"]))
     }
 
     func testFirstLaunchPersistsAndKnownSeedUUIDs() throws {
@@ -34,16 +36,16 @@ final class LayoutStoreTests: XCTestCase {
         let decoded = try JSONSerialization.jsonObject(with: data) as? [String: Any]
         XCTAssertEqual(decoded?["version"] as? Int, 1)
         let known = decoded?["knownSeedUUIDs"] as? [String]
-        XCTAssertEqual(known?.count, 7)
+        XCTAssertEqual(known?.count, PresetSeeds.all.count)
     }
 
     func testSecondLaunchDoesNotReSeed() throws {
         let store1 = try LayoutStore(fileURL: fileURL)
         try store1.delete(id: PresetSeeds.fullID)
-        XCTAssertEqual(store1.layouts.count, 6)
+        XCTAssertEqual(store1.layouts.count, PresetSeeds.all.count - 1)
 
         let store2 = try LayoutStore(fileURL: fileURL)
-        XCTAssertEqual(store2.layouts.count, 6)
+        XCTAssertEqual(store2.layouts.count, PresetSeeds.all.count - 1)
         XCTAssertNil(store2.layouts.first(where: { $0.id == PresetSeeds.fullID }))
     }
 
@@ -57,7 +59,7 @@ final class LayoutStoreTests: XCTestCase {
             hotkey: nil, isPresetSeed: false, isModified: false
         )
         try store.insert(custom)
-        XCTAssertEqual(store.layouts.count, 8)
+        XCTAssertEqual(store.layouts.count, PresetSeeds.all.count + 1)
 
         var renamed = custom
         renamed.name = "Renamed"
@@ -85,9 +87,9 @@ final class LayoutStoreTests: XCTestCase {
         let store = try LayoutStore(fileURL: fileURL)
         try store.delete(id: PresetSeeds.fullID)
         try store.delete(id: PresetSeeds.halvesID)
-        XCTAssertEqual(store.layouts.count, 5)
+        XCTAssertEqual(store.layouts.count, PresetSeeds.all.count - 2)
         try store.restoreDefaultPresets()
-        XCTAssertEqual(store.layouts.count, 7)
+        XCTAssertEqual(store.layouts.count, PresetSeeds.all.count)
         XCTAssertNotNil(store.layouts.first(where: { $0.id == PresetSeeds.fullID }))
         XCTAssertNotNil(store.layouts.first(where: { $0.id == PresetSeeds.halvesID }))
     }
@@ -96,7 +98,7 @@ final class LayoutStoreTests: XCTestCase {
         let store = try LayoutStore(fileURL: fileURL)
         try store.restoreDefaultPresets()
         try store.restoreDefaultPresets()
-        XCTAssertEqual(store.layouts.count, 7)
+        XCTAssertEqual(store.layouts.count, PresetSeeds.all.count)
     }
 
     func testOnChangeFiresAfterMutation() throws {
@@ -116,7 +118,7 @@ final class LayoutStoreTests: XCTestCase {
     func testSimulatedFutureSeedOnlyAddsNewUUID() throws {
         let store = try LayoutStore(fileURL: fileURL)
         try store.delete(id: PresetSeeds.fullID)
-        XCTAssertEqual(store.layouts.count, 6)
+        XCTAssertEqual(store.layouts.count, PresetSeeds.all.count - 1)
 
         let newSeedID = UUID(uuidString: "11111111-0099-0000-0000-000000000099")!
         let newSeed = CustomLayout(
@@ -124,14 +126,14 @@ final class LayoutStoreTests: XCTestCase {
             hotkey: nil, isPresetSeed: true, isModified: false
         )
         try store.applyFutureSeeds(candidates: [newSeed])
-        XCTAssertEqual(store.layouts.count, 7)
+        XCTAssertEqual(store.layouts.count, PresetSeeds.all.count)
         XCTAssertNotNil(store.layouts.first(where: { $0.id == newSeedID }))
         XCTAssertNil(store.layouts.first(where: { $0.id == PresetSeeds.fullID }),
                      "deleted seed must not come back")
 
         // Idempotent
         try store.applyFutureSeeds(candidates: [newSeed])
-        XCTAssertEqual(store.layouts.count, 7)
+        XCTAssertEqual(store.layouts.count, PresetSeeds.all.count)
     }
 
     // MARK: - Hotkey conflict (M7 block-save)
@@ -139,14 +141,14 @@ final class LayoutStoreTests: XCTestCase {
     func testAssignHotkeyBlocksConflict() throws {
         let store = try LayoutStore(fileURL: fileURL)
         let halvesChord = HotkeyBinding(
-            keyCode: UInt32(kVK_ANSI_2), modifiers: [.command, .shift]
+            keyCode: UInt32(kVK_ANSI_2), modifiers: [.command, .control]
         )
         var fullCopy = store.layouts.first(where: { $0.id == PresetSeeds.fullID })!
         let originalFullHotkey = fullCopy.hotkey
         fullCopy.hotkey = halvesChord
         XCTAssertThrowsError(try store.update(fullCopy)) { err in
             XCTAssertEqual(err as? LayoutStoreError,
-                           .hotkeyConflict(existingLayoutID: PresetSeeds.halvesID))
+                           .hotkeyConflict(existingResource: "Halves"))
         }
         XCTAssertEqual(
             store.layouts.first(where: { $0.id == PresetSeeds.fullID })?.hotkey,
@@ -175,5 +177,37 @@ final class LayoutStoreTests: XCTestCase {
         halves.hotkey = nil
         try store.update(halves)
         XCTAssertNil(store.layouts.first(where: { $0.id == PresetSeeds.halvesID })?.hotkey)
+    }
+}
+
+// MARK: - V0.4 cross-store hotkey conflict (two-phase setter — §3)
+
+extension LayoutStoreTests {
+    func testUpdateThrowsOnExternalWorkspaceHotkeyConflict() throws {
+        // Construct with default no-op probe; then install the real probe
+        // that simulates a Workspace "Coding" owning ⌘⌥1.
+        let store = try LayoutStore(fileURL: fileURL)
+        store.setHotkeyConflictProbe { chord in
+            chord.keyCode == 18 && chord.modifiers == [.command, .option] ? "Coding" : nil
+        }
+        var halves = store.layouts.first { $0.name == "Halves" }!
+        halves.hotkey = HotkeyBinding(keyCode: 18, modifiers: [.command, .option])  // ⌘⌥1
+
+        XCTAssertThrowsError(try store.update(halves)) { error in
+            guard case LayoutStoreError.hotkeyConflict(let resource) = error else {
+                return XCTFail("Expected .hotkeyConflict, got \(error)")
+            }
+            XCTAssertEqual(resource, "Coding")
+        }
+    }
+
+    func testSetHotkeyConflictProbeReplacesPrior() throws {
+        // Confirm the setter replaces, not accumulates — last-writer-wins.
+        let store = try LayoutStore(fileURL: fileURL)
+        store.setHotkeyConflictProbe { _ in "FirstProbe" }
+        store.setHotkeyConflictProbe { _ in nil }  // should override
+        var halves = store.layouts.first { $0.name == "Halves" }!
+        halves.hotkey = HotkeyBinding(keyCode: 99, modifiers: [.command, .option])  // unused chord
+        XCTAssertNoThrow(try store.update(halves))
     }
 }

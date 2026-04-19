@@ -4,10 +4,10 @@ import SwiftUI
 struct AboutTab: View {
     var body: some View {
         VStack(spacing: 12) {
-            Text("Scene")
+            Text("about.app_name")
                 .font(.largeTitle)
                 .bold()
-            Text("V0.2")
+            Text("about.version")
                 .foregroundStyle(.secondary)
             Link(
                 "github.com/ChiFungHillmanChan/scene",

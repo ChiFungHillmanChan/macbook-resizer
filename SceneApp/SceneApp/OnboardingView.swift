@@ -10,37 +10,37 @@ struct OnboardingView: View {
         VStack(spacing: 16) {
             Image(systemName: "rectangle.3.group")
                 .font(.system(size: 48))
-            Text("Scene needs Accessibility access")
+            Text("onboarding.accessibility.title")
                 .font(.title2)
                 .bold()
-            Text("To resize and rearrange your windows, Scene needs permission to control other apps.\n\nClick below to open System Settings, then enable Scene under Privacy & Security → Accessibility.")
+            Text("onboarding.accessibility.body")
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: 380)
                 .foregroundStyle(.secondary)
-            Button("Open System Settings") {
+            Button("onboarding.accessibility.open_settings") {
                 if let url = AXPermission.systemSettingsURL {
                     NSWorkspace.shared.open(url)
                 }
             }
             .keyboardShortcut(.defaultAction)
-            Button("Check again") {
+            Button("onboarding.accessibility.check_again") {
                 checkAttempts += 1
                 onGrant()
             }
             .buttonStyle(.link)
 
-            if checkAttempts >= 2 {
+            if checkAttempts >= 1 {
                 Divider().padding(.vertical, 4)
                 VStack(spacing: 8) {
-                    Text("Still not detected?")
+                    Text("onboarding.accessibility.still_not_detected.title")
                         .font(.callout)
                         .bold()
-                    Text("macOS sometimes needs Scene to relaunch after the toggle. Try quitting and reopening.")
+                    Text("onboarding.accessibility.still_not_detected.body")
                         .font(.caption)
                         .multilineTextAlignment(.center)
                         .foregroundStyle(.secondary)
                         .frame(maxWidth: 380)
-                    Button("Quit Scene") {
+                    Button("menu.quit") {
                         NSApplication.shared.terminate(nil)
                     }
                     .controlSize(.small)

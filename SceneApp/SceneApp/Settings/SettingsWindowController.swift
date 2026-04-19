@@ -9,19 +9,27 @@ import SwiftUI
 final class SettingsWindowController: NSWindowController, NSWindowDelegate {
     private let layoutVM: LayoutStoreViewModel
     private let settingsVM: SettingsStoreViewModel
+    private let workspaceVM: WorkspaceStoreViewModel
 
-    init(layoutVM: LayoutStoreViewModel, settingsVM: SettingsStoreViewModel) {
+    init(
+        layoutVM: LayoutStoreViewModel,
+        settingsVM: SettingsStoreViewModel,
+        workspaceVM: WorkspaceStoreViewModel,
+        calendarPermissionRequester: @escaping () async -> Bool
+    ) {
         self.layoutVM = layoutVM
         self.settingsVM = settingsVM
+        self.workspaceVM = workspaceVM
         let host = NSHostingController(
-            rootView: SettingsRoot()
+            rootView: SettingsRoot(calendarPermissionRequester: calendarPermissionRequester)
                 .environmentObject(layoutVM)
                 .environmentObject(settingsVM)
+                .environmentObject(workspaceVM)
         )
         let window = NSWindow(contentViewController: host)
-        window.setContentSize(NSSize(width: 700, height: 500))
+        window.setContentSize(NSSize(width: 760, height: 540))
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
-        window.title = "Scene Settings"
+        window.title = String(localized: "settings.window.title")
         window.isReleasedWhenClosed = false
         super.init(window: window)
         window.delegate = self

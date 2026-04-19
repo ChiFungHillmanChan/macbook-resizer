@@ -6,9 +6,11 @@ public enum LayoutStoreError: Error, Equatable {
     case notFound
     case notASeed
     /// Raised when an `insert` or `update` would assign a hotkey already owned
-    /// by another layout. The owning layout's id is provided so callers can
-    /// surface a "Used by …" message in the UI.
-    case hotkeyConflict(existingLayoutID: UUID)
+    /// by another layout or by an external resource (e.g., a Workspace, see
+    /// `setHotkeyConflictProbe`). `existingResource` is the owning resource's
+    /// display name (layout name or workspace name) so callers can surface a
+    /// "Used by …" message in the UI.
+    case hotkeyConflict(existingResource: String)
 }
 
 /// Persists the user's `CustomLayout` collection as JSON.
@@ -28,6 +30,12 @@ public final class LayoutStore {
     private(set) var knownSeedUUIDs: Set<UUID>
     private let fileURL: URL
     private var observers: [UUID: () -> Void] = [:]
+    /// V0.4 cross-store hotkey conflict probe. Returns the display name of an
+    /// external resource (typically a Workspace) that owns the given chord,
+    /// or nil if no external conflict. AppDelegate installs the real probe
+    /// via `setHotkeyConflictProbe(_:)` after both stores are constructed
+    /// (Cross-cutting conventions §3).
+    private var hotkeyConflictProbe: (HotkeyBinding) -> String? = { _ in nil }
 
     public init(fileURL: URL) throws {
         self.fileURL = fileURL
@@ -49,9 +57,7 @@ public final class LayoutStore {
         guard !layouts.contains(where: { $0.id == layout.id }) else {
             throw LayoutStoreError.duplicateID
         }
-        if let conflictID = hotkeyConflictID(for: layout) {
-            throw LayoutStoreError.hotkeyConflict(existingLayoutID: conflictID)
-        }
+        try assertNoHotkeyConflict(for: layout)
         layouts.append(layout)
         try persist()
         notify()
@@ -61,9 +67,7 @@ public final class LayoutStore {
         guard let idx = layouts.firstIndex(where: { $0.id == layout.id }) else {
             throw LayoutStoreError.notFound
         }
-        if let conflictID = hotkeyConflictID(for: layout) {
-            throw LayoutStoreError.hotkeyConflict(existingLayoutID: conflictID)
-        }
+        try assertNoHotkeyConflict(for: layout)
 
         var next = layout
         if next.isPresetSeed,
@@ -155,16 +159,30 @@ public final class LayoutStore {
 
     // MARK: - Internals
 
-    /// Returns the id of an existing layout (excluding `candidate.id`) whose
-    /// hotkey collides with `candidate.hotkey`, or `nil` if no conflict.
-    private func hotkeyConflictID(for candidate: CustomLayout) -> UUID? {
-        guard let chord = candidate.hotkey else { return nil }
+    /// Throws `.hotkeyConflict(existingResource:)` if `candidate.hotkey` is
+    /// owned by another layout (internal) or by an external resource — typically
+    /// a Workspace — as reported by `hotkeyConflictProbe`.
+    private func assertNoHotkeyConflict(for candidate: CustomLayout) throws {
+        guard let chord = candidate.hotkey else { return }
         for other in layouts where other.id != candidate.id {
             if let otherChord = other.hotkey, otherChord.conflicts(with: chord) {
-                return other.id
+                throw LayoutStoreError.hotkeyConflict(existingResource: other.name)
             }
         }
-        return nil
+        if let external = hotkeyConflictProbe(chord) {
+            throw LayoutStoreError.hotkeyConflict(existingResource: external)
+        }
+    }
+
+    // MARK: - Cross-store probe
+
+    /// Install a probe that returns the display name of a Workspace (or other
+    /// external resource) that owns a given hotkey chord. Scene's AppDelegate
+    /// installs this AFTER both LayoutStore and WorkspaceStore are constructed,
+    /// resolving the circular-dependency bootstrap (see Cross-cutting conventions §3).
+    /// Call with `{ _ in nil }` to disable.
+    public func setHotkeyConflictProbe(_ probe: @escaping (HotkeyBinding) -> String?) {
+        self.hotkeyConflictProbe = probe
     }
 
     private func notify() {

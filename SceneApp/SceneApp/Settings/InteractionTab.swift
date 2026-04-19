@@ -7,22 +7,22 @@ struct InteractionTab: View {
 
     var body: some View {
         Form {
-            Section("Animation") {
-                Toggle("Enable smooth animation", isOn: enabledBinding)
+            Section("interaction.animation.section") {
+                Toggle("interaction.animation.enable", isOn: enabledBinding)
                 Slider(value: durationBinding, in: 100...500, step: 25) {
-                    Text("Duration")
+                    Text("interaction.animation.duration")
                 } minimumValueLabel: {
-                    Text("100ms")
+                    Text("interaction.animation.duration.min")
                 } maximumValueLabel: {
-                    Text("500ms")
+                    Text("interaction.animation.duration.max")
                 }
                 .disabled(!settingsVM.animation.enabled)
 
-                Text("\(settingsVM.animation.durationMs)ms")
+                Text(String(format: String(localized: "interaction.animation.duration.value"), settingsVM.animation.durationMs))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
 
-                Picker("Easing", selection: easingBinding) {
+                Picker("interaction.animation.easing", selection: easingBinding) {
                     ForEach(EasingCurve.allCases, id: \.self) { curve in
                         Text(label(for: curve)).tag(curve)
                     }
@@ -33,22 +33,22 @@ struct InteractionTab: View {
                 previewSection
             }
 
-            Section("Drag-to-Swap") {
-                Toggle("Enable drag-to-swap", isOn: dragSwapEnabledBinding)
+            Section("interaction.drag_swap.section") {
+                Toggle("interaction.drag_swap.enable", isOn: dragSwapEnabledBinding)
                 Slider(value: dragSwapThresholdBinding, in: 10...100, step: 5) {
-                    Text("Drag distance threshold")
+                    Text("interaction.drag_swap.threshold")
                 } minimumValueLabel: {
-                    Text("10pt")
+                    Text("interaction.drag_swap.threshold.min")
                 } maximumValueLabel: {
-                    Text("100pt")
+                    Text("interaction.drag_swap.threshold.max")
                 }
                 .disabled(!settingsVM.dragSwap.enabled)
 
-                Text("\(Int(settingsVM.dragSwap.distanceThresholdPt))pt")
+                Text(String(format: String(localized: "interaction.drag_swap.threshold.value"), Int(settingsVM.dragSwap.distanceThresholdPt)))
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .trailing)
 
-                Text("Hold ⌥ while dragging to temporarily bypass drag-to-swap.")
+                Text("interaction.drag_swap.hint")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -58,7 +58,7 @@ struct InteractionTab: View {
 
     private var previewSection: some View {
         VStack(alignment: .leading) {
-            Text("Preview").font(.headline)
+            Text("interaction.animation.preview").font(.headline)
             GeometryReader { geo in
                 ZStack(alignment: .topLeading) {
                     RoundedRectangle(cornerRadius: 8).fill(Color.black.opacity(0.05))
@@ -70,7 +70,7 @@ struct InteractionTab: View {
                 }
             }
             .frame(height: 60)
-            Button("Run preview") { previewToggle.toggle() }
+            Button("interaction.animation.preview.run") { previewToggle.toggle() }
         }
         .padding(.vertical)
     }
@@ -136,9 +136,9 @@ struct InteractionTab: View {
 
     private func label(for curve: EasingCurve) -> String {
         switch curve {
-        case .linear:  return "Linear"
-        case .easeOut: return "Ease Out"
-        case .spring:  return "Spring"
+        case .linear:  return String(localized: "interaction.animation.easing.linear")
+        case .easeOut: return String(localized: "interaction.animation.easing.ease_out")
+        case .spring:  return String(localized: "interaction.animation.easing.spring")
         }
     }
 }

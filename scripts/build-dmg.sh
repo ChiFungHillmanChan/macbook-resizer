@@ -17,7 +17,7 @@ VOLUME_NAME="Scene ${VERSION}"
 echo "==> Cleaning previous build…"
 rm -rf "$BUILD_DIR" "$DIST_DIR"
 
-echo "==> Building universal Release binary (arm64 + x86_64)…"
+echo "==> Building arm64 Release binary (Apple Silicon only)…"
 xcodebuild \
     -project "$PROJECT" \
     -scheme "$SCHEME" \
@@ -25,7 +25,8 @@ xcodebuild \
     -derivedDataPath "$BUILD_DIR" \
     CODE_SIGN_IDENTITY="-" \
     CODE_SIGNING_REQUIRED=NO \
-    ARCHS="arm64 x86_64" \
+    ARCHS="arm64" \
+    VALID_ARCHS="arm64" \
     ONLY_ACTIVE_ARCH=NO \
     build >/dev/null
 
