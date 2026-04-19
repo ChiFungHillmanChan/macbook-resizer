@@ -4,7 +4,7 @@
 
 **要求 macOS 14 (Sonoma) 或以上。**
 
-> 🌐 English version: [README.md](README.md)
+> English version: [README.md](README.md)
 
 ## 功能
 

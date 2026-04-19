@@ -4,7 +4,7 @@ A macOS menu bar app for instant window layouts. Click one of seven presets and 
 
 **Requires macOS 14 (Sonoma) or later.**
 
-> 🌐 繁體中文版本： [README.zh-HK.md](README.zh-HK.md)
+> 繁體中文版本： [README.zh-HK.md](README.zh-HK.md)
 
 ## Features
 
