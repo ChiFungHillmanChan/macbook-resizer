@@ -35,10 +35,16 @@ if [[ ! -d "$SRC_APP" ]]; then
     exit 1
 fi
 
+ICON_ICNS="dist/Scene.icns"
+
 echo "==> Staging DMG contents…"
 mkdir -p "$DIST_DIR/dmg-contents"
 cp -R "$SRC_APP" "$DIST_DIR/dmg-contents/$APP_NAME"
 ln -s /Applications "$DIST_DIR/dmg-contents/Applications"
+
+if [[ -f "$ICON_ICNS" ]]; then
+    cp "$ICON_ICNS" "$DIST_DIR/dmg-contents/.VolumeIcon.icns"
+fi
 
 echo "==> Packaging DMG…"
 hdiutil create \
@@ -47,6 +53,16 @@ hdiutil create \
     -ov \
     -format UDZO \
     "$DIST_DIR/$DMG_NAME" >/dev/null
+
+if [[ -f "$ICON_ICNS" ]]; then
+    echo "==> Setting DMG volume icon…"
+    MOUNT_DIR=$(hdiutil attach "$DIST_DIR/$DMG_NAME" -readwrite -noverify -noautoopen 2>/dev/null | grep "Volumes" | awk '{print $3}')
+    if [[ -n "$MOUNT_DIR" ]]; then
+        cp "$ICON_ICNS" "$MOUNT_DIR/.VolumeIcon.icns"
+        SetFile -a C "$MOUNT_DIR" 2>/dev/null || true
+        hdiutil detach "$MOUNT_DIR" >/dev/null 2>&1
+    fi
+fi
 
 hdiutil verify "$DIST_DIR/$DMG_NAME" >/dev/null
 

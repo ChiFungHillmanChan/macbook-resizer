@@ -34,3 +34,6 @@ AGENTS.md
 .aider*
 .roomodes
 docs/superpowers/
+
+.env
+.env/*
