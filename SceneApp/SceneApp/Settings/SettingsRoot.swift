@@ -3,25 +3,25 @@ import SwiftUI
 /// Root view of the Settings window. Sidebar nav with 4 tabs.
 struct SettingsRoot: View {
     enum Tab: String, CaseIterable, Identifiable {
-        case layouts, hotkeys, animation, about
+        case layouts, hotkeys, interaction, about
 
         var id: String { rawValue }
 
         var label: String {
             switch self {
-            case .layouts:   return "Layouts"
-            case .hotkeys:   return "Hotkeys"
-            case .animation: return "Animation"
-            case .about:     return "About"
+            case .layouts:     return "Layouts"
+            case .hotkeys:     return "Hotkeys"
+            case .interaction: return "Interaction"
+            case .about:       return "About"
             }
         }
 
         var symbol: String {
             switch self {
-            case .layouts:   return "rectangle.split.2x2"
-            case .hotkeys:   return "command"
-            case .animation: return "play.rectangle"
-            case .about:     return "info.circle"
+            case .layouts:     return "rectangle.split.2x2"
+            case .hotkeys:     return "command"
+            case .interaction: return "hand.draw"
+            case .about:       return "info.circle"
             }
         }
     }
@@ -37,10 +37,10 @@ struct SettingsRoot: View {
         } detail: {
             Group {
                 switch selection {
-                case .layouts:   LayoutsTab()
-                case .hotkeys:   HotkeysTab()
-                case .animation: AnimationTab()
-                case .about:     AboutTab()
+                case .layouts:     LayoutsTab()
+                case .hotkeys:     HotkeysTab()
+                case .interaction: InteractionTab()
+                case .about:       AboutTab()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

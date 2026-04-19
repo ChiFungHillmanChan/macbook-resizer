@@ -2,6 +2,7 @@ import AppKit
 import Combine
 import SceneCore
 import class SceneCore.Cancellable
+import protocol SceneCore.WindowRef
 import os
 
 /// Disambiguates SceneCore's closure-based `Cancellable` from `Combine.Cancellable`.
@@ -29,6 +30,14 @@ final class Coordinator: ObservableObject {
     let layoutStore: LayoutStore
     let settingsStore: SettingsStore
     private let animator = WindowAnimator()
+    private let observerGroup = AXMoveObserverGroup()
+    private lazy var dragSwapSink = DragSwapAnimationSink(animator: animator, settingsStore: settingsStore)
+    private lazy var dragSwapController: DragSwapController = makeDragSwapController()
+    private var escMonitor: Any?
+    private var lastPlacedWindows: [any SceneWindowRef] = []
+    private var lastAppliedLayout: Layout?
+    private var lastScreen: NSScreen?
+    private var lastWindowToSlotIdx: [CGWindowID: Int] = [:]
     /// Disambiguated from `Combine.Cancellable` (which is brought in by
     /// `import Combine` above) — SceneCore ships its own closure-based token.
     private var layoutStoreObserver: SceneCancellable?
@@ -101,7 +110,9 @@ final class Coordinator: ObservableObject {
                 _ = try LayoutEngine.apply(plan, on: windows)
             }
             log.info("applied \(custom.name, privacy: .public) animated=\(shouldAnimate)")
+            rebuildDragSwapObservers(plan: plan, windows: windows, layout: custom.toLayout(), screen: screen)
         } catch AXWindowEnumerator.EnumerationError.permissionDenied {
+            stopDragSwapInfrastructure()
             setPermission(false)
             onboarding.show()
         } catch {
@@ -122,6 +133,7 @@ final class Coordinator: ObservableObject {
             onboarding.hide()
         } else {
             hotkeyManager.unregisterAll()
+            stopDragSwapInfrastructure()
         }
     }
 
@@ -149,5 +161,75 @@ final class Coordinator: ObservableObject {
                 }
             )
         }
+    }
+
+    // MARK: - Drag-to-swap lifecycle
+
+    private func makeDragSwapController() -> DragSwapController {
+        DragSwapController(
+            contextProvider: { [weak self] in
+                guard let self,
+                      let layout = self.lastAppliedLayout,
+                      let screen = self.lastScreen
+                else { return nil }
+                return DragSwapController.Context(
+                    layout: layout,
+                    screen: screen,
+                    windows: self.lastPlacedWindows,
+                    windowToSlotIdx: self.lastWindowToSlotIdx
+                )
+            },
+            config: { [weak self] in self?.settingsStore.dragSwap ?? .default },
+            animationSink: dragSwapSink
+        )
+    }
+
+    private func startDragSwapInfrastructure() {
+        if escMonitor == nil {
+            escMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
+                if event.keyCode == 53 {
+                    Task { @MainActor in self?.dragSwapController.cancelDrag() }
+                }
+            }
+        }
+        dragSwapController.start()
+    }
+
+    private func stopDragSwapInfrastructure() {
+        observerGroup.stopObserving()
+        dragSwapController.stop()
+        if let escMonitor { NSEvent.removeMonitor(escMonitor) }
+        escMonitor = nil
+    }
+
+    /// Replace the AX observer set with the windows that were just placed by the
+    /// most recent successful `applyLayout`. Either starts the drag-swap infra
+    /// (when enabled in settings and there's a non-empty placed set) or stops it.
+    private func rebuildDragSwapObservers(plan: Plan, windows: [any SceneWindowRef], layout: Layout, screen: NSScreen) {
+        observerGroup.stopObserving()
+        lastPlacedWindows = plan.placements.compactMap { p in
+            windows.first(where: { $0.id == p.windowID })
+        }
+        lastAppliedLayout = layout
+        lastScreen = screen
+        // Snapshot window→slot mapping. Plan.placements is parallel to layout.slots,
+        // so index in the array = slot index. finishDrag uses this to recover the
+        // dragged window's original slot without trusting AX-live `source.frame`.
+        lastWindowToSlotIdx = Dictionary(
+            uniqueKeysWithValues: plan.placements.enumerated().map { ($1.windowID, $0) }
+        )
+        let placedIDs = Set(lastPlacedWindows.map { $0.id })
+        guard settingsStore.dragSwap.enabled, !placedIDs.isEmpty else {
+            stopDragSwapInfrastructure()
+            return
+        }
+        observerGroup.startObserving(windowIDs: placedIDs) { [weak self] id, frame in
+            self?.dragSwapController.handleWindowMoved(windowID: id, currentFrame: frame)
+        }
+        startDragSwapInfrastructure()
+    }
+
+    deinit {
+        if let escMonitor { NSEvent.removeMonitor(escMonitor) }
     }
 }

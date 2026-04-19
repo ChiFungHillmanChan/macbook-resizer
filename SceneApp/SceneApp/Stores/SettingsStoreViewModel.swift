@@ -10,16 +10,19 @@ import class SceneCore.Cancellable
 final class SettingsStoreViewModel: ObservableObject {
     let store: SettingsStore
     @Published private(set) var animation: AnimationConfig
+    @Published private(set) var dragSwap: DragSwapConfig
     private var token: Cancellable?
 
     init(store: SettingsStore) {
         self.store = store
         self.animation = store.animation
+        self.dragSwap = store.dragSwap
         let weakSelf = WeakBox(self)
         self.token = store.onChange {
             Task { @MainActor in
                 guard let strong = weakSelf.value else { return }
                 strong.animation = strong.store.animation
+                strong.dragSwap = strong.store.dragSwap
             }
         }
     }

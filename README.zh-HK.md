@@ -1,10 +1,17 @@
 # Scene
 
-一個 macOS menu bar app — click 一下，所有可見窗口即刻入位。V0.2 加咗自訂 layout、自訂 hotkey、smooth animation、設定視窗。
+一個 macOS menu bar app — click 一下，所有可見窗口即刻入位。V0.3 加咗 drag-to-swap（拖 window 即刻對調位），建基於 V0.2 嘅自訂 layout、自訂 hotkey、smooth animation、設定視窗。
 
 **需要 macOS 14（Sonoma）或以上。**
 
 > English version: [README.md](README.md)
+
+## V0.3 — 拖拉交換
+
+- **拖視窗就可以重排**：揸住任何 placed window 拖落另一個 placed window 嘅位，source 即時 snap，被換走嗰個行 V0.2 動畫引擎（250ms easeOut，跟 Animation tab 嘅設定）。
+- **Interaction tab**：開 / 閂 drag-to-swap；拖拉距離 threshold 可調（10–100pt）。
+- **逃生出口**：揸住 ⌥ 拖就唔 swap（free-move）；drag 中途撳 Esc 就 cancel，視窗 snap 返原位。
+- **Unit test 數目**：92 → 114 個。
 
 ## V0.2 功能
 
@@ -71,7 +78,7 @@ Layout / animation / store / hotkey 全部 logic 喺 `SceneCore`，係 Swift pac
 swift test
 ```
 
-92 個 unit test 覆蓋 layout 數學、window-to-slot mapping、animation 狀態機、JSON persistence、hotkey 衝突、edge case。
+114 個 unit test 覆蓋 layout 數學、window-to-slot mapping、animation 狀態機、JSON persistence、hotkey 衝突、drag-to-swap 邏輯、edge case。
 
 ## 用法
 
@@ -132,7 +139,7 @@ macbook-resizer/
 │   ├── Interaction/            # hotkey + drag-swap controller
 │   ├── Layout/                 # Slot, Layout, LayoutEngine + LayoutTemplate, CustomLayout, PresetSeeds, LayoutStore（V0.2）
 │   └── Settings/               # AnimationConfig, HotkeyBinding, SettingsStore, Cancellable（V0.2）
-├── Tests/SceneCoreTests/       # 92 個 XCTest case
+├── Tests/SceneCoreTests/       # 114 個 XCTest case
 ├── SceneApp/                   # Xcode project — menu bar shell + 設定視窗
 │   └── SceneApp/
 │       ├── Animation/          # WindowAnimator（CVDisplayLink + AX bridge）
@@ -150,15 +157,14 @@ macbook-resizer/
     └── TESTING.md              # 手動 smoke test checklist（V0.1 + V0.2）
 ```
 
-故意分層：**`SceneCore` 完全 framework-neutral**——冇 SwiftUI、冇 Combine、冇 ObservableObject。所有 hard logic（AX call、layout 數學、animation 狀態機、store CRUD）住喺度，92 個 unit test 覆蓋。**`SceneApp` 係薄殼**，只負責 SwiftUI binding + AppKit lifecycle。SceneCore 用 closure-based observation 同 SceneApp 通訊（`@MainActor class FooStoreViewModel: ObservableObject` 做 adapter）。
+故意分層：**`SceneCore` 完全 framework-neutral**——冇 SwiftUI、冇 Combine、冇 ObservableObject。所有 hard logic（AX call、layout 數學、animation 狀態機、store CRUD、drag-to-swap）住喺度，114 個 unit test 覆蓋。**`SceneApp` 係薄殼**，只負責 SwiftUI binding + AppKit lifecycle。SceneCore 用 closure-based observation 同 SceneApp 通訊（`@MainActor class FooStoreViewModel: ObservableObject` 做 adapter）。
 
 `swift test` 由 command line 跑得，唔使 Xcode；只有最後 `.app` build 先要。
 
 詳細架構 + 進階文檔：[Wiki（繁體中文）](https://github.com/ChiFungHillmanChan/macbook-resizer/wiki/Home-zh-HK)
 
-## V0.3 路線圖（未做）
+## V0.4 路線圖（未做）
 
-- **Drag-to-swap** — applyLayout 之後拖 window，自動 snap 去最近 slot 同其他 window 對調。`DragSwapController` 喺 SceneCore 已經寫好，剩 `AXObserver` bridge 未 wire。
 - **Per-display layouts** — 唔同 monitor apply 唔同 preset。
 - **Pattern learning** — 觀察用家手動拖 window 嘅 pattern，建議 "下午 2-5pm 通常 Cursor 70+Chrome 30，要唔要 save 做 preset?"
 - **AI / 自然語言 input** — 打 "cursor 左 chrome 右" → LLM → layout JSON。
