@@ -1,0 +1,130 @@
+# Scene
+
+A macOS menu bar app for instant window layouts. Click one of seven presets and every visible window snaps into place.
+
+**Requires macOS 14 (Sonoma) or later.**
+
+## Features
+
+- **7 preset layouts** — Full, Halves, Thirds, Quads, Main+Side (70/30), LeftSplit+Right, Left+RightSplit
+- **One click, all windows** — frontmost window goes to slot 1, the rest follow z-order
+- **Global hotkeys** — ⌘⇧1 through ⌘⇧7
+- **Overflow handling** — windows beyond slot count get minimized
+- **Electron-aware** — retries ±5px corrections for Cursor, VS Code, Slack, etc.
+- **Multi-display** — only rearranges windows on the screen under the mouse
+- **Dock/menu-bar-aware** — uses `visibleFrame` so windows never slide under the menu bar or Dock
+- **Zero external dependencies** — pure Foundation, AppKit, SwiftUI, Carbon
+
+## Layouts
+
+| ID | Name | Slots |
+|---|---|---|
+| 1 | Full | 1 (100%) |
+| 2 | Halves | 2 (50/50) |
+| 3 | Thirds | 3 equal columns |
+| 4 | Quads | 2×2 grid |
+| 5 | Main + Side | 70% / 30% |
+| 6 | LeftSplit + Right | left column split top/bottom, right column full |
+| 7 | Left + RightSplit | left column full, right column split top/bottom |
+
+## Install / Build
+
+### Prerequisites
+
+- macOS 14+
+- Xcode 16+ (for building the app)
+- Swift 5.9+ (bundled with Xcode)
+
+### Build the app
+
+```bash
+git clone <repo-url>
+cd macbook-resizer
+open SceneApp/SceneApp.xcodeproj
+```
+
+In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu bar extra (no Dock icon).
+
+### Run the core library tests
+
+The layout logic lives in `SceneCore`, a Swift package that works without Xcode:
+
+```bash
+swift test
+```
+
+26 unit tests cover layout math, window-to-slot mapping, and edge cases.
+
+## Usage
+
+1. On first launch, Scene asks for **Accessibility permission**. Grant it in System Settings → Privacy & Security → Accessibility.
+2. Click the Scene icon in the menu bar (`rectangle.3.group`) to see the 7 presets.
+3. Click any preset, or press ⌘⇧1 – ⌘⇧7.
+4. Quit via the menu's **Quit Scene** item.
+
+### Hotkey reference
+
+| Shortcut | Layout |
+|---|---|
+| ⌘⇧1 | Full |
+| ⌘⇧2 | Halves |
+| ⌘⇧3 | Thirds |
+| ⌘⇧4 | Quads |
+| ⌘⇧5 | Main + Side |
+| ⌘⇧6 | LeftSplit + Right |
+| ⌘⇧7 | Left + RightSplit |
+
+### Edge-case behavior
+
+| Scenario | Behavior |
+|---|---|
+| More windows than slots | First N placed by z-order; remainder minimized |
+| Fewer windows than slots | Windows placed; extra slots left empty |
+| No visible windows | macOS notification (or menu bar icon blink if notifications are denied) |
+| Permission revoked mid-session | Menu bar icon greys out; hotkeys unregister within 2 s |
+| Electron apps | Single ±5 px retry if the window undershoots/overshoots the target |
+| System Settings | macOS enforces a minimum window size — position is respected, size may not be |
+
+## Architecture
+
+```
+macbook-resizer/
+├── Package.swift
+├── Sources/SceneCore/          # pure logic, unit-testable without Xcode
+│   ├── AX/                     # Accessibility API wrappers
+│   ├── Display/                # screen picker
+│   ├── Interaction/            # hotkey + drag-swap controllers
+│   └── Layout/                 # Slot, Layout, LayoutEngine, Plan, Geometry
+├── Tests/SceneCoreTests/       # 26 XCTest cases
+├── SceneApp/                   # Xcode project — menu bar shell
+│   └── SceneApp/
+│       ├── SceneAppApp.swift          # @main + MenuBarExtra
+│       ├── AppDelegate.swift
+│       ├── Coordinator.swift          # orchestration layer
+│       ├── MenuBarContentView.swift
+│       ├── OnboardingView.swift
+│       ├── OnboardingWindowController.swift
+│       └── NotificationHelper.swift
+└── docs/
+    └── superpowers/
+        ├── specs/                     # design spec
+        ├── plans/                     # implementation plan
+        ├── notes/                     # deferral decisions
+        └── manual-tests/              # smoke-test checklist
+```
+
+The split is deliberate: `SceneCore` owns all the hard logic (AX calls, layout math, hotkey plumbing) and is covered by 26 unit tests. `SceneApp` is a thin SwiftUI/AppKit shell that only wires UI and app lifecycle. You can run `swift test` on `SceneCore` from the command line without installing Xcode — only the final `.app` build needs it.
+
+## Roadmap (V0.2+)
+
+Deferred from V0.1, captured in `docs/superpowers/notes/drag-swap-deferred.md`:
+
+- **Drag-to-swap** — drag any window after applying a preset; it snaps to the nearest slot and swaps with whoever lives there. The `DragSwapController` is already implemented in `SceneCore`; only the `AXObserver` bridge remains.
+- **Animation** — interpolate frame changes over ~150 ms instead of snapping instantly.
+- **Per-display layouts** — apply different presets to each monitor independently.
+- **Settings window** — toggle launch-at-login, customize hotkeys, rename/hide presets.
+- **Per-app rules** — e.g., "always put Slack in slot 3".
+
+## License
+
+TBD.
