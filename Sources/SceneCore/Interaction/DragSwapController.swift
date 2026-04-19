@@ -135,14 +135,17 @@ public final class DragSwapController {
             w.id != source.id && rectsApproxEqual(w.frame, targetRect, tolerance: 5)
         }
 
-        do {
-            try source.setFrame(targetRect)
-            if let other, let sourceOriginalSlotIdx {
-                let otherRect = slots[sourceOriginalSlotIdx].absoluteRect(in: vf)
-                try other.setFrame(otherRect)
+        do { try source.setFrame(targetRect) }
+        catch { log.error("swap source setFrame failed: \(String(describing: error), privacy: .public)") }
+
+        if let other, let sourceOriginalSlotIdx {
+            let otherRect = slots[sourceOriginalSlotIdx].absoluteRect(in: vf)
+            if let sink = animationSink {
+                sink.animate(window: other, to: otherRect)
+            } else {
+                do { try other.setFrame(otherRect) }
+                catch { log.error("swap other setFrame failed: \(String(describing: error), privacy: .public)") }
             }
-        } catch {
-            log.error("swap failed: \(String(describing: error), privacy: .public)")
         }
     }
 }

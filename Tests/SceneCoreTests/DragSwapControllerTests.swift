@@ -170,4 +170,56 @@ final class DragSwapControllerTests: XCTestCase {
         XCTAssertNil(controller._testActiveDrag,
                      "center outside every slot's absolute rect must not arm")
     }
+
+    // MARK: - Task 7: finishDrag routes displaced window through sink
+
+    func testFinishDragSwapsTwoWindowsAnimatingDisplaced() {
+        let wA = MockWindow(id: 1, frame: slot0Rect)
+        let wB = MockWindow(id: 2, frame: slot1Rect)
+        let (controller, sink) = makeController(
+            layout: makeLayout(),
+            windows: [wA, wB],
+            screen: makeScreen()
+        )
+        controller.handleWindowMoved(windowID: 1, currentFrame: slot0Rect)
+        controller.handleWindowMoved(windowID: 1, currentFrame: slot0Rect.offsetBy(dx: 400, dy: 0))
+
+        controller.simulateMouseUp()
+
+        XCTAssertEqual(wA.setFrameCallCount, 1)
+        XCTAssertEqual(wA.frame, slot1Rect)
+        XCTAssertEqual(wB.setFrameCallCount, 0, "displaced window should animate, not setFrame directly")
+        XCTAssertEqual(sink.calls.count, 1)
+        XCTAssertEqual(sink.calls.first?.windowID, 2)
+        XCTAssertEqual(sink.calls.first?.target, slot0Rect)
+    }
+
+    func testFinishDragOnEmptyTargetSlotJustSnapsSource() {
+        let wA = MockWindow(id: 1, frame: slot0Rect)
+        let (controller, sink) = makeController(
+            layout: makeLayout(),
+            windows: [wA],
+            screen: makeScreen()
+        )
+        controller.handleWindowMoved(windowID: 1, currentFrame: slot0Rect)
+        controller.handleWindowMoved(windowID: 1, currentFrame: slot0Rect.offsetBy(dx: 400, dy: 0))
+
+        controller.simulateMouseUp()
+
+        XCTAssertEqual(wA.frame, slot1Rect)
+        XCTAssertEqual(sink.calls.count, 0, "no other window to animate")
+    }
+
+    func testFinishDragWithoutActiveDragIsNoop() {
+        let wA = MockWindow(id: 1, frame: slot0Rect)
+        let (controller, sink) = makeController(
+            layout: makeLayout(),
+            windows: [wA],
+            screen: makeScreen()
+        )
+        controller.simulateMouseUp()
+
+        XCTAssertEqual(wA.setFrameCallCount, 0)
+        XCTAssertEqual(sink.calls.count, 0)
+    }
 }
