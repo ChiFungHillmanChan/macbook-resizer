@@ -222,4 +222,38 @@ final class DragSwapControllerTests: XCTestCase {
         XCTAssertEqual(wA.setFrameCallCount, 0)
         XCTAssertEqual(sink.calls.count, 0)
     }
+
+    // MARK: - Task 8: cancelDrag
+
+    func testCancelDragSnapsSourceBackToOrigin() {
+        let wA = MockWindow(id: 1, frame: slot0Rect)
+        let wB = MockWindow(id: 2, frame: slot1Rect)
+        let (controller, sink) = makeController(
+            layout: makeLayout(),
+            windows: [wA, wB],
+            screen: makeScreen()
+        )
+        controller.handleWindowMoved(windowID: 1, currentFrame: slot0Rect)
+        controller.handleWindowMoved(windowID: 1, currentFrame: slot0Rect.offsetBy(dx: 400, dy: 0))
+
+        controller.cancelDrag()
+
+        XCTAssertEqual(sink.calls.count, 1)
+        XCTAssertEqual(sink.calls.first?.windowID, 1)
+        XCTAssertEqual(sink.calls.first?.target, slot0Rect,
+                       "cancel should snap source back to its origin frame")
+        XCTAssertNil(controller._testActiveDrag)
+    }
+
+    func testCancelDragWithNoActiveDragIsNoop() {
+        let wA = MockWindow(id: 1, frame: slot0Rect)
+        let (controller, sink) = makeController(
+            layout: makeLayout(),
+            windows: [wA],
+            screen: makeScreen()
+        )
+        controller.cancelDrag()
+
+        XCTAssertEqual(sink.calls.count, 0)
+    }
 }

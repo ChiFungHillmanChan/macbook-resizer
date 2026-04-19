@@ -64,6 +64,24 @@ public final class DragSwapController {
     }
 
     @MainActor
+    public func cancelDrag() {
+        defer {
+            preview.hide()
+            activeDrag = nil
+            dragOrigin = nil
+        }
+        guard let drag = activeDrag, let origin = dragOrigin, drag.windowID == origin.windowID else { return }
+        guard let source = drag.ctx.windows.first(where: { $0.id == drag.windowID }) else { return }
+
+        if let sink = animationSink {
+            sink.animate(window: source, to: origin.frame)
+        } else {
+            do { try source.setFrame(origin.frame) }
+            catch { log.error("cancel setFrame failed: \(String(describing: error), privacy: .public)") }
+        }
+    }
+
+    @MainActor
     internal func simulateMouseUp() { finishDrag() }
 
     internal var _testActiveDrag: ActiveDragSnapshot? {
