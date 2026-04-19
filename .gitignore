@@ -24,3 +24,13 @@ Package.resolved
 # Release pipeline outputs
 /build/
 /dist/
+
+# AI / agent-session artifacts (local only — do not commit)
+CLAUDE.md
+GEMINI.md
+AGENTS.md
+.claude/
+.cursor/
+.aider*
+.roomodes
+docs/superpowers/

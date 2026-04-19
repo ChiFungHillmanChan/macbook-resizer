@@ -118,18 +118,15 @@ macbook-resizer/
 │       ├── OnboardingWindowController.swift
 │       └── NotificationHelper.swift
 └── docs/
-    └── superpowers/
-        ├── specs/                     # design spec
-        ├── plans/                     # implementation plan
-        ├── notes/                     # deferral decisions
-        └── manual-tests/              # smoke-test checklist
+    ├── INSTALL.md                     # end-user install walkthrough
+    └── TESTING.md                     # manual smoke-test checklist
 ```
 
 The split is deliberate: `SceneCore` owns all the hard logic (AX calls, layout math, hotkey plumbing) and is covered by 26 unit tests. `SceneApp` is a thin SwiftUI/AppKit shell that only wires UI and app lifecycle. You can run `swift test` on `SceneCore` from the command line without installing Xcode — only the final `.app` build needs it.
 
 ## Roadmap (V0.2+)
 
-Deferred from V0.1, captured in `docs/superpowers/notes/drag-swap-deferred.md`:
+Deferred from V0.1:
 
 - **Drag-to-swap** — drag any window after applying a preset; it snaps to the nearest slot and swaps with whoever lives there. The `DragSwapController` is already implemented in `SceneCore`; only the `AXObserver` bridge remains.
 - **Animation** — interpolate frame changes over ~150 ms instead of snapping instantly.
