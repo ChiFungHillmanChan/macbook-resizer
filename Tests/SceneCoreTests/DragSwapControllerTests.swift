@@ -6,6 +6,13 @@ import protocol SceneCore.WindowRef
 
 typealias SceneWindowRef = WindowRef
 
+/// Boxes a mutable Int so a closure can flip it mid-test (e.g., simulate the user
+/// releasing the mouse button between drag arming and animator-driven re-entry).
+final class MutableButtonsBox {
+    var value: Int
+    init(value: Int) { self.value = value }
+}
+
 @MainActor
 final class DragSwapControllerTests: XCTestCase {
     let vf = CGRect(x: 0, y: 0, width: 1000, height: 800)
@@ -195,6 +202,11 @@ final class DragSwapControllerTests: XCTestCase {
     }
 
     func testFinishDragOnEmptyTargetSlotJustSnapsSource() {
+        // "Empty target slot" = a slot in the placed layout with no window currently
+        // occupying it. We use a 2-slot layout but place only wA (in slot 0), so
+        // slot 1 is the empty target. Real scenario: a 4-slot layout fired against
+        // 2 windows leaves 2 underflow slots — same outcome (source snaps, no displaced
+        // animation) regardless of layout size.
         let wA = MockWindow(id: 1, frame: slot0Rect)
         let (controller, sink) = makeController(
             layout: makeLayout(),
@@ -208,6 +220,49 @@ final class DragSwapControllerTests: XCTestCase {
 
         XCTAssertEqual(wA.frame, slot1Rect)
         XCTAssertEqual(sink.calls.count, 0, "no other window to animate")
+    }
+
+    // Stronger self-fire guard test: simulates `WindowAnimator` writing AX frames
+    // during the displaced-window animation right after a swap finishes. Those
+    // writes fire `kAXMovedNotification` and re-enter `handleWindowMoved`. The
+    // guard at gate #2 must reject them because the mouse button is no longer held.
+    func testSelfFireDuringDisplacedAnimationDoesNotReEnter() {
+        let wA = MockWindow(id: 1, frame: slot0Rect)
+        let wB = MockWindow(id: 2, frame: slot1Rect)
+
+        // State-mutable button probe so the test can flip "user released mouse"
+        // mid-scenario without rebuilding the controller.
+        let pressed = MutableButtonsBox(value: 0b1)
+        let sink = RecordingSink()
+        let ctx = DragSwapController.Context(layout: makeLayout(), screen: makeScreen(), windows: [wA, wB])
+        let controller = DragSwapController(
+            contextProvider: { ctx },
+            config: { .default },
+            animationSink: sink,
+            modifierFlagsProbe: { [] },
+            mouseButtonsProbe: { pressed.value },
+            visibleFrameOverride: { _ in self.vf }
+        )
+
+        // 1. Arm + finish a real drag (source = wA, target = slot 1 occupied by wB).
+        controller.handleWindowMoved(windowID: 1, currentFrame: slot0Rect)
+        controller.handleWindowMoved(windowID: 1, currentFrame: slot0Rect.offsetBy(dx: 400, dy: 0))
+        pressed.value = 0  // user releases mouse before mouseUp finishes the swap
+        controller.simulateMouseUp()
+        XCTAssertEqual(sink.calls.count, 1, "displaced window animated once via sink")
+
+        // 2. Simulate the 3 frames `WindowAnimator` would write to wB during its
+        //    250ms easeOut animation. Each fires kAXMovedNotification → re-enters
+        //    handleWindowMoved. The mouse-button guard must reject all of them.
+        let priorSinkCalls = sink.calls.count
+        controller.handleWindowMoved(windowID: 2, currentFrame: slot1Rect.offsetBy(dx: -100, dy: 0))
+        controller.handleWindowMoved(windowID: 2, currentFrame: slot1Rect.offsetBy(dx: -300, dy: 0))
+        controller.handleWindowMoved(windowID: 2, currentFrame: slot0Rect)
+
+        XCTAssertNil(controller._testActiveDrag,
+                     "animator-driven AX writes must not re-arm a swap")
+        XCTAssertEqual(sink.calls.count, priorSinkCalls,
+                       "no further sink calls — the guard short-circuited each re-entry")
     }
 
     func testFinishDragWithoutActiveDragIsNoop() {

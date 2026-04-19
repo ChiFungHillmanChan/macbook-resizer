@@ -50,10 +50,18 @@ enum AXWindowLookup {
               let p = posValue, let s = sizeValue
         else { return nil }
 
+        // AXValue is the only sensible runtime type for kAXPosition / kAXSize, but
+        // a non-conformant app could return something else. Use as? + guard to skip
+        // silently per the spec's "log and continue" stance for AX failures.
+        guard CFGetTypeID(p) == AXValueGetTypeID(),
+              CFGetTypeID(s) == AXValueGetTypeID()
+        else { return nil }
         var origin = CGPoint.zero
         var size = CGSize.zero
-        AXValueGetValue(p as! AXValue, .cgPoint, &origin)
-        AXValueGetValue(s as! AXValue, .cgSize, &size)
+        let pAxValue = p as! AXValue
+        let sAxValue = s as! AXValue
+        AXValueGetValue(pAxValue, .cgPoint, &origin)
+        AXValueGetValue(sAxValue, .cgSize, &size)
         return CGRect(origin: origin, size: size)
     }
 

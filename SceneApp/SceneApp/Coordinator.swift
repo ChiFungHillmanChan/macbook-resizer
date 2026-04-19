@@ -109,23 +109,7 @@ final class Coordinator: ObservableObject {
                 _ = try LayoutEngine.apply(plan, on: windows)
             }
             log.info("applied \(custom.name, privacy: .public) animated=\(shouldAnimate)")
-
-            // V0.3: rebuild AX observers on the newly-placed set.
-            observerGroup.stopObserving()
-            lastPlacedWindows = plan.placements.compactMap { p in
-                windows.first(where: { $0.id == p.windowID })
-            }
-            lastAppliedLayout = custom.toLayout()
-            lastScreen = screen
-            let placedIDs = Set(lastPlacedWindows.map { $0.id })
-            if settingsStore.dragSwap.enabled, !placedIDs.isEmpty {
-                observerGroup.startObserving(windowIDs: placedIDs) { [weak self] id, frame in
-                    self?.dragSwapController.handleWindowMoved(windowID: id, currentFrame: frame)
-                }
-                startDragSwapInfrastructure()
-            } else {
-                stopDragSwapInfrastructure()
-            }
+            rebuildDragSwapObservers(plan: plan, windows: windows, layout: custom.toLayout(), screen: screen)
         } catch AXWindowEnumerator.EnumerationError.permissionDenied {
             stopDragSwapInfrastructure()
             setPermission(false)
@@ -214,6 +198,27 @@ final class Coordinator: ObservableObject {
         dragSwapController.stop()
         if let escMonitor { NSEvent.removeMonitor(escMonitor) }
         escMonitor = nil
+    }
+
+    /// Replace the AX observer set with the windows that were just placed by the
+    /// most recent successful `applyLayout`. Either starts the drag-swap infra
+    /// (when enabled in settings and there's a non-empty placed set) or stops it.
+    private func rebuildDragSwapObservers(plan: Plan, windows: [any SceneWindowRef], layout: Layout, screen: NSScreen) {
+        observerGroup.stopObserving()
+        lastPlacedWindows = plan.placements.compactMap { p in
+            windows.first(where: { $0.id == p.windowID })
+        }
+        lastAppliedLayout = layout
+        lastScreen = screen
+        let placedIDs = Set(lastPlacedWindows.map { $0.id })
+        guard settingsStore.dragSwap.enabled, !placedIDs.isEmpty else {
+            stopDragSwapInfrastructure()
+            return
+        }
+        observerGroup.startObserving(windowIDs: placedIDs) { [weak self] id, frame in
+            self?.dragSwapController.handleWindowMoved(windowID: id, currentFrame: frame)
+        }
+        startDragSwapInfrastructure()
     }
 
     deinit {

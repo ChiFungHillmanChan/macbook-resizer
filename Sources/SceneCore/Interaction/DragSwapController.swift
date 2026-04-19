@@ -63,6 +63,14 @@ public final class DragSwapController {
         dragOrigin = nil
     }
 
+    deinit {
+        // Release the global NSEvent monitor synchronously. `NSEvent.removeMonitor`
+        // is nonisolated, so this is safe to call from a `@MainActor` class's deinit.
+        if let monitor = mouseUpMonitor {
+            NSEvent.removeMonitor(monitor)
+        }
+    }
+
     @MainActor
     public func cancelDrag() {
         defer {
@@ -81,6 +89,7 @@ public final class DragSwapController {
         }
     }
 
+    #if DEBUG
     @MainActor
     internal func simulateMouseUp() { finishDrag() }
 
@@ -88,12 +97,18 @@ public final class DragSwapController {
         guard let drag = activeDrag else { return nil }
         return ActiveDragSnapshot(windowID: drag.windowID, targetSlotIdx: drag.targetSlotIdx)
     }
+    #endif
 
     @MainActor
     public func handleWindowMoved(windowID: CGWindowID, currentFrame: CGRect) {
         let cfg = config()
         guard cfg.enabled else { return }
         guard !modifierFlagsProbe().contains(.option) else { return }
+        // Self-fire guard: `WindowAnimator` writes AX frames during animation, which
+        // fires `kAXMovedNotification` and re-enters this method. The mouse button
+        // is never held during animator-driven writes, so this short-circuits cleanly
+        // before any drag bookkeeping. (Spec lists this gate later in the order; we
+        // run it earlier for cheaper short-circuiting.)
         guard mouseButtonsProbe() & 0b1 != 0 else { return }
 
         if dragOrigin?.windowID != windowID {
@@ -179,10 +194,12 @@ private struct DragOrigin {
     let frame: CGRect
 }
 
+#if DEBUG
 internal struct ActiveDragSnapshot: Equatable {
     let windowID: CGWindowID
     let targetSlotIdx: Int
 }
+#endif
 
 @MainActor
 private final class DragPreviewOverlay {
