@@ -1,17 +1,15 @@
-//
-//  SceneAppApp.swift
-//  SceneApp
-//
-//  Created by Hillman Chan on 19/04/2026.
-//
-
 import SwiftUI
+import SceneCore
 
 @main
-struct SceneAppApp: App {
+struct SceneAppEntry: App {
+    @NSApplicationDelegateAdaptor(AppDelegate.self) var delegate
+
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        MenuBarExtra("Scene", systemImage: "rectangle.3.group") {
+            MenuBarContentView()
+                .environmentObject(delegate.coordinator)
         }
+        .menuBarExtraStyle(.menu)
     }
 }
