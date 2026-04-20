@@ -1267,6 +1267,29 @@
         }
       }
     },
+    "menu.update.available": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update available: v%@ — click to download"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有新版本 v%@ — 撳呢度 download"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "有新版本 v%@ — 點此下載"
+          }
+        }
+      }
+    },
     "menu.workspaces.empty": {
       "extractionState": "manual",
       "localizations": {

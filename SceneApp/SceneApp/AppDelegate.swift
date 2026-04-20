@@ -33,6 +33,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private(set) var workspaceActivator: WorkspaceActivator?
     private(set) var triggerSupervisor: TriggerSupervisor?
 
+    /// V0.4.2 passive update nudge. Polled at most once per 24h from
+    /// `applicationDidFinishLaunching`; the check is silent on failure and
+    /// skipped entirely if the 24h window hasn't elapsed.
+    let updateChecker = UpdateChecker()
+
     /// Single shared instance — re-shown on subsequent "Settings…" clicks
     /// rather than recreated, so view-model state survives close/reopen.
     @MainActor
@@ -119,6 +124,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         )
         self.triggerSupervisor = supervisor
         coordinator.configure(triggerSupervisor: supervisor)
+
+        updateChecker.checkIfDue()
     }
 
     func applicationWillTerminate(_ notification: Notification) {

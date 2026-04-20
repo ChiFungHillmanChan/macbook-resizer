@@ -4,6 +4,7 @@ import SceneCore
 struct MenuBarContentView: View {
     @EnvironmentObject var coordinator: Coordinator
     @EnvironmentObject var appDelegate: AppDelegate
+    @EnvironmentObject var updateChecker: UpdateChecker
     @ObservedObject var workspaceStore: WorkspaceStoreViewModel
     @ObservedObject var layoutStore: LayoutStoreViewModel
 
@@ -19,6 +20,19 @@ struct MenuBarContentView: View {
     private var grantedMenu: some View {
         // Touch layoutListVersion so SwiftUI rebuilds when LayoutStore mutates.
         let _ = coordinator.layoutListVersion
+
+        if let version = updateChecker.availableVersion,
+           let url = updateChecker.releasePageURL {
+            Button(action: { NSWorkspace.shared.open(url) }) {
+                HStack(spacing: 6) {
+                    Image(systemName: "arrow.down.circle.fill")
+                        .foregroundStyle(.tint)
+                    Text(String(format: String(localized: "menu.update.available"), version))
+                        .fontWeight(.semibold)
+                }
+            }
+            Divider()
+        }
 
         // MARK: - Workspaces (V0.4)
 
