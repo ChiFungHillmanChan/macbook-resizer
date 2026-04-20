@@ -1,5 +1,6 @@
 import Combine
 import Foundation
+import SceneCore
 import os
 
 /// Passive update nudge: polls the GitHub `releases/latest` endpoint at most
@@ -53,38 +54,18 @@ final class UpdateChecker: ObservableObject {
             UserDefaults.standard.set(Date(), forKey: lastCheckKey)
 
             guard let bundleVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
-                  Self.isTag(release.tagName, newerThan: bundleVersion),
+                  isVersionTag(release.tagName, newerThan: bundleVersion),
                   let url = URL(string: release.htmlURL)
             else { return }
 
-            self.availableVersion = Self.normalize(release.tagName)
+            self.availableVersion = Self.normalizeTag(release.tagName)
             self.releasePageURL = url
         } catch {
             log.debug("update check failed: \(String(describing: error), privacy: .public)")
         }
     }
 
-    /// Fail-safe semver compare. Both sides are split on `.` into `[Int]`;
-    /// unparseable components fall out via `compactMap`, so malformed inputs
-    /// can't trigger a spurious nudge. Equal or older tags return false.
-    /// Internal for unit-testability (see `UpdateCheckerTests`).
-    static func isTag(_ tag: String, newerThan bundle: String) -> Bool {
-        let t = parts(normalize(tag))
-        let b = parts(bundle)
-        guard !t.isEmpty, !b.isEmpty else { return false }
-        for i in 0..<max(t.count, b.count) {
-            let ti = i < t.count ? t[i] : 0
-            let bi = i < b.count ? b[i] : 0
-            if ti != bi { return ti > bi }
-        }
-        return false
-    }
-
-    private static func parts(_ s: String) -> [Int] {
-        s.split(separator: ".").compactMap { Int($0) }
-    }
-
-    private static func normalize(_ tag: String) -> String {
+    private static func normalizeTag(_ tag: String) -> String {
         tag.hasPrefix("v") ? String(tag.dropFirst()) : tag
     }
 
