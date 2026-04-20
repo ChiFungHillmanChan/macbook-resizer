@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 Quarantine is stripped automatically — no "cannot be verified" prompt. On first launch, grant Accessibility in **System Settings → Privacy & Security → Accessibility**.
 
-**Or download the DMG directly**: **[Scene-0.4.2.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.2/Scene-0.4.2.dmg)** (~1.4 MB, Apple Silicon, macOS 14+)
+**Or download the DMG directly**: **[Scene-0.4.3.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.3/Scene-0.4.3.dmg)** (~1.4 MB, Apple Silicon, macOS 14+)
 
 All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · DMG users, see [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
 
@@ -25,6 +25,13 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
   Your browser does not render embedded video. <a href="docs/media/scene-marketing.mp4">Download the demo clip (MP4, 13 MB)</a>.
 </video>
+
+## V0.4.3 passive update nudge
+
+- **"Update available" menu item** — Scene polls GitHub's `releases/latest` endpoint at most once every 24 hours per device and surfaces a tinted menu bar entry when a newer release exists. Click it and the GitHub release page opens in your browser; install the DMG as usual. No Sparkle, no silent auto-install.
+- **Why not auto-install?** Scene is ad-hoc signed, so every new build has a different `cdhash`. A silent replace would invalidate your Accessibility grant on every update, breaking the core feature. Keeping you in the DMG install path means the Homebrew tap's quarantine-strip postflight still runs cleanly.
+- **One-time upgrade for everyone on ≤ v0.4.2** — the nudge ships starting from this release. Older builds (v0.3, v0.4.0, v0.4.1, v0.4.2) have no update-check code, so they won't see it. After you install v0.4.3, future releases will prompt you automatically.
+- **19 new unit tests** — the semver comparison moved into SceneCore as `isVersionTag(_:newerThan:)`. Total tests: 158 → 177.
 
 ## V0.4.2 bug fixes
 
@@ -88,7 +95,7 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 
 ## Install
 
-End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.4.2 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.2/Scene-0.4.2.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
+End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.4.3 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.3/Scene-0.4.3.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
 
 ## Build from source
 
@@ -111,7 +118,7 @@ In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu ba
 ### Build a distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.4.2    # produces dist/Scene-0.4.2.dmg
+./scripts/build-dmg.sh 0.4.3    # produces dist/Scene-0.4.3.dmg
 ```
 
 This builds an Apple Silicon (arm64) binary, ad-hoc signs it, and packages it into a DMG with an `Applications` drop shortcut. No Apple Developer account required. macOS 14 devices are overwhelmingly Apple Silicon; Intel users can add `ARCHS="arm64 x86_64"` back to the build script.
@@ -124,7 +131,7 @@ The layout logic lives in `SceneCore`, a Swift package that works without Xcode:
 swift test
 ```
 
-158 unit tests cover layout math, window-to-slot mapping, animation state machine, JSON persistence, hotkey conflicts, drag-to-swap logic, and edge cases.
+177 unit tests cover layout math, window-to-slot mapping, animation state machine, JSON persistence, hotkey conflicts, drag-to-swap logic, semver comparison for the update nudge, and edge cases.
 
 ## Usage
 

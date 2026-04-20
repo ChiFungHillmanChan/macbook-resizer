@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 自動幫你清走 quarantine flag，唔會彈「cannot be verified」嘅 Gatekeeper 警告。首次開 Scene 嗰陣，去 **System Settings → Privacy & Security → Accessibility** 撳着 Scene 就得。
 
-**或者直接下載 DMG**：**[Scene-0.4.2.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.2/Scene-0.4.2.dmg)**（約 1.4 MB，Apple Silicon，macOS 14+）
+**或者直接下載 DMG**：**[Scene-0.4.3.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.3/Scene-0.4.3.dmg)**（約 1.4 MB，Apple Silicon，macOS 14+）
 
 所有版本：[Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · 用 DMG 嘅話，跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
 
@@ -25,6 +25,13 @@ brew install --cask chifunghillmanchan/tap/scene
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
   你個 browser 唔 render 到 embed 嘅 video。<a href="docs/media/scene-marketing.mp4">撳呢度 download 示範片（MP4，13 MB）</a>。
 </video>
+
+## V0.4.3 更新提示
+
+- **「有新版本」menu 項目** — Scene 每 24 小時撳一次 GitHub `releases/latest` API，如果遠端 tag 新過本機就喺 menu bar 頂顯示 tinted 嘅 update 項。撳落去就開 release page 下載新 DMG。冇用 Sparkle，冇 silent auto-install。
+- **點解唔 auto-install？** Scene 係 ad-hoc sign，每次 build 個 `cdhash` 都變。Silent replace 會令你嘅 Accessibility 授權每次都失效，核心功能就冚。留畀你自己行 DMG，Homebrew tap 嘅 postflight（清 quarantine）先至照跑。
+- **V0.4.2 之前嘅用戶要手動升一次** — 個 nudge 由今次 release 先加。v0.3 / v0.4.0 / v0.4.1 / v0.4.2 binaries 冇 update-check 邏輯，所以唔會見到提示。裝咗 v0.4.3 之後，將來發新版就會自動提你。
+- **19 個新 unit test** — semver 比較 function 抽咗入 SceneCore（`isVersionTag(_:newerThan:)`）。總 test 數：158 → 177。
 
 ## V0.4.2 修 bug
 
@@ -85,7 +92,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 ## Install
 
-End user：去 [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者[直接撳呢度 download 最新嘅 v0.4.2 DMG](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.2/Scene-0.4.2.dmg)，又或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
+End user：去 [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者[直接撳呢度 download 最新嘅 v0.4.3 DMG](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.3/Scene-0.4.3.dmg)，又或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
 
 ## 由 source build
 
@@ -108,7 +115,7 @@ Xcode 揀 `SceneApp` scheme → ⌘R。App 以 menu bar extra 形式行（冇 Do
 ### Build distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.4.2    # 出 dist/Scene-0.4.2.dmg
+./scripts/build-dmg.sh 0.4.3    # 出 dist/Scene-0.4.3.dmg
 ```
 
 Build Apple Silicon（arm64）binary，ad-hoc sign，pack 入 DMG 連 `Applications` drop shortcut。唔使 Apple Developer account。macOS 14 嘅機絕大多數都係 Apple Silicon；如果要兼容 Intel Mac，喺 build script 加返 `ARCHS="arm64 x86_64"`。
@@ -121,7 +128,7 @@ Layout / animation / store / hotkey 全部 logic 喺 `SceneCore`，係 Swift pac
 swift test
 ```
 
-158 個 unit test 覆蓋 layout 數學、window-to-slot mapping、animation 狀態機、JSON persistence、hotkey 衝突、drag-to-swap 邏輯、edge case。
+177 個 unit test 覆蓋 layout 數學、window-to-slot mapping、animation 狀態機、JSON persistence、hotkey 衝突、drag-to-swap 邏輯、update nudge 嘅 semver 比較、edge case。
 
 ## 用法
 
