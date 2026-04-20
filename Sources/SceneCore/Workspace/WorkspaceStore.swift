@@ -7,6 +7,8 @@ public enum WorkspaceStoreError: Error, Equatable {
     /// Thrown by `update(_:)` when no workspace exists with the given ID.
     /// Callers that want upsert semantics should call `insert(_:)` instead.
     case notFound(id: UUID)
+    /// Thrown by `insert(_:)` when a workspace with the same ID already exists.
+    case duplicateID(id: UUID)
     case decodingFailed(String)
 }
 
@@ -75,6 +77,9 @@ public final class WorkspaceStore {
     }
 
     public func insert(_ workspace: Workspace) throws {
+        if workspaces.contains(where: { $0.id == workspace.id }) {
+            throw WorkspaceStoreError.duplicateID(id: workspace.id)
+        }
         try assertNoHotkeyConflict(workspace)
         workspaces.append(workspace)
         try persist()

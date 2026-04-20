@@ -22,12 +22,6 @@
             "state": "translated",
             "value": "Scene"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scene"
-          }
         }
       }
     },
@@ -47,12 +41,6 @@
           }
         },
         "zh-TW": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "V0.4"
-          }
-        },
-        "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "V0.4"
@@ -80,12 +68,6 @@
             "state": "translated",
             "value": "錯誤"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "エラー"
-          }
         }
       }
     },
@@ -108,12 +90,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "好"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OK"
           }
         }
       }
@@ -138,12 +114,6 @@
             "state": "translated",
             "value": "清除"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "クリア"
-          }
         }
       }
     },
@@ -166,12 +136,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ 已使用這個快速鍵，請先解除或選擇其他組合。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "このショートカットは既に %@ で使用されています。先に解除するか、別のキーを選んでください。"
           }
         }
       }
@@ -196,12 +160,6 @@
             "state": "translated",
             "value": "錄製"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "記録"
-          }
         }
       }
     },
@@ -221,12 +179,6 @@
           }
         },
         "zh-TW": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "時間"
-          }
-        },
-        "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "時間"
@@ -254,12 +206,6 @@
             "state": "translated",
             "value": "500 毫秒"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "500ms"
-          }
         }
       }
     },
@@ -282,12 +228,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "100 毫秒"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "100ms"
           }
         }
       }
@@ -312,12 +252,6 @@
             "state": "translated",
             "value": "%lld 毫秒"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lldms"
-          }
         }
       }
     },
@@ -340,12 +274,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "緩動"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "イージング"
           }
         }
       }
@@ -370,12 +298,6 @@
             "state": "translated",
             "value": "漸慢"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "イーズアウト"
-          }
         }
       }
     },
@@ -398,12 +320,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "線性"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "リニア"
           }
         }
       }
@@ -428,12 +344,6 @@
             "state": "translated",
             "value": "彈簧"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "スプリング"
-          }
         }
       }
     },
@@ -456,12 +366,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "啟用流暢動畫"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "スムーズアニメーションを有効にする"
           }
         }
       }
@@ -486,12 +390,6 @@
             "state": "translated",
             "value": "預覽"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "プレビュー"
-          }
         }
       }
     },
@@ -514,12 +412,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "播放預覽"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "プレビューを再生"
           }
         }
       }
@@ -544,12 +436,6 @@
             "state": "translated",
             "value": "動畫"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "アニメーション"
-          }
         }
       }
     },
@@ -572,12 +458,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "啟用拖曳交換"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ドラッグで入れ替えを有効にする"
           }
         }
       }
@@ -602,12 +482,6 @@
             "state": "translated",
             "value": "拖曳時按住 ⌥ 可暫時跳過拖曳交換。"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ドラッグ中に ⌥ を押し続けると、一時的にドラッグ交換をオフにできます。"
-          }
         }
       }
     },
@@ -630,12 +504,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "拖曳交換"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ドラッグで入れ替え"
           }
         }
       }
@@ -660,12 +528,6 @@
             "state": "translated",
             "value": "拖曳距離門檻"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ドラッグ距離のしきい値"
-          }
         }
       }
     },
@@ -688,12 +550,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "100 點"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "100pt"
           }
         }
       }
@@ -718,12 +574,6 @@
             "state": "translated",
             "value": "10 點"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "10pt"
-          }
         }
       }
     },
@@ -746,12 +596,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld 點"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%lldpt"
           }
         }
       }
@@ -776,12 +620,6 @@
             "state": "translated",
             "value": "請選擇一個排列,或新增一個"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "レイアウトを選ぶか、新しく作成してください"
-          }
         }
       }
     },
@@ -804,12 +642,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "名稱"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "名前"
           }
         }
       }
@@ -834,12 +666,6 @@
             "state": "translated",
             "value": "範本"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "テンプレート"
-          }
         }
       }
     },
@@ -862,12 +688,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "(已修改)"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "(変更あり)"
           }
         }
       }
@@ -892,12 +712,6 @@
             "state": "translated",
             "value": "新排列"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新しいレイアウト"
-          }
         }
       }
     },
@@ -920,12 +734,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "還原預設排列"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "デフォルトプリセットを復元"
           }
         }
       }
@@ -950,12 +758,6 @@
             "state": "translated",
             "value": "欄分隔線 %lld"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "列の区切り %lld"
-          }
         }
       }
     },
@@ -978,12 +780,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "欄分割"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "列の分割"
           }
         }
       }
@@ -1008,12 +804,6 @@
             "state": "translated",
             "value": "主區高度"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "メインの高さ"
-          }
         }
       }
     },
@@ -1036,12 +826,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "主區寬度"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "メインの幅"
           }
         }
       }
@@ -1066,12 +850,6 @@
             "state": "translated",
             "value": "配對分割"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ペア分割"
-          }
         }
       }
     },
@@ -1094,12 +872,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "列分隔線 %lld"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "行の区切り %lld"
           }
         }
       }
@@ -1124,12 +896,6 @@
             "state": "translated",
             "value": "列分割"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "行の分割"
-          }
         }
       }
     },
@@ -1152,12 +918,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "堆疊分割"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "スタックの分割"
           }
         }
       }
@@ -1182,12 +942,6 @@
             "state": "translated",
             "value": "2 × 2 格"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "2 × 2 グリッド"
-          }
         }
       }
     },
@@ -1210,12 +964,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "3 × 2 格"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "3 × 2 グリッド"
           }
         }
       }
@@ -1240,12 +988,6 @@
             "state": "translated",
             "value": "L 形(主區在下)"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L 字(メイン下)"
-          }
         }
       }
     },
@@ -1268,12 +1010,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "L 形(主區在左)"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L 字(メイン左)"
           }
         }
       }
@@ -1298,12 +1034,6 @@
             "state": "translated",
             "value": "L 形(主區在右)"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L 字(メイン右)"
-          }
         }
       }
     },
@@ -1326,12 +1056,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "L 形(主區在上)"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "L 字(メイン上)"
           }
         }
       }
@@ -1356,12 +1080,6 @@
             "state": "translated",
             "value": "單一"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "シングル"
-          }
         }
       }
     },
@@ -1384,12 +1102,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "3 欄"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "3 列"
           }
         }
       }
@@ -1414,12 +1126,6 @@
             "state": "translated",
             "value": "3 列"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "3 行"
-          }
         }
       }
     },
@@ -1442,12 +1148,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "2 欄"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "2 列"
           }
         }
       }
@@ -1472,12 +1172,6 @@
             "state": "translated",
             "value": "2 列"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "2 行"
-          }
         }
       }
     },
@@ -1500,12 +1194,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "授權輔助使用…"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "アクセシビリティのアクセスを許可…"
           }
         }
       }
@@ -1530,12 +1218,6 @@
             "state": "translated",
             "value": "結束 Scene"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scene を終了"
-          }
         }
       }
     },
@@ -1559,12 +1241,6 @@
             "state": "translated",
             "value": "工作空間"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ワークスペース"
-          }
         }
       }
     },
@@ -1584,12 +1260,6 @@
           }
         },
         "zh-TW": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "設定…"
-          }
-        },
-        "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "設定…"
@@ -1617,12 +1287,6 @@
             "state": "translated",
             "value": "尚未建立工作空間"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ワークスペースがまだありません"
-          }
         }
       }
     },
@@ -1645,12 +1309,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "沒有可排列的視窗"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "配置するウィンドウがありません"
           }
         }
       }
@@ -1675,12 +1333,6 @@
             "state": "translated",
             "value": "為了調整並重新排列視窗，Scene 需要控制其他 App 的權限。\n\n請按下方按鈕開啟「系統設定」，並在「隱私權與安全性 → 輔助使用」中啟用 Scene。\n\n已經授權？每次更新 Scene 後，請把開關切到 OFF 再切回 ON 以重新確認。"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ウィンドウのサイズ変更と再配置を行うため、Scene は他のアプリを制御する権限が必要です。\n\n下のボタンでシステム設定を開き、「プライバシーとセキュリティ → アクセシビリティ」で Scene を有効にしてください。\n\nすでに許可済みですか？アップデートのたびに、スイッチを一度 OFF にしてから再度 ON にして許可を更新してください。"
-          }
         }
       }
     },
@@ -1703,12 +1355,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "再次檢查"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "再確認"
           }
         }
       }
@@ -1733,12 +1379,6 @@
             "state": "translated",
             "value": "開啟系統設定"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "システム設定を開く"
-          }
         }
       }
     },
@@ -1748,25 +1388,88 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "If Scene is already in the Accessibility list, toggle it OFF then back ON — macOS requires re-confirming access after each update. If that fails, quit Scene and reopen."
+            "value": "macOS ties Accessibility grants to the app's code signature. After each update, the previous grant becomes invalid — System Settings may still show Scene as ON but the new binary isn't trusted. The reliable fix: reset the grant with the command below, then relaunch Scene and re-authorize."
           }
         },
         "zh-HK": {
           "stringUnit": {
             "state": "translated",
-            "value": "如果 Scene 已經喺輔助使用 list 入面，撳個 toggle OFF 再撳 ON — macOS 每次升級都要 confirm 多次權限。如果仲係唔得，結束 Scene 再開過。"
+            "value": "macOS 將輔助使用授權綁住個 app 嘅 code signature。每次更新之後，之前嘅授權就失效 — 系統設定可能仲顯示 Scene 係 ON，但新 build 其實未被信任。最可靠嘅解決方法：用下面嘅指令 reset 授權，然後重啟 Scene 再重新授權。"
           }
         },
         "zh-TW": {
           "stringUnit": {
             "state": "translated",
-            "value": "如果 Scene 已在輔助使用清單中，請把開關切到 OFF 再切回 ON — macOS 每次更新後都需重新確認權限。仍無法偵測請結束 Scene 再開啟。"
+            "value": "macOS 會將輔助使用權限繫結在 app 的 code signature。每次更新後，原本的權限就失效 — 系統設定或許仍顯示 Scene 為 ON，但新的 binary 並未被信任。最可靠的解法：用下方指令重設權限，再重新啟動 Scene 並重新授權。"
           }
-        },
-        "ja": {
+        }
+      }
+    },
+    "onboarding.accessibility.copy_command": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "アクセシビリティのリストに Scene がすでにある場合は、スイッチを一度 OFF にしてから再度 ON にしてください（macOS はアップデートごとに権限の再確認が必要です）。それでもだめな場合は Scene を終了して開き直してください。"
+            "value": "Copy Command"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複製指令"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "複製指令"
+          }
+        }
+      }
+    },
+    "onboarding.accessibility.command_copied": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copied"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已複製"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已複製"
+          }
+        }
+      }
+    },
+    "onboarding.accessibility.reset_command_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste into Terminal (⌘Space → type “Terminal”), press Return, then quit Scene and reopen."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "貼到 Terminal（⌘Space 然後打「Terminal」），撳 Return，然後 Quit Scene 再開返。"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "貼到 Terminal（⌘Space 輸入「Terminal」），按 Return，然後結束 Scene 並重新打開。"
           }
         }
       }
@@ -1791,12 +1494,6 @@
             "state": "translated",
             "value": "仍然無法偵測?"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "まだ検出されませんか?"
-          }
         }
       }
     },
@@ -1819,12 +1516,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Scene 需要輔助使用權限"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scene にアクセシビリティ権限が必要です"
           }
         }
       }
@@ -1849,12 +1540,6 @@
             "state": "translated",
             "value": "Scene 需要存取行事曆,才能在事件開始時觸發工作空間。"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "カレンダーを使ったワークスペーストリガーを実行するため、Scene はカレンダーへのアクセスが必要です。"
-          }
         }
       }
     },
@@ -1877,12 +1562,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "授權存取"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "アクセスを許可"
           }
         }
       }
@@ -1907,12 +1586,6 @@
             "state": "translated",
             "value": "行事曆存取"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "カレンダーへのアクセス"
-          }
         }
       }
     },
@@ -1935,12 +1608,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "取消"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "キャンセル"
           }
         }
       }
@@ -1965,12 +1632,6 @@
             "state": "translated",
             "value": "刪除"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "削除"
-          }
         }
       }
     },
@@ -1993,12 +1654,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "還原預設"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "デフォルトに戻す"
           }
         }
       }
@@ -2023,12 +1678,6 @@
             "state": "translated",
             "value": "儲存"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "保存"
-          }
         }
       }
     },
@@ -2051,12 +1700,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "關於"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "情報"
           }
         }
       }
@@ -2081,12 +1724,6 @@
             "state": "translated",
             "value": "快速鍵"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ショートカット"
-          }
         }
       }
     },
@@ -2109,12 +1746,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "互動"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "インタラクション"
           }
         }
       }
@@ -2139,12 +1770,6 @@
             "state": "translated",
             "value": "排列"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "レイアウト"
-          }
         }
       }
     },
@@ -2168,12 +1793,6 @@
             "state": "translated",
             "value": "工作空間"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ワークスペース"
-          }
         }
       }
     },
@@ -2193,12 +1812,6 @@
           }
         },
         "zh-TW": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scene 設定"
-          }
-        },
-        "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "Scene 設定"
@@ -2226,12 +1839,6 @@
             "state": "translated",
             "value": "+ 新增觸發條件"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "+ トリガーを追加"
-          }
         }
       }
     },
@@ -2254,12 +1861,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "新增類型"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "種類"
           }
         }
       }
@@ -2284,12 +1885,6 @@
             "state": "translated",
             "value": "當行事曆事件標題包含"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "カレンダーイベントのタイトルに含まれるとき"
-          }
         }
       }
     },
@@ -2312,12 +1907,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Scene 需要行事曆權限才能使用此觸發。請於系統設定授權。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "このトリガーを使うにはカレンダーへのアクセス許可が必要です。システム設定から許可してください。"
           }
         }
       }
@@ -2342,12 +1931,6 @@
             "state": "translated",
             "value": "關鍵字"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "キーワード"
-          }
         }
       }
     },
@@ -2370,12 +1953,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "行事曆事件"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "カレンダーイベント"
           }
         }
       }
@@ -2400,12 +1977,6 @@
             "state": "translated",
             "value": "僅手動"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "手動のみ"
-          }
         }
       }
     },
@@ -2428,12 +1999,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "連接螢幕時"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "モニター接続時"
           }
         }
       }
@@ -2458,12 +2023,6 @@
             "state": "translated",
             "value": "拔除螢幕時"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "モニター切断時"
-          }
         }
       }
     },
@@ -2486,12 +2045,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "指定時間"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "指定時刻"
           }
         }
       }
@@ -2516,12 +2069,6 @@
             "state": "translated",
             "value": "手動 — 透過快速鍵或選單啟動"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "手動 — ショートカットまたはメニューから起動"
-          }
         }
       }
     },
@@ -2544,12 +2091,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "連接時"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "接続時"
           }
         }
       }
@@ -2574,12 +2115,6 @@
             "state": "translated",
             "value": "拔除時"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "切断時"
-          }
         }
       }
     },
@@ -2602,12 +2137,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "尚無觸發條件 — 此工作空間僅能手動啟動。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "まだトリガーがありません — このワークスペースは手動でのみ起動します。"
           }
         }
       }
@@ -2632,12 +2161,6 @@
             "state": "translated",
             "value": "移除觸發條件"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "トリガーを削除"
-          }
         }
       }
     },
@@ -2660,12 +2183,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "於"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "時刻"
           }
         }
       }
@@ -2690,12 +2207,6 @@
             "state": "translated",
             "value": "星期"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "曜日"
-          }
         }
       }
     },
@@ -2718,12 +2229,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "五"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "金"
           }
         }
       }
@@ -2748,12 +2253,6 @@
             "state": "translated",
             "value": "一"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "月"
-          }
         }
       }
     },
@@ -2777,12 +2276,6 @@
             "state": "translated",
             "value": "六"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "土"
-          }
         }
       }
     },
@@ -2802,12 +2295,6 @@
           }
         },
         "zh-TW": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "日"
-          }
-        },
-        "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "日"
@@ -2835,12 +2322,6 @@
             "state": "translated",
             "value": "四"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "木"
-          }
         }
       }
     },
@@ -2863,12 +2344,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "二"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "火"
           }
         }
       }
@@ -2893,12 +2368,6 @@
             "state": "translated",
             "value": "三"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "水"
-          }
         }
       }
     },
@@ -2922,12 +2391,6 @@
             "state": "translated",
             "value": "已啟動 %@ 工作空間"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ を起動しました"
-          }
         }
       }
     },
@@ -2947,12 +2410,6 @@
           }
         },
         "zh-TW": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scene"
-          }
-        },
-        "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "Scene"
@@ -2980,12 +2437,6 @@
             "state": "translated",
             "value": "新增…"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "追加…"
-          }
         }
       }
     },
@@ -3008,12 +2459,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "移除應用程式"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "アプリを削除"
           }
         }
       }
@@ -3038,12 +2483,6 @@
             "state": "translated",
             "value": "搜尋"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "検索"
-          }
         }
       }
     },
@@ -3066,12 +2505,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "啟動時開啟"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "起動するアプリ"
           }
         }
       }
@@ -3096,12 +2529,6 @@
             "state": "translated",
             "value": "啟動時關閉"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "終了するアプリ"
-          }
         }
       }
     },
@@ -3124,12 +2551,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ 已使用此快速鍵"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ショートカットは既に %@ で使用されています"
           }
         }
       }
@@ -3154,12 +2575,6 @@
             "state": "translated",
             "value": "工作空間 %@ 已不存在"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ワークスペース %@ は存在しません"
-          }
         }
       }
     },
@@ -3182,12 +2597,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "請在「捷徑」App 建立對應的捷徑;Scene 會在切換時執行。"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ショートカット App で対応するショートカットを作成してください。Scene は起動時/終了時に実行します。"
           }
         }
       }
@@ -3212,12 +2621,6 @@
             "state": "translated",
             "value": "結束時的捷徑"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "集中モード オフのショートカット"
-          }
         }
       }
     },
@@ -3240,12 +2643,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "啟動時的捷徑"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "集中モード オンのショートカット"
           }
         }
       }
@@ -3270,12 +2667,6 @@
             "state": "translated",
             "value": "快速鍵"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ショートカット"
-          }
         }
       }
     },
@@ -3298,12 +2689,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "取消"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "キャンセル"
           }
         }
       }
@@ -3328,12 +2713,6 @@
             "state": "translated",
             "value": "清除"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "クリア"
-          }
         }
       }
     },
@@ -3356,12 +2735,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "未設定"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "なし"
           }
         }
       }
@@ -3386,12 +2759,6 @@
             "state": "translated",
             "value": "錄製"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "記録"
-          }
         }
       }
     },
@@ -3414,12 +2781,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "排列"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "レイアウト"
           }
         }
       }
@@ -3444,12 +2805,6 @@
             "state": "translated",
             "value": "排列已遺失 — 請重新選擇"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "レイアウトがありません — 選び直してください"
-          }
         }
       }
     },
@@ -3472,12 +2827,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "名稱"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "名前"
           }
         }
       }
@@ -3502,12 +2851,6 @@
             "state": "translated",
             "value": "儲存"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "保存"
-          }
         }
       }
     },
@@ -3531,12 +2874,6 @@
             "state": "translated",
             "value": "應用程式"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "アプリ"
-          }
         }
       }
     },
@@ -3556,12 +2893,6 @@
           }
         },
         "zh-TW": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "基本"
-          }
-        },
-        "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "基本"
@@ -3589,12 +2920,6 @@
             "state": "translated",
             "value": "專注模式"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "集中モード"
-          }
         }
       }
     },
@@ -3618,11 +2943,51 @@
             "state": "translated",
             "value": "觸發條件"
           }
-        },
-        "ja": {
+        }
+      }
+    },
+    "workspace.apply_failed.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "トリガー"
+            "value": "Couldn't apply %@'s layout — check Accessibility permission or open windows"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "套唔到 %@ 嘅排列 — 睇吓輔助使用權限或者開咗窗未"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法套用 %@ 的排列 — 請檢查輔助使用權限或視窗是否已開啟"
+          }
+        }
+      }
+    },
+    "workspace.apply_failed.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Workspace activation incomplete"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "情境未完全啟動"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "工作空間未完全啟動"
           }
         }
       }
@@ -3647,12 +3012,6 @@
             "state": "translated",
             "value": "%@ 指向已刪除的排列 — 請編輯並重新選擇"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "%@ は削除されたレイアウトを参照しています — 編集して選び直してください"
-          }
         }
       }
     },
@@ -3675,12 +3034,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "工作空間的排列已遺失"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ワークスペースのレイアウトがありません"
           }
         }
       }
@@ -3705,12 +3058,6 @@
             "state": "translated",
             "value": "仍在執行:%@(請確認是否有未儲存的內容)"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "まだ実行中:%@(未保存の変更がないか確認してください)"
-          }
         }
       }
     },
@@ -3733,12 +3080,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "部分應用程式無法結束"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "一部のアプリを終了できませんでした"
           }
         }
       }
@@ -3763,12 +3104,6 @@
             "state": "translated",
             "value": "請選擇要編輯的工作空間"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "編集するワークスペースを選択してください"
-          }
         }
       }
     },
@@ -3788,12 +3123,6 @@
           }
         },
         "zh-TW": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "複製"
-          }
-        },
-        "ja": {
           "stringUnit": {
             "state": "translated",
             "value": "複製"
@@ -3821,12 +3150,6 @@
             "state": "translated",
             "value": "新增"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新規"
-          }
         }
       }
     },
@@ -3850,12 +3173,6 @@
             "state": "translated",
             "value": "新工作空間"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "新しいワークスペース"
-          }
         }
       }
     },
@@ -3878,12 +3195,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "請先建立排列 — 工作空間必須有排列才能建立"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "まずレイアウトを作成してください — ワークスペースにはレイアウトが必要です"
           }
         }
       }

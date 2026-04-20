@@ -85,9 +85,15 @@ final class CalendarTriggerWatcher {
         for workspace in workspacesWithCalendarTriggers {
             for trigger in workspace.triggers {
                 guard case .calendarEvent(let keyword) = trigger else { continue }
+                // Swift's `String.range(of: "")` returns a non-nil empty range,
+                // which would fire this trigger for every event in the match
+                // window. Treat empty / whitespace-only keywords as unconfigured
+                // and skip them silently.
+                let trimmed = keyword.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty else { continue }
                 for event in events {
                     let title = event.title ?? ""
-                    if title.range(of: keyword, options: .caseInsensitive) != nil {
+                    if title.range(of: trimmed, options: .caseInsensitive) != nil {
                         let key = "\(workspace.id.uuidString)-\(event.eventIdentifier ?? "")"
                         if lastFiredForEvent[key] != nil { continue }
                         lastFiredForEvent[key] = now

@@ -156,7 +156,7 @@ rm -rf ~/Library/Application\ Support/Scene
 killall SceneApp 2>/dev/null; true
 ```
 
-Build & launch: `xcodebuild -project SceneApp/SceneApp.xcodeproj -scheme SceneApp -configuration Debug CODE_SIGNING_REQUIRED=NO build` then launch from `~/Library/Developer/Xcode/DerivedData/SceneApp-*/Build/Products/Debug/SceneApp.app` (or install via `dist/Scene-0.4.0.dmg`).
+Build & launch: `xcodebuild -project SceneApp/SceneApp.xcodeproj -scheme SceneApp -configuration Debug CODE_SIGNING_REQUIRED=NO build` then launch from `~/Library/Developer/Xcode/DerivedData/SceneApp-*/Build/Products/Debug/SceneApp.app` (or install via `dist/Scene-0.4.1.dmg`).
 
 1. **First-launch seeding** — delete `~/Library/Application Support/Scene/workspaces.json`; relaunch; 4 default Workspaces appear in Settings → Workspaces.
 2. **Vertical seed migration** — with an existing V0.2 `layouts.json` present (no vertical seeds), launch; 3 new vertical seeds (⌘⌃8 / ⌘⌃9 / ⌘⌃0) appear; previously-deleted V0.1 seeds stay deleted (`applyFutureSeeds` never re-adds records whose UUID is already in `knownSeedUUIDs`).

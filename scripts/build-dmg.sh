@@ -1,21 +1,35 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# build-dmg.sh — produces a universal, ad-hoc-signed Scene DMG at dist/.
+# build-dmg.sh — produces an arm64, ad-hoc-signed Scene DMG at dist/.
+#
+# Produces a polished two-icon installer window (Scene.app on the left,
+# Applications folder alias on the right) with a background image showing a
+# directional arrow. AppleScript pins window bounds, icon positions, icon
+# size, and hides toolbar/sidebar/status bar so the user sees a clean
+# "drag-me-over-there" layout.
+#
+# Background image lives at dmg/background.tiff (committed to the repo).
+#
 # Usage: ./scripts/build-dmg.sh [version]
-#        version defaults to the value embedded in MARKETING_VERSION or 0.1.0.
 
 VERSION="${1:-0.1.0}"
 PROJECT="SceneApp/SceneApp.xcodeproj"
 SCHEME="SceneApp"
 BUILD_DIR="build"
 DIST_DIR="dist"
+STAGE_DIR="$DIST_DIR/dmg-contents"
 APP_NAME="Scene.app"
 DMG_NAME="Scene-${VERSION}.dmg"
+DMG_RW="$DIST_DIR/Scene-${VERSION}-rw.dmg"
 VOLUME_NAME="Scene ${VERSION}"
 
-echo "==> Cleaning previous build…"
-rm -rf "$BUILD_DIR" "$DIST_DIR"
+ICON_ICNS="$DIST_DIR/Scene.icns"
+BG_TIFF="dmg/background.tiff"
+
+echo "==> Cleaning previous build artifacts…"
+rm -rf "$BUILD_DIR" "$STAGE_DIR" "$DIST_DIR/$DMG_NAME" "$DMG_RW"
+mkdir -p "$DIST_DIR"
 
 echo "==> Building arm64 Release binary (Apple Silicon only)…"
 xcodebuild \
@@ -36,38 +50,114 @@ if [[ ! -d "$SRC_APP" ]]; then
     exit 1
 fi
 
-ICON_ICNS="dist/Scene.icns"
-
 echo "==> Staging DMG contents…"
-mkdir -p "$DIST_DIR/dmg-contents"
-cp -R "$SRC_APP" "$DIST_DIR/dmg-contents/$APP_NAME"
-ln -s /Applications "$DIST_DIR/dmg-contents/Applications"
+mkdir -p "$STAGE_DIR"
+cp -R "$SRC_APP" "$STAGE_DIR/$APP_NAME"
+ln -s /Applications "$STAGE_DIR/Applications"
 
+# Background image + volume icon go into hidden dotfiles that Finder understands.
+if [[ -f "$BG_TIFF" ]]; then
+    mkdir -p "$STAGE_DIR/.background"
+    cp "$BG_TIFF" "$STAGE_DIR/.background/background.tiff"
+else
+    echo "WARN: $BG_TIFF not found — DMG will use Finder default (no background)." >&2
+fi
 if [[ -f "$ICON_ICNS" ]]; then
-    cp "$ICON_ICNS" "$DIST_DIR/dmg-contents/.VolumeIcon.icns"
+    cp "$ICON_ICNS" "$STAGE_DIR/.VolumeIcon.icns"
 fi
 
-echo "==> Packaging DMG…"
+# Create an intermediate READ-WRITE DMG we can mount, style via AppleScript,
+# and then compress. Going straight to ULFO would give us a compressed but
+# unstyled DMG.
+#
+# Size: stage + 30% headroom, rounded up. hdiutil can auto-size but it
+# sometimes reserves too little for .DS_Store writes.
+STAGE_BYTES=$(du -sk "$STAGE_DIR" | awk '{print $1}')
+DMG_KB=$(( STAGE_BYTES + STAGE_BYTES / 3 + 2048 ))
+echo "==> Creating intermediate R/W DMG (~${DMG_KB}K)…"
 hdiutil create \
     -volname "$VOLUME_NAME" \
-    -srcfolder "$DIST_DIR/dmg-contents" \
+    -srcfolder "$STAGE_DIR" \
+    -fs HFS+ \
+    -format UDRW \
+    -size "${DMG_KB}k" \
     -ov \
-    -format UDZO \
-    "$DIST_DIR/$DMG_NAME" >/dev/null
+    "$DMG_RW" >/dev/null
 
-if [[ -f "$ICON_ICNS" ]]; then
-    echo "==> Setting DMG volume icon…"
-    MOUNT_DIR=$(hdiutil attach "$DIST_DIR/$DMG_NAME" -readwrite -noverify -noautoopen 2>/dev/null | grep "Volumes" | awk '{print $3}')
-    if [[ -n "$MOUNT_DIR" ]]; then
-        cp "$ICON_ICNS" "$MOUNT_DIR/.VolumeIcon.icns"
-        SetFile -a C "$MOUNT_DIR" 2>/dev/null || true
-        hdiutil detach "$MOUNT_DIR" >/dev/null 2>&1
-    fi
+echo "==> Mounting R/W DMG to apply Finder layout…"
+MOUNT_OUT=$(hdiutil attach "$DMG_RW" -readwrite -noverify -noautoopen)
+MOUNT_DIR=$(echo "$MOUNT_OUT" | grep "/Volumes/" | awk '{for (i=3; i<=NF; i++) printf "%s ", $i; print ""}' | sed 's/ *$//' | head -1)
+if [[ -z "$MOUNT_DIR" || ! -d "$MOUNT_DIR" ]]; then
+    echo "ERROR: could not determine mount point from hdiutil output:" >&2
+    echo "$MOUNT_OUT" >&2
+    exit 1
 fi
+echo "    mounted at: $MOUNT_DIR"
+
+# Hide the .background folder and volume icon from Finder's normal view.
+if [[ -d "$MOUNT_DIR/.background" ]]; then
+    SetFile -a V "$MOUNT_DIR/.background" 2>/dev/null || true
+fi
+if [[ -f "$MOUNT_DIR/.VolumeIcon.icns" ]]; then
+    SetFile -a VC "$MOUNT_DIR/.VolumeIcon.icns" 2>/dev/null || true
+    SetFile -a C "$MOUNT_DIR" 2>/dev/null || true
+fi
+
+# Finder layout via AppleScript. Window is 660x400 content at screen position
+# (400, 200). Scene.app sits at (164, 200) and the Applications alias at
+# (497, 200) — 128px icons with a 333px gap that matches the arrow glyph in
+# the background image.
+echo "==> Applying Finder layout…"
+osascript <<EOF || true
+tell application "Finder"
+    tell disk "$VOLUME_NAME"
+        open
+        set current view of container window to icon view
+        set toolbar visible of container window to false
+        set statusbar visible of container window to false
+        set the bounds of container window to {400, 200, 1060, 620}
+        set viewOpts to the icon view options of container window
+        set arrangement of viewOpts to not arranged
+        set icon size of viewOpts to 128
+        set text size of viewOpts to 13
+        set label position of viewOpts to bottom
+        try
+            set background picture of viewOpts to file ".background:background.tiff"
+        end try
+        set position of item "$APP_NAME" of container window to {164, 200}
+        set position of item "Applications" of container window to {497, 200}
+        close
+        open
+        update without registering applications
+        delay 2
+    end tell
+end tell
+EOF
+
+sync
+
+echo "==> Detaching R/W DMG…"
+# hdiutil occasionally reports the volume as busy right after AppleScript
+# runs (Finder hasn't released it yet). Retry a few times before giving up.
+for attempt in 1 2 3 4 5; do
+    if hdiutil detach "$MOUNT_DIR" >/dev/null 2>&1; then
+        break
+    fi
+    sleep 1
+    [[ $attempt -eq 5 ]] && hdiutil detach "$MOUNT_DIR" -force >/dev/null 2>&1 || true
+done
+
+echo "==> Converting to compressed read-only DMG (ULFO/LZFSE)…"
+hdiutil convert "$DMG_RW" \
+    -format ULFO \
+    -o "$DIST_DIR/$DMG_NAME" >/dev/null
+rm -f "$DMG_RW"
 
 hdiutil verify "$DIST_DIR/$DMG_NAME" >/dev/null
 
-rm -rf "$DIST_DIR/dmg-contents"
+# Keep dist/dmg-contents out of the repo, but its layout is small — nothing
+# user-facing references it past this point.
+rm -rf "$STAGE_DIR"
 
 echo
 echo "==> Done."

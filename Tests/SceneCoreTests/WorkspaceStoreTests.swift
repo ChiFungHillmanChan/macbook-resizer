@@ -76,6 +76,24 @@ final class WorkspaceStoreTests: XCTestCase {
         XCTAssertFalse(store.workspaces.contains { $0.id == missing.id })
     }
 
+    // MARK: - Insert duplicate-ID guard
+
+    func testInsertThrowsOnDuplicateID() throws {
+        let store = try WorkspaceStore(fileURL: fileURL, hotkeyConflictProbe: { _ in nil })
+        let duplicate = Workspace(
+            id: WorkspaceSeeds.codingID,  // already seeded
+            name: "Imposter",
+            layoutID: PresetSeeds.fullID
+        )
+        XCTAssertThrowsError(try store.insert(duplicate)) { error in
+            guard case WorkspaceStoreError.duplicateID(let id) = error else {
+                return XCTFail("Expected .duplicateID, got \(error)")
+            }
+            XCTAssertEqual(id, WorkspaceSeeds.codingID)
+        }
+        XCTAssertEqual(store.workspaces.count, 4)  // unchanged
+    }
+
     // MARK: - Cross-store hotkey conflict
 
     func testUpdateThrowsOnInternalHotkeyConflict() throws {

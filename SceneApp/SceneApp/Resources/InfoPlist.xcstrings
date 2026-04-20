@@ -21,12 +21,6 @@
             "state": "translated",
             "value": "Scene 會使用您的行事曆,在符合條件的事件開始時自動啟動工作空間。"
           }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Scene はカレンダーを使用し、一致するイベントが始まったときにワークスペースを自動的に起動します。"
-          }
         }
       }
     }

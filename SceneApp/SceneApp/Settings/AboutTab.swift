@@ -10,8 +10,8 @@ struct AboutTab: View {
             Text("about.version")
                 .foregroundStyle(.secondary)
             Link(
-                "github.com/ChiFungHillmanChan/scene",
-                destination: URL(string: "https://github.com/ChiFungHillmanChan/scene")!
+                "github.com/ChiFungHillmanChan/macbook-resizer",
+                destination: URL(string: "https://github.com/ChiFungHillmanChan/macbook-resizer")!
             )
         }
         .padding()

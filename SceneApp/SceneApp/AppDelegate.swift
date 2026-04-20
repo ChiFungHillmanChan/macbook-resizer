@@ -107,7 +107,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             workspaceStore: workspaceStore,
             layoutStore: layoutStore,
             applyLayout: { [weak self] id in
-                await MainActor.run { self?.coordinator.applyLayout(id: id) }
+                await MainActor.run { self?.coordinator.applyLayout(id: id) ?? false }
             },
             notifier: notifier
         )

@@ -124,22 +124,29 @@ final class Coordinator: ObservableObject {
         supervisor.activateManually(workspaceID: id)
     }
 
-    func applyLayout(id: UUID) {
+    /// Returns `true` when the layout was applied (or animation kicked off
+    /// successfully). Returns `false` when the call no-op'd for any reason —
+    /// missing permission, no windows, enumeration error, or apply throw. The
+    /// Bool is consumed by `WorkspaceActivator` so it can skip the success
+    /// banner and `setActive` on failure; hotkey/menu callers discard it.
+    @discardableResult
+    func applyLayout(id: UUID) -> Bool {
         guard let layout = layoutStore.layouts.first(where: { $0.id == id }) else {
             log.error("applyLayout: unknown id \(id.uuidString, privacy: .public)")
-            return
+            return false
         }
-        applyLayout(layout)
+        return applyLayout(layout)
     }
 
-    func applyLayout(_ custom: CustomLayout) {
-        guard permissionGranted else { onboarding.show(); return }
+    @discardableResult
+    func applyLayout(_ custom: CustomLayout) -> Bool {
+        guard permissionGranted else { onboarding.show(); return false }
         let screen = ScreenResolver.activeScreen()
         do {
             let windows = try AXWindowEnumerator.listVisibleWindows(on: screen)
             if windows.isEmpty {
                 notification?.notifyNoWindows()
-                return
+                return false
             }
             let plan = LayoutEngine.plan(
                 windows: windows,
@@ -162,12 +169,15 @@ final class Coordinator: ObservableObject {
             }
             log.info("applied \(custom.name, privacy: .public) animated=\(shouldAnimate)")
             rebuildDragSwapObservers(plan: plan, windows: windows, layout: custom.toLayout(), screen: screen)
+            return true
         } catch AXWindowEnumerator.EnumerationError.permissionDenied {
             stopDragSwapInfrastructure()
             setPermission(false)
             onboarding.show()
+            return false
         } catch {
             log.error("applyLayout error: \(String(describing: error), privacy: .public)")
+            return false
         }
     }
 

@@ -19,6 +19,11 @@ final class TriggerSupervisor {
     private var calendarWatcher: CalendarTriggerWatcher!
     private var lastActivation: [UUID: Date] = [:]
     private let cooldown: TimeInterval = 30.0
+    /// Single-flight guard: at most one activation in flight at a time. Second
+    /// taps on a hotkey (manual) or overlapping auto-triggers are dropped with a
+    /// log line — prevents interleaved quit/launch/layout state from racing.
+    /// @MainActor isolation makes the read-modify-write atomic.
+    private var activationInFlight: Bool = false
 
     init(workspaceStore: WorkspaceStore, activator: WorkspaceActivator) {
         self.workspaceStore = workspaceStore
@@ -58,8 +63,12 @@ final class TriggerSupervisor {
 
     /// Manual activation (hotkey or menu click). Bypasses cooldown per §4.13.
     func activateManually(workspaceID: UUID) {
+        guard !activationInFlight else {
+            NSLog("[Scene] TriggerSupervisor: activation in flight, dropping manual request \(workspaceID.uuidString)")
+            return
+        }
         lastActivation[workspaceID] = Date()
-        Task { @MainActor in await activator.activate(workspaceID: workspaceID) }
+        startActivation(workspaceID: workspaceID)
     }
 
     /// System-event triggers (monitor/time/calendar). First match wins.
@@ -78,7 +87,19 @@ final class TriggerSupervisor {
         if let last = lastActivation[workspaceID], Date().timeIntervalSince(last) < cooldown {
             return
         }
+        guard !activationInFlight else {
+            NSLog("[Scene] TriggerSupervisor: activation in flight, dropping auto request \(workspaceID.uuidString)")
+            return
+        }
         lastActivation[workspaceID] = Date()
-        Task { @MainActor in await activator.activate(workspaceID: workspaceID) }
+        startActivation(workspaceID: workspaceID)
+    }
+
+    private func startActivation(workspaceID: UUID) {
+        activationInFlight = true
+        Task { @MainActor [weak self] in
+            defer { self?.activationInFlight = false }
+            await self?.activator.activate(workspaceID: workspaceID)
+        }
     }
 }

@@ -21,8 +21,10 @@ final class WorkspaceActivator {
     private let workspaceStore: WorkspaceStore
     private let layoutStore: LayoutStore
     /// Injected to decouple from Coordinator (avoid circular ownership).
-    /// Production wire passes `coordinator.applyLayout`.
-    private let applyLayout: (UUID) async -> Void
+    /// Production wire passes `coordinator.applyLayout`. Returns `true` when
+    /// the layout was actually applied — the activator uses this to decide
+    /// whether to show the success banner and persist `activeWorkspaceID`.
+    private let applyLayout: (UUID) async -> Bool
     private let notifier: NotificationHelper
 
     init(
@@ -30,7 +32,7 @@ final class WorkspaceActivator {
         focusController: FocusController,
         workspaceStore: WorkspaceStore,
         layoutStore: LayoutStore,
-        applyLayout: @escaping (UUID) async -> Void,
+        applyLayout: @escaping (UUID) async -> Bool,
         notifier: NotificationHelper
     ) {
         self.appLauncher = appLauncher
@@ -71,10 +73,22 @@ final class WorkspaceActivator {
         // 3. Settle
         try? await Task.sleep(for: .milliseconds(1500))
 
-        // 4. Apply layout (validate layout still exists; warn if not)
+        // 4. Apply layout (validate layout still exists; warn if not).
+        // On failure, skip steps 6/7 so we don't falsely banner "Activated"
+        // or persist `activeWorkspaceID` when no windows were placed. Focus
+        // (step 5) still runs — it's independent of layout state and the
+        // user explicitly opted in to the Shortcut.
+        let layoutApplied: Bool
         if layoutStore.layouts.contains(where: { $0.id == workspace.layoutID }) {
-            await applyLayout(workspace.layoutID)
+            layoutApplied = await applyLayout(workspace.layoutID)
+            if !layoutApplied {
+                notifier.notify(
+                    title: String(localized: "workspace.apply_failed.title"),
+                    body: String(format: String(localized: "workspace.apply_failed.body"), workspace.name)
+                )
+            }
         } else {
+            layoutApplied = false
             notifier.notify(
                 title: String(localized: "workspace.missing_layout.title"),
                 body: String(format: String(localized: "workspace.missing_layout.body"), workspace.name)
@@ -83,6 +97,8 @@ final class WorkspaceActivator {
 
         // 5. Focus On
         focusController.run(focusMode: workspace.focusMode, activating: true)
+
+        guard layoutApplied else { return }
 
         // 6. Persist active state
         try? workspaceStore.setActive(workspaceID)

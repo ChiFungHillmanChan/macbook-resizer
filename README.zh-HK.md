@@ -6,6 +6,20 @@
 
 > English version: [README.md](README.md)
 
+## 安裝
+
+**用 Homebrew**（推薦）：
+
+```bash
+brew install --cask chifunghillmanchan/tap/scene
+```
+
+自動幫你清走 quarantine flag，唔會彈「cannot be verified」嘅 Gatekeeper 警告。首次開 Scene 嗰陣，去 **System Settings → Privacy & Security → Accessibility** 撳着 Scene 就得。
+
+**或者直接下載 DMG**：**[Scene-0.4.1.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.1/Scene-0.4.1.dmg)**（約 1.4 MB，Apple Silicon，macOS 14+）
+
+所有版本：[Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · 用 DMG 嘅話，跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
+
 ## 示範片
 
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
@@ -17,7 +31,7 @@
 - **Workspaces（情境）** — 一嚿 bundle 包住 layout + apps + Focus 模式 + 自動觸發（手動 / monitor / 時間 / 日曆），撳一下就切換成個工作情境
 - **Layout thumbnail** — menu bar 同設定度每個 layout 都即時 render 出 slot 比例嘅小圖
 - **3 個新縱向 preset** — Main + Side Vertical（⌘⌃8）、Halves Vertical（⌘⌃9）、Thirds Vertical（⌘⌃0）
-- **多語 UI** — 完整支援 English + 繁體中文（香港）；部分支援 繁體中文（台灣）同 日本語
+- **多語 UI** — 完整支援 English + 繁體中文（香港）；部分支援 繁體中文（台灣）
 - 連埋 V0.2（自訂 + 動畫）、V0.3（drag-to-swap）一齊出，係首次公開 release
 
 ## V0.3 — 拖拉交換
@@ -25,7 +39,15 @@
 - **拖視窗就可以重排**：揸住任何 placed window 拖落另一個 placed window 嘅位，source 即時 snap，被換走嗰個行 V0.2 動畫引擎（250ms easeOut，跟 Animation tab 嘅設定）。
 - **Interaction tab**：開 / 閂 drag-to-swap；拖拉距離 threshold 可調（10–100pt）。
 - **逃生出口**：揸住 ⌥ 拖就唔 swap（free-move）；drag 中途撳 Esc 就 cancel，視窗 snap 返原位。
-- **Unit test 數目**：92 → 116 個（V0.4 再加到 157）。
+- **Unit test 數目**：92 → 116 個（V0.4.1 再加到 158）。
+
+## V0.4.1 修補
+
+- **DMG 瘦身到 1.4 MB**（上一版 2.8 MB）— 靠 `-Osize`、LZFSE、pngquant 壓縮 icon 同埋重新設計嘅安裝視窗背景。
+- **靚仔安裝視窗** — 自訂背景圖加埋方向箭頭，icon 位置 pin 死，收埋 toolbar/sidebar，畫面好清。
+- **Workspace 啟動更穩** — layout 套唔到嗰陣唔會再彈「已啟動」通知；single-flight 防止多次啟動打架；日曆 keyword 留空唔會再誤撞所有 event。
+- **授權指引更清晰** — 重新安裝後 macOS 綁住舊 cdhash 嘅授權失效，onboarding 視窗直接畀你 `tccutil reset` 指令同一個「複製」按鈕，唔使再試「toggle OFF/ON」呢啲唔可靠嘅做法。
+- `WorkspaceStore.insert` 加防重複 ID guard。
 
 ## V0.2 功能
 
@@ -56,7 +78,7 @@
 
 ## Install
 
-End user：去 [Releases](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
+End user：去 [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者[直接撳呢度 download 最新嘅 v0.4.1 DMG](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.1/Scene-0.4.1.dmg)，又或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
 
 ## 由 source build
 
@@ -79,7 +101,7 @@ Xcode 揀 `SceneApp` scheme → ⌘R。App 以 menu bar extra 形式行（冇 Do
 ### Build distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.4.0    # 出 dist/Scene-0.4.0.dmg
+./scripts/build-dmg.sh 0.4.1    # 出 dist/Scene-0.4.1.dmg
 ```
 
 Build Apple Silicon（arm64）binary，ad-hoc sign，pack 入 DMG 連 `Applications` drop shortcut。唔使 Apple Developer account。macOS 14 嘅機絕大多數都係 Apple Silicon；如果要兼容 Intel Mac，喺 build script 加返 `ARCHS="arm64 x86_64"`。
@@ -92,7 +114,7 @@ Layout / animation / store / hotkey 全部 logic 喺 `SceneCore`，係 Swift pac
 swift test
 ```
 
-157 個 unit test 覆蓋 layout 數學、window-to-slot mapping、animation 狀態機、JSON persistence、hotkey 衝突、drag-to-swap 邏輯、edge case。
+158 個 unit test 覆蓋 layout 數學、window-to-slot mapping、animation 狀態機、JSON persistence、hotkey 衝突、drag-to-swap 邏輯、edge case。
 
 ## 用法
 
@@ -155,7 +177,7 @@ macbook-resizer/
 │   ├── Layout/                 # Slot, Layout, LayoutEngine + LayoutTemplate, CustomLayout, PresetSeeds, LayoutStore（V0.2）
 │   └── Settings/               # AnimationConfig, HotkeyBinding, DragSwapConfig,
 │                               #   SettingsStore, Cancellable
-├── Tests/SceneCoreTests/       # 157 個 XCTest case
+├── Tests/SceneCoreTests/       # 158 個 XCTest case
 ├── SceneApp/                   # Xcode project — menu bar shell + 設定視窗
 │   └── SceneApp/
 │       ├── Animation/          # WindowAnimator（CVDisplayLink + AX bridge）
@@ -174,7 +196,7 @@ macbook-resizer/
     └── TESTING.md              # 手動 smoke test checklist（V0.1–V0.4）
 ```
 
-故意分層：**`SceneCore` 完全 framework-neutral**——冇 SwiftUI、冇 Combine、冇 ObservableObject。所有 hard logic（AX call、layout 數學、animation 狀態機、store CRUD、drag-to-swap）住喺度，157 個 unit test 覆蓋。**`SceneApp` 係薄殼**，只負責 SwiftUI binding、AppKit lifecycle，同埋 framework-neutral library 做唔到嘅 AppKit/AX bridge（`WindowAnimator`、`AXMoveObserverGroup`、`AXWindowLookup`、`DragSwapAnimationSink`）。SceneCore 用 closure-based observation 同 SceneApp 通訊（`@MainActor class FooStoreViewModel: ObservableObject` 做 adapter）。
+故意分層：**`SceneCore` 完全 framework-neutral**——冇 SwiftUI、冇 Combine、冇 ObservableObject。所有 hard logic（AX call、layout 數學、animation 狀態機、store CRUD、drag-to-swap）住喺度，158 個 unit test 覆蓋。**`SceneApp` 係薄殼**，只負責 SwiftUI binding、AppKit lifecycle，同埋 framework-neutral library 做唔到嘅 AppKit/AX bridge（`WindowAnimator`、`AXMoveObserverGroup`、`AXWindowLookup`、`DragSwapAnimationSink`）。SceneCore 用 closure-based observation 同 SceneApp 通訊（`@MainActor class FooStoreViewModel: ObservableObject` 做 adapter）。
 
 `swift test` 由 command line 跑得，唔使 Xcode；只有最後 `.app` build 先要。
 

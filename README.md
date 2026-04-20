@@ -6,6 +6,20 @@ A macOS menu bar app for instant window layouts. Click one of seven presets and 
 
 > 繁體中文版本： [README.zh-HK.md](README.zh-HK.md)
 
+## Install
+
+**Homebrew** (recommended):
+
+```bash
+brew install --cask chifunghillmanchan/tap/scene
+```
+
+Quarantine is stripped automatically — no "cannot be verified" prompt. On first launch, grant Accessibility in **System Settings → Privacy & Security → Accessibility**.
+
+**Or download the DMG directly**: **[Scene-0.4.1.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.1/Scene-0.4.1.dmg)** (~1.4 MB, Apple Silicon, macOS 14+)
+
+All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · DMG users, see [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
+
 ## Demo
 
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
@@ -17,7 +31,7 @@ A macOS menu bar app for instant window layouts. Click one of seven presets and 
 - **Workspaces** — bundle layout + apps + Focus mode + auto-triggers (manual / monitor / time / calendar) into a one-click context switcher
 - **Layout thumbnails** — every layout reference in the menu and settings now shows a live rendering of its slot proportions
 - **3 new vertical preset layouts** — Main + Side Vertical (⌘⌃8), Halves Vertical (⌘⌃9), Thirds Vertical (⌘⌃0)
-- **Multilingual UI** — full English + 繁體中文 (香港) support; partial 繁體中文 (台灣) and 日本語
+- **Multilingual UI** — full English + 繁體中文 (香港) support; partial 繁體中文 (台灣)
 - Bundled with V0.2 (customization + animation) and V0.3 (drag-to-swap) for one big first public release
 
 ### V0.3 — Drag-to-Swap
@@ -25,7 +39,15 @@ A macOS menu bar app for instant window layouts. Click one of seven presets and 
 - **Drag to rearrange**: grab any placed window and drag it onto another — swap executes with the displaced window animating via the V0.2 engine (250ms easeOut, respects the Animation tab toggle).
 - **Interaction tab**: enable / disable drag-to-swap; tune drag-distance threshold (10–100pt).
 - **Escape hatches**: hold ⌥ while dragging to free-move without swap; press Esc mid-drag to cancel and snap back to origin.
-- **Test count**: 92 → 116 unit tests (V0.4 raises total to 157).
+- **Test count**: 92 → 116 unit tests (V0.4.1 raises total to 158).
+
+## V0.4.1 polish
+
+- **Under-1MB DMG** — previous 2.8 MB → **1.4 MB**, via `-Osize` + LZFSE + pngquant icon compression + styled installer background.
+- **Styled installer window** — custom background with a directional arrow, pinned icon positions, hidden toolbar/sidebar, clean "drag to Applications" layout.
+- **Workspace activation reliability** — no more false-success banner when layout apply fails; single-flight guard prevents concurrent activations from racing; empty Calendar keyword no longer matches every event.
+- **Better "grant denied" onboarding** — when re-installs invalidate the TCC cdhash binding, the onboarding window now surfaces the exact `tccutil reset` command with a one-click Copy button, instead of unreliable "toggle OFF/ON" advice.
+- **Duplicate-ID guard** in `WorkspaceStore.insert`.
 
 ## Features (V0.2)
 
@@ -56,7 +78,7 @@ A macOS menu bar app for instant window layouts. Click one of seven presets and 
 
 ## Install
 
-End users: download the DMG from the releases page (or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
+End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.4.1 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.1/Scene-0.4.1.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
 
 ## Build from source
 
@@ -79,7 +101,7 @@ In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu ba
 ### Build a distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.4.0    # produces dist/Scene-0.4.0.dmg
+./scripts/build-dmg.sh 0.4.1    # produces dist/Scene-0.4.1.dmg
 ```
 
 This builds an Apple Silicon (arm64) binary, ad-hoc signs it, and packages it into a DMG with an `Applications` drop shortcut. No Apple Developer account required. macOS 14 devices are overwhelmingly Apple Silicon; Intel users can add `ARCHS="arm64 x86_64"` back to the build script.
@@ -92,7 +114,7 @@ The layout logic lives in `SceneCore`, a Swift package that works without Xcode:
 swift test
 ```
 
-157 unit tests cover layout math, window-to-slot mapping, animation state machine, JSON persistence, hotkey conflicts, drag-to-swap logic, and edge cases.
+158 unit tests cover layout math, window-to-slot mapping, animation state machine, JSON persistence, hotkey conflicts, drag-to-swap logic, and edge cases.
 
 ## Usage
 
@@ -139,7 +161,7 @@ macbook-resizer/
 │   │                           #   LayoutTemplate, CustomLayout, PresetSeeds, LayoutStore
 │   └── Settings/               # AnimationConfig, HotkeyBinding, DragSwapConfig,
 │                               #   SettingsStore, Cancellable
-├── Tests/SceneCoreTests/       # 157 XCTest cases
+├── Tests/SceneCoreTests/       # 158 XCTest cases
 ├── SceneApp/                   # Xcode project — menu bar shell + settings window
 │   └── SceneApp/
 │       ├── Animation/                 # WindowAnimator (CVDisplayLink + AX bridge)
@@ -160,7 +182,7 @@ macbook-resizer/
     └── TESTING.md                     # manual smoke-test checklist (V0.1–V0.4)
 ```
 
-The split is deliberate: `SceneCore` is framework-neutral and owns all the hard logic (AX calls, layout math, hotkey plumbing, animation state machine, JSON persistence, drag-swap). 157 unit tests run via `swift test` without Xcode. `SceneApp` is a thin SwiftUI/AppKit shell — only UI, app lifecycle, and the AppKit/AX bridges (`WindowAnimator`, `AXMoveObserverGroup`, `AXWindowLookup`, `DragSwapAnimationSink`) that can't live in a framework-neutral library. Only the final `.app` build needs Xcode.
+The split is deliberate: `SceneCore` is framework-neutral and owns all the hard logic (AX calls, layout math, hotkey plumbing, animation state machine, JSON persistence, drag-swap). 158 unit tests run via `swift test` without Xcode. `SceneApp` is a thin SwiftUI/AppKit shell — only UI, app lifecycle, and the AppKit/AX bridges (`WindowAnimator`, `AXMoveObserverGroup`, `AXWindowLookup`, `DragSwapAnimationSink`) that can't live in a framework-neutral library. Only the final `.app` build needs Xcode.
 
 ## Persistence
 
