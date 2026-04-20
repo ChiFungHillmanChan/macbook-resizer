@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 Quarantine is stripped automatically — no "cannot be verified" prompt. On first launch, grant Accessibility in **System Settings → Privacy & Security → Accessibility**.
 
-**Or download the DMG directly**: **[Scene-0.4.1.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.1/Scene-0.4.1.dmg)** (~1.4 MB, Apple Silicon, macOS 14+)
+**Or download the DMG directly**: **[Scene-0.4.2.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.2/Scene-0.4.2.dmg)** (~1.4 MB, Apple Silicon, macOS 14+)
 
 All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · DMG users, see [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
 
@@ -26,12 +26,19 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
   Your browser does not render embedded video. <a href="docs/media/scene-marketing.mp4">Download the demo clip (MP4, 13 MB)</a>.
 </video>
 
+## V0.4.2 bug fixes
+
+- **Animation lag on ProMotion** — AX writes are now throttled to 30Hz (from the display-native 120Hz) and deduped within 0.5pt per window. Cursor ↔ Chrome swaps now complete in the configured 250ms instead of dragging out to a second or more.
+- **Workspace "preselected on launch"** — `activeWorkspaceID` is now session-only state. Earlier builds restored it from disk, so the menu bar showed a checkmark against a workspace the user did not pick in the current session. Old state on disk is silently ignored and dropped.
+- **Instant workspace click** — an empty `appsToQuit` list no longer spends the 5-second gentle-quit grace period, and an empty `appsToLaunch` list skips the 1.5-second settle. Default seeded workspaces fire their layout within ~50ms of the click instead of ~6.5 seconds.
+- **Layout re-fire after opening a new window** — hitting the same layout hotkey twice now adds a 200ms settle before re-enumerating windows, giving `CGWindowListCopyWindowInfo` time to register the brand-new window. First fire of any layout is unchanged.
+
 ## New in v0.4
 
 - **Workspaces** — bundle layout + apps + Focus mode + auto-triggers (manual / monitor / time / calendar) into a one-click context switcher
 - **Layout thumbnails** — every layout reference in the menu and settings now shows a live rendering of its slot proportions
 - **3 new vertical preset layouts** — Main + Side Vertical (⌘⌃8), Halves Vertical (⌘⌃9), Thirds Vertical (⌘⌃0)
-- **Multilingual UI** — full English + 繁體中文 (香港) support; partial 繁體中文 (台灣)
+- **Multilingual UI** — English / 繁體中文 (香港) / 繁體中文 (台灣), all at ~99% key coverage
 - Bundled with V0.2 (customization + animation) and V0.3 (drag-to-swap) for one big first public release
 
 ### V0.3 — Drag-to-Swap
@@ -51,11 +58,11 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 
 ## Features (V0.2)
 
-- **7 built-in layout presets** — Full, Halves, Thirds, Quads, Main + Side (70/30), LeftSplit + Right, Left + RightSplit
+- **10 built-in layout presets** — Full, Halves, Thirds, Quads, Main + Side (70/30), LeftSplit + Right, Left + RightSplit, plus vertical variants: Main + Side (Vertical), Halves (Vertical), Thirds (Vertical)
 - **Build your own layouts** — 11 grid templates (columns / rows / 2×2 / 3×2 / 4 L-shape variants) with proportion sliders
-- **Per-layout custom hotkeys** with conflict detection (block-save: one chord per layout)
+- **Per-layout custom hotkeys** with conflict detection (block-save: one chord per layout or workspace)
 - **Smooth window animation** with adjustable duration (100–500 ms) and easing (Linear / Ease Out / Spring)
-- **Settings window** — Layouts / Hotkeys / Animation / About (open via menu bar icon → Settings… or ⌘,)
+- **Settings window** — Workspaces / Layouts / Hotkeys / Interaction / About (open via menu bar icon → Settings… or ⌘,)
 - **One click, all windows** — frontmost window goes to slot 1, the rest follow z-order
 - **Overflow handling** — windows beyond slot count get minimized
 - **Electron-aware** — retries ±5 px corrections for Cursor, VS Code, Slack, etc.
@@ -75,10 +82,13 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 | 5 | Main + Side | 70% / 30% |
 | 6 | LeftSplit + Right | left column split top/bottom, right column full |
 | 7 | Left + RightSplit | left column full, right column split top/bottom |
+| 8 | Main + Side (Vertical) | top row 70%, bottom row 30% |
+| 9 | Halves (Vertical) | 2 equal rows |
+| 10 | Thirds (Vertical) | 3 equal rows |
 
 ## Install
 
-End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.4.1 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.1/Scene-0.4.1.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
+End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.4.2 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.2/Scene-0.4.2.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
 
 ## Build from source
 
@@ -101,7 +111,7 @@ In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu ba
 ### Build a distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.4.1    # produces dist/Scene-0.4.1.dmg
+./scripts/build-dmg.sh 0.4.2    # produces dist/Scene-0.4.2.dmg
 ```
 
 This builds an Apple Silicon (arm64) binary, ad-hoc signs it, and packages it into a DMG with an `Applications` drop shortcut. No Apple Developer account required. macOS 14 devices are overwhelmingly Apple Silicon; Intel users can add `ARCHS="arm64 x86_64"` back to the build script.
@@ -119,8 +129,8 @@ swift test
 ## Usage
 
 1. On first launch, Scene asks for **Accessibility permission**. Grant it in System Settings → Privacy & Security → Accessibility.
-2. Click the Scene icon in the menu bar (`rectangle.3.group`) to see the 7 presets.
-3. Click any preset, or press ⌘⌃1 – ⌘⌃7.
+2. Click the Scene icon in the menu bar (`rectangle.3.group`) to see the 10 layout presets and 4 workspace presets.
+3. Click any layout preset, or press ⌘⌃1 – ⌘⌃0 (where ⌘⌃0 = the 10th). Workspaces fire on ⌘⌥1 – ⌘⌥4.
 4. Quit via the menu's **Quit Scene** item.
 
 ### Hotkey reference
@@ -134,6 +144,20 @@ swift test
 | ⌘⌃5 | Main + Side |
 | ⌘⌃6 | LeftSplit + Right |
 | ⌘⌃7 | Left + RightSplit |
+| ⌘⌃8 | Main + Side (Vertical) |
+| ⌘⌃9 | Halves (Vertical) |
+| ⌘⌃0 | Thirds (Vertical) |
+
+Workspace hotkeys (defaults):
+
+| Shortcut | Workspace |
+|---|---|
+| ⌘⌥1 | Coding |
+| ⌘⌥2 | Meeting |
+| ⌘⌥3 | Reading |
+| ⌘⌥4 | Streaming |
+
+All layout and workspace hotkeys are re-bindable in Settings → Hotkeys; chord conflicts across layouts **and** workspaces are blocked at save time.
 
 ### Edge-case behavior
 
@@ -159,17 +183,27 @@ macbook-resizer/
 │   │                           #   WindowAnimationSink, WindowMoveObserving
 │   ├── Layout/                 # Slot, Layout, LayoutEngine, Plan, Geometry,
 │   │                           #   LayoutTemplate, CustomLayout, PresetSeeds, LayoutStore
-│   └── Settings/               # AnimationConfig, HotkeyBinding, DragSwapConfig,
-│                               #   SettingsStore, Cancellable
+│   ├── Settings/               # AnimationConfig, HotkeyBinding, DragSwapConfig,
+│   │                           #   SettingsStore, Cancellable
+│   └── Workspace/              # Workspace, WorkspaceTrigger, WorkspaceSeeds,
+│                               #   WorkspaceStore, FocusModeReference
 ├── Tests/SceneCoreTests/       # 158 XCTest cases
 ├── SceneApp/                   # Xcode project — menu bar shell + settings window
 │   └── SceneApp/
 │       ├── Animation/                 # WindowAnimator (CVDisplayLink + AX bridge)
 │       ├── Interaction/               # AXMoveObserverGroup, AXWindowLookup,
 │       │                              #   DragSwapAnimationSink
-│       ├── Settings/                  # SettingsWindowController + 4 tabs +
-│       │                              #   LayoutEditorView + HotkeyCaptureView
-│       ├── Stores/                    # LayoutStoreViewModel, SettingsStoreViewModel
+│       ├── Resources/                 # Localizable.xcstrings, InfoPlist.xcstrings
+│       ├── Settings/                  # SettingsWindowController + 5 tabs
+│       │                              #   (Workspaces / Layouts / Hotkeys / Interaction / About)
+│       │                              #   + LayoutEditorView + LayoutPickerView + LayoutThumbnail
+│       │                              #   + WorkspaceEditorView + WorkspaceTriggerEditor
+│       │                              #   + AppPickerView + HotkeyCaptureView
+│       ├── Stores/                    # LayoutStoreViewModel, SettingsStoreViewModel,
+│       │                              #   WorkspaceStoreViewModel
+│       ├── Workspace/                 # AppLauncher, FocusController, WorkspaceActivator
+│       │   └── Triggers/              #   MonitorTriggerWatcher, TimeTriggerScheduler,
+│       │                              #   CalendarTriggerWatcher, TriggerSupervisor
 │       ├── SceneAppApp.swift          # @main + MenuBarExtra
 │       ├── AppDelegate.swift
 │       ├── Coordinator.swift          # orchestration layer
@@ -179,19 +213,21 @@ macbook-resizer/
 │       └── NotificationHelper.swift
 └── docs/
     ├── INSTALL.md                     # end-user install walkthrough
-    └── TESTING.md                     # manual smoke-test checklist (V0.1–V0.4)
+    ├── TESTING.md                     # manual smoke-test checklist (V0.1–V0.4)
+    └── media/                         # demo video + screenshots
 ```
 
 The split is deliberate: `SceneCore` is framework-neutral and owns all the hard logic (AX calls, layout math, hotkey plumbing, animation state machine, JSON persistence, drag-swap). 158 unit tests run via `swift test` without Xcode. `SceneApp` is a thin SwiftUI/AppKit shell — only UI, app lifecycle, and the AppKit/AX bridges (`WindowAnimator`, `AXMoveObserverGroup`, `AXWindowLookup`, `DragSwapAnimationSink`) that can't live in a framework-neutral library. Only the final `.app` build needs Xcode.
 
 ## Persistence
 
-V0.2 writes two JSON files atomically into:
+Scene writes three JSON files atomically into:
 
 ```
 ~/Library/Application Support/Scene/
-├── layouts.json     # 7 seeds + your custom layouts + each layout's hotkey
-└── settings.json    # animation enabled/duration/easing
+├── layouts.json      # 10 seeds + your custom layouts + each layout's hotkey
+├── settings.json     # animation enabled/duration/easing + drag-swap config
+└── workspaces.json   # 4 workspace seeds + your custom workspaces + active workspace ID
 ```
 
 Delete this folder to reset to factory state.

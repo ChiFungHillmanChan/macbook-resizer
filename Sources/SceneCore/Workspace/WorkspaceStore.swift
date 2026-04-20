@@ -22,10 +22,15 @@ public enum WorkspaceStoreError: Error, Equatable {
 /// `setHotkeyConflictProbe(_:)` after both stores are constructed; the init
 /// parameter defaults to a no-op probe for single-test convenience.
 public final class WorkspaceStore {
+    /// `activeWorkspaceID` is intentionally absent here — it is session-only
+    /// state, not persisted. Restoring a "last active" workspace on launch
+    /// presents users with a checkmark against a workspace they did not pick
+    /// in the current session, which feels like Scene made the choice for them.
+    /// An unknown `activeWorkspaceID` key in older on-disk files is tolerated
+    /// by `JSONDecoder`'s default unknown-key policy.
     private struct DiskModel: Codable {
         var version: Int
         var knownSeedUUIDs: [UUID]
-        var activeWorkspaceID: UUID?
         var workspaces: [Workspace]
     }
 
@@ -44,15 +49,14 @@ public final class WorkspaceStore {
         self.fileURL = fileURL
         self.hotkeyConflictProbe = hotkeyConflictProbe
 
+        self.activeWorkspaceID = nil
         if FileManager.default.fileExists(atPath: fileURL.path) {
             let data = try Data(contentsOf: fileURL)
             let model = try JSONDecoder().decode(DiskModel.self, from: data)
             self.workspaces = model.workspaces
-            self.activeWorkspaceID = model.activeWorkspaceID
             self.knownSeedUUIDs = Set(model.knownSeedUUIDs)
         } else {
             self.workspaces = WorkspaceSeeds.all
-            self.activeWorkspaceID = nil
             self.knownSeedUUIDs = Set(WorkspaceSeeds.all.map { $0.id })
             try persist()
         }
@@ -157,7 +161,6 @@ public final class WorkspaceStore {
         let model = DiskModel(
             version: 1,
             knownSeedUUIDs: Array(knownSeedUUIDs),
-            activeWorkspaceID: activeWorkspaceID,
             workspaces: workspaces
         )
         let encoder = JSONEncoder()

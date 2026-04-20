@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 自動幫你清走 quarantine flag，唔會彈「cannot be verified」嘅 Gatekeeper 警告。首次開 Scene 嗰陣，去 **System Settings → Privacy & Security → Accessibility** 撳着 Scene 就得。
 
-**或者直接下載 DMG**：**[Scene-0.4.1.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.1/Scene-0.4.1.dmg)**（約 1.4 MB，Apple Silicon，macOS 14+）
+**或者直接下載 DMG**：**[Scene-0.4.2.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.2/Scene-0.4.2.dmg)**（約 1.4 MB，Apple Silicon，macOS 14+）
 
 所有版本：[Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · 用 DMG 嘅話，跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
 
@@ -25,6 +25,13 @@ brew install --cask chifunghillmanchan/tap/scene
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
   你個 browser 唔 render 到 embed 嘅 video。<a href="docs/media/scene-marketing.mp4">撳呢度 download 示範片（MP4，13 MB）</a>。
 </video>
+
+## V0.4.2 修 bug
+
+- **ProMotion 動畫 lag** — AX 寫入而家 throttle 到 30Hz（由 display 原生 120Hz 減落嚟），加埋每個 window 0.5pt 範圍內 dedup。Cursor ↔ Chrome swap 返返原本設定嘅 250ms，唔再拖長到成秒以上。
+- **Workspace 「一打開就預選咗」** — `activeWorkspaceID` 而家只係 session-only state。之前版本會由 disk restore 返，搞到 menu bar 顯示用戶呢個 session 冇揀過嘅 workspace 被剔住。舊 disk state 會被靜悄悄 ignore 同清走。
+- **即時 Workspace click** — `appsToQuit` 空 list 唔再食 5 秒 gentle-quit grace period；`appsToLaunch` 空 list 又跳過 1.5 秒 settle。Default seed workspace click 完 ~50ms 就出 layout，唔再係 ~6.5 秒先有反應。
+- **開新窗口後再撳同一個 layout** — 連續撳同一個 layout hotkey 兩次，第二次會加 200ms settle 先 re-enumerate window，畀 `CGWindowListCopyWindowInfo` 時間登記到新窗口。第一次撳 layout 嘅 latency 冇變。
 
 ## V0.4 新功能
 
@@ -78,7 +85,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 ## Install
 
-End user：去 [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者[直接撳呢度 download 最新嘅 v0.4.1 DMG](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.1/Scene-0.4.1.dmg)，又或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
+End user：去 [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者[直接撳呢度 download 最新嘅 v0.4.2 DMG](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.4.2/Scene-0.4.2.dmg)，又或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
 
 ## 由 source build
 
@@ -101,7 +108,7 @@ Xcode 揀 `SceneApp` scheme → ⌘R。App 以 menu bar extra 形式行（冇 Do
 ### Build distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.4.1    # 出 dist/Scene-0.4.1.dmg
+./scripts/build-dmg.sh 0.4.2    # 出 dist/Scene-0.4.2.dmg
 ```
 
 Build Apple Silicon（arm64）binary，ad-hoc sign，pack 入 DMG 連 `Applications` drop shortcut。唔使 Apple Developer account。macOS 14 嘅機絕大多數都係 Apple Silicon；如果要兼容 Intel Mac，喺 build script 加返 `ARCHS="arm64 x86_64"`。

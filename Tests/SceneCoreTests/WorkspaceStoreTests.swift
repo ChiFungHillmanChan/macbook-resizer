@@ -131,13 +131,16 @@ final class WorkspaceStoreTests: XCTestCase {
 
     // MARK: - Active workspace
 
-    func testSetActivePersists() throws {
+    func testActiveWorkspaceIsSessionOnly() throws {
         let store = try WorkspaceStore(fileURL: fileURL, hotkeyConflictProbe: { _ in nil })
         try store.setActive(WorkspaceSeeds.readingID)
         XCTAssertEqual(store.activeWorkspaceID, WorkspaceSeeds.readingID)
 
+        // `activeWorkspaceID` is intentionally session-only: a reload does not
+        // restore it. Otherwise users see a "preselected" workspace on launch
+        // even though they did not pick one in the current session.
         let reloaded = try WorkspaceStore(fileURL: fileURL, hotkeyConflictProbe: { _ in nil })
-        XCTAssertEqual(reloaded.activeWorkspaceID, WorkspaceSeeds.readingID)
+        XCTAssertNil(reloaded.activeWorkspaceID)
     }
 
     func testSetActiveNilClears() throws {

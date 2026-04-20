@@ -39,6 +39,17 @@ final class Coordinator: ObservableObject {
     private var lastAppliedLayout: Layout?
     private var lastScreen: NSScreen?
     private var lastWindowToSlotIdx: [CGWindowID: Int] = [:]
+    /// Tracks the last `applyLayout` fire. When the user re-fires the same
+    /// layout within `repeatFireWindow`, we defer enumeration by
+    /// `repeatFireSettleMs` so a newly-opened OS window has time to register
+    /// with the window server (`CGWindowListCopyWindowInfo` has a ~100–500ms
+    /// propagation lag). Without this, hitting the hotkey immediately after
+    /// Cmd+N in Cursor/Chrome reads a stale snapshot and the layout looks
+    /// like a no-op because the new window is not in the plan.
+    private var lastApplyCustomLayoutID: UUID?
+    private var lastApplyTime: Date?
+    private let repeatFireWindow: TimeInterval = 5.0
+    private let repeatFireSettleMs: Int = 200
     /// Disambiguated from `Combine.Cancellable` (which is brought in by
     /// `import Combine` above) — SceneCore ships its own closure-based token.
     private var layoutStoreObserver: SceneCancellable?
@@ -140,6 +151,29 @@ final class Coordinator: ObservableObject {
 
     @discardableResult
     func applyLayout(_ custom: CustomLayout) -> Bool {
+        guard permissionGranted else { onboarding.show(); return false }
+        if let lastID = lastApplyCustomLayoutID, lastID == custom.id,
+           let lastTime = lastApplyTime,
+           Date().timeIntervalSince(lastTime) < repeatFireWindow {
+            // Same layout re-fired recently — almost always means the user
+            // just opened a new OS window and wants it placed. Defer the
+            // actual work by `repeatFireSettleMs` so `CGWindowListCopyWindowInfo`
+            // has time to report the new window. Refresh the timestamp so the
+            // deferred apply itself doesn't re-enter this branch.
+            lastApplyTime = Date()
+            let settle = repeatFireSettleMs
+            Task { @MainActor [weak self] in
+                try? await Task.sleep(for: .milliseconds(settle))
+                _ = self?.performApplyLayout(custom)
+            }
+            return true
+        }
+        lastApplyCustomLayoutID = custom.id
+        lastApplyTime = Date()
+        return performApplyLayout(custom)
+    }
+
+    private func performApplyLayout(_ custom: CustomLayout) -> Bool {
         guard permissionGranted else { onboarding.show(); return false }
         let screen = ScreenResolver.activeScreen()
         do {

@@ -35,6 +35,20 @@ final class WindowAnimator: WindowFrameSink {
     private let clock: Clock
     private var displayLink: CVDisplayLink?
     private var byID: [CGWindowID: any SceneWindowRef] = [:]
+    /// Last frame actually written to each window. Used to suppress redundant
+    /// AX writes: when the interpolator emits a frame within 0.5pt of what we
+    /// last wrote, another round-trip would be indistinguishable to the target
+    /// app and only costs IPC time.
+    private var lastWritten: [CGWindowID: CGRect] = [:]
+    /// Wall time of the most recent `tick` we actually forwarded to the runner.
+    /// Used to throttle CVDisplayLink to `minTickInterval` — ProMotion displays
+    /// fire at 120Hz, which quadruples AX write count on Electron-family apps
+    /// (Cursor, Chrome, VS Code) that respond in 30–60ms per call and bottleneck
+    /// the animation to several seconds of stalled IPC.
+    private var lastTickTime: Double = 0
+    /// 30Hz ceiling on AX writes. At 250ms default animation duration that's
+    /// ~8 emitted frames per window — visually indistinguishable from 60Hz.
+    private let minTickInterval: Double = 1.0 / 30.0
     private let log = Logger(subsystem: "com.scene.app", category: "animator")
 
     init(clock: Clock = SystemClock()) {
@@ -55,6 +69,8 @@ final class WindowAnimator: WindowFrameSink {
     func animate(windows: [any SceneWindowRef], placements: [Placement], config: AnimationConfig) {
         // Refresh the live window registry. Animations always replace the prior set.
         byID.removeAll()
+        lastWritten.removeAll()
+        lastTickTime = 0
         for w in windows { byID[w.id] = w }
 
         let tracks: [AnimationTrack] = placements.compactMap { p in
@@ -84,6 +100,10 @@ final class WindowAnimator: WindowFrameSink {
 
     private func writeOnMain(windowID: CGWindowID, frame: CGRect) {
         guard let window = byID[windowID] else { return }
+        if let prev = lastWritten[windowID], rectsApproxEqual(prev, frame, tolerance: 0.5) {
+            return
+        }
+        lastWritten[windowID] = frame
         do { try window.setFrame(frame) }
         catch {
             log.error("AX setFrame failed for \(windowID, privacy: .public): \(String(describing: error), privacy: .public)")
@@ -118,10 +138,13 @@ final class WindowAnimator: WindowFrameSink {
 
     private func tickFromDisplayLink() {
         let now = clock.now()
+        if lastTickTime > 0, now - lastTickTime < minTickInterval { return }
+        lastTickTime = now
         runner.tick(now: now)
         if runner.isFinished {
             stopDisplayLink()
             byID.removeAll()
+            lastWritten.removeAll()
         }
     }
 

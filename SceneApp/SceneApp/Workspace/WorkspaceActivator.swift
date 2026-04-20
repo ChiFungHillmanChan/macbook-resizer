@@ -70,8 +70,13 @@ final class WorkspaceActivator {
         // 2. Launch (parallel)
         await appLauncher.launch(bundleIDs: workspace.appsToLaunch)
 
-        // 3. Settle
-        try? await Task.sleep(for: .milliseconds(1500))
+        // 3. Settle — only when we actually launched something that may still
+        // be registering its first windows. Skipping the 1.5s delay on empty
+        // lists (typical for default seeded Workspaces) keeps menu-click
+        // feedback near-instant.
+        if !workspace.appsToLaunch.isEmpty {
+            try? await Task.sleep(for: .milliseconds(1500))
+        }
 
         // 4. Apply layout (validate layout still exists; warn if not).
         // On failure, skip steps 6/7 so we don't falsely banner "Activated"

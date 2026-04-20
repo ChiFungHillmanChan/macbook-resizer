@@ -38,6 +38,12 @@ final class AppLauncher {
     /// of apps that didn't quit (survivors). Caller surfaces a notification if
     /// survivors is non-empty. NEVER force-terminates (see spec §4.2).
     func quit(bundleIDs: [String]) async -> QuitReport {
+        // Empty list means the caller has no apps to close — e.g., a default
+        // seeded Workspace. Returning early avoids a gratuitous 5s delay that
+        // would otherwise block the activation sequence and make a menu click
+        // feel completely unresponsive.
+        if bundleIDs.isEmpty { return QuitReport(survivors: []) }
+
         var toQuit: [NSRunningApplication] = []
         for id in bundleIDs {
             let apps = NSRunningApplication.runningApplications(withBundleIdentifier: id)
