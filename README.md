@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 Quarantine is stripped automatically — no "cannot be verified" prompt. On first launch, grant Accessibility in **System Settings → Privacy & Security → Accessibility**.
 
-**Or download the DMG directly**: **[Scene-0.5.0.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.0/Scene-0.5.0.dmg)** (Apple Silicon, macOS 14+, notarized by Apple — no Gatekeeper prompt)
+**Or download the DMG directly**: **[Scene-0.5.1.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.1/Scene-0.5.1.dmg)** (Apple Silicon, macOS 14+, notarized by Apple — no Gatekeeper prompt)
 
 All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · DMG users, see [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
 
@@ -95,7 +95,7 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 
 ## Install
 
-End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.5.0 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.0/Scene-0.5.0.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
+End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.5.1 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.1/Scene-0.5.1.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
 
 ## Build from source
 
@@ -118,7 +118,7 @@ In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu ba
 ### Build a distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.5.0    # produces dist/Scene-0.5.0.dmg (notarized)
+./scripts/build-dmg.sh 0.5.1    # produces dist/Scene-0.5.1.dmg (notarized)
 ```
 
 This builds an Apple Silicon (arm64) binary, ad-hoc signs it, and packages it into a DMG with an `Applications` drop shortcut. No Apple Developer account required. macOS 14 devices are overwhelmingly Apple Silicon; Intel users can add `ARCHS="arm64 x86_64"` back to the build script.

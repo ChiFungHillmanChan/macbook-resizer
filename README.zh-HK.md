@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 自動幫你清走 quarantine flag，唔會彈「cannot be verified」嘅 Gatekeeper 警告。首次開 Scene 嗰陣，去 **System Settings → Privacy & Security → Accessibility** 撳着 Scene 就得。
 
-**或者直接下載 DMG**：**[Scene-0.5.0.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.0/Scene-0.5.0.dmg)**（Apple Silicon，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
+**或者直接下載 DMG**：**[Scene-0.5.1.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.1/Scene-0.5.1.dmg)**（Apple Silicon，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
 
 所有版本：[Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · 用 DMG 嘅話，跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
 
@@ -92,7 +92,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 ## Install
 
-End user：去 [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者[直接撳呢度 download 最新嘅 v0.5.0 DMG](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.0/Scene-0.5.0.dmg)，又或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Accessibility 授權。
+End user：去 [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者[直接撳呢度 download 最新嘅 v0.5.1 DMG](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.1/Scene-0.5.1.dmg)，又或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Accessibility 授權。
 
 ## 由 source build
 
@@ -115,7 +115,7 @@ Xcode 揀 `SceneApp` scheme → ⌘R。App 以 menu bar extra 形式行（冇 Do
 ### Build distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.5.0    # 出 dist/Scene-0.5.0.dmg（notarized）
+./scripts/build-dmg.sh 0.5.1    # 出 dist/Scene-0.5.1.dmg（notarized）
 ```
 
 Build Apple Silicon（arm64）binary，ad-hoc sign，pack 入 DMG 連 `Applications` drop shortcut。唔使 Apple Developer account。macOS 14 嘅機絕大多數都係 Apple Silicon；如果要兼容 Intel Mac，喺 build script 加返 `ARCHS="arm64 x86_64"`。

@@ -33,9 +33,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private(set) var workspaceActivator: WorkspaceActivator?
     private(set) var triggerSupervisor: TriggerSupervisor?
 
-    /// V0.4.2 passive update nudge. Polled at most once per 24h from
-    /// `applicationDidFinishLaunching`; the check is silent on failure and
-    /// skipped entirely if the 24h window hasn't elapsed.
+    /// V0.4.2 passive update nudge. `startPeriodicChecks()` wires an immediate
+    /// check plus an hourly timer and a wake-from-sleep observer; the actual
+    /// GitHub call is rate-limited to once per 24h per device via UserDefaults,
+    /// so long-running menu bar instances discover new releases without
+    /// requiring a relaunch (V0.5.1).
     let updateChecker = UpdateChecker()
 
     /// Single shared instance — re-shown on subsequent "Settings…" clicks
@@ -125,7 +127,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         self.triggerSupervisor = supervisor
         coordinator.configure(triggerSupervisor: supervisor)
 
-        updateChecker.checkIfDue()
+        updateChecker.startPeriodicChecks()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
