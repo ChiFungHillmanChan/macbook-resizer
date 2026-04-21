@@ -39,6 +39,7 @@ AGENTS.md
 .roomodes
 docs/superpowers/
 docs/marketing/
+APPLE_DEVELOPER_SETUP*.md
 .superpowers/
 
 .env
