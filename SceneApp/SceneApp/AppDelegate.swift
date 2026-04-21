@@ -22,7 +22,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         workspaceStore: workspaceStore,
         settingsStore: settingsStore,
         onPermissionChange: { [weak self] granted in
-            DispatchQueue.main.async { self?.permissionGranted = granted }
+            DispatchQueue.main.async {
+                self?.permissionGranted = granted
+                if granted { self?.showFirstLaunchWelcomeIfNeeded() }
+            }
         }
     )
 
@@ -53,6 +56,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
                 return await watcher.requestAccess()
             }
         )
+    }()
+
+    /// One-time welcome window shown on first install (after AX is granted).
+    /// Gating lives in `showFirstLaunchWelcomeIfNeeded()`; the controller
+    /// itself does not check the UserDefaults flag, so callers that want to
+    /// force-show (e.g. the "Show welcome screen again" button on the About
+    /// tab) simply call `firstLaunchWindow.show()` directly.
+    @MainActor
+    lazy var firstLaunchWindow: FirstLaunchWindowController = {
+        let c = FirstLaunchWindowController()
+        c.onOpenSettings = { [weak self] in self?.openSettings() }
+        return c
     }()
 
     override init() {
@@ -128,6 +143,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         coordinator.configure(triggerSupervisor: supervisor)
 
         updateChecker.startPeriodicChecks()
+
+        showFirstLaunchWelcomeIfNeeded()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -137,5 +154,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @MainActor
     func openSettings() {
         settingsWindow.show()
+    }
+
+    /// Shows the welcome window the very first time AX permission is both
+    /// granted and detected. Flag is set BEFORE showing so a cmd-Q during the
+    /// welcome does not cause it to re-appear — preferable to re-showing it
+    /// indefinitely until a clean dismiss.
+    ///
+    /// Idempotent — safe to call multiple times. Called from
+    /// `applicationDidFinishLaunching` (covers the AX-already-granted case)
+    /// and from the permission-change closure (covers the grant-during-session
+    /// case).
+    @MainActor
+    private func showFirstLaunchWelcomeIfNeeded() {
+        let key = "hasShownFirstLaunchWelcomeV1"
+        let defaults = UserDefaults.standard
+        if defaults.bool(forKey: key) { return }
+        guard permissionGranted else { return }
+        defaults.set(true, forKey: key)
+        firstLaunchWindow.show()
     }
 }
