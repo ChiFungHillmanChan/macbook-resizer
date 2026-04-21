@@ -1,6 +1,6 @@
 # Scene
 
-A macOS menu bar app for instant window layouts. Click one of seven presets and every visible window snaps into place.
+A macOS menu bar app for instant window layouts. Click one of ten presets and every visible window snaps into place. First-time users get a friendly welcome window on first launch.
 
 **Requires macOS 14 (Sonoma) or later.**
 
@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 Quarantine is stripped automatically — no "cannot be verified" prompt. On first launch, grant Accessibility in **System Settings → Privacy & Security → Accessibility**.
 
-**Or download the DMG directly**: **[Scene-0.5.1.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.1/Scene-0.5.1.dmg)** (Apple Silicon, macOS 14+, notarized by Apple — no Gatekeeper prompt)
+**Or download the DMG directly**: **[Scene-0.5.2.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.2/Scene-0.5.2.dmg)** (Apple Silicon, macOS 14+, notarized by Apple — no Gatekeeper prompt)
 
 All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · DMG users, see [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
 
@@ -25,6 +25,16 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
   Your browser does not render embedded video. <a href="docs/media/scene-marketing.mp4">Download the demo clip (MP4, 13 MB)</a>.
 </video>
+
+## V0.5.2 first-launch welcome
+
+- **One-time welcome window** — new users now see a friendly welcome screen on first launch after Accessibility permission is granted. Confirms "Scene is running", shows a native SwiftUI illustration of a mock menu bar with the Scene icon highlighted and a bouncing arrow pointing at it, and offers two buttons: **"Got it"** (dismiss) or **"Open Settings"** (primary, opens Workspaces tab).
+- **Gated by `UserDefaults`** — the `hasShownFirstLaunchWelcomeV1` flag survives reinstalls. Flag is set at show-time (not dismiss-time), so a `⌘Q` during the welcome does not cause it to re-appear on the next launch.
+- **Re-openable** — **Settings → About → "Show welcome screen again"** re-triggers the welcome on demand without clearing the flag.
+- **AX-missing path coordinated** — if AX is not yet granted at launch, the existing AX onboarding appears first; after the user grants permission, the welcome appears in its place. The two windows never overlap.
+- **Localized** — English, 繁體中文 (香港) 粵語, 繁體中文 (台灣).
+- **Dynamic version string** — the About tab now reads `CFBundleShortVersionString` from the bundle instead of a stale `"V0.4"` catalog constant, so future releases no longer require a String Catalog edit just to update the displayed version.
+- **No SceneCore changes; tests still 177/177** — this is a pure SceneApp UI feature.
 
 ## V0.4.3 passive update nudge
 
@@ -95,7 +105,7 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 
 ## Install
 
-End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.5.1 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.1/Scene-0.5.1.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
+End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.5.2 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.2/Scene-0.5.2.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
 
 ## Build from source
 
@@ -118,7 +128,7 @@ In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu ba
 ### Build a distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.5.1    # produces dist/Scene-0.5.1.dmg (notarized)
+./scripts/build-dmg.sh 0.5.2    # produces dist/Scene-0.5.2.dmg (notarized)
 ```
 
 This builds an Apple Silicon (arm64) binary, ad-hoc signs it, and packages it into a DMG with an `Applications` drop shortcut. No Apple Developer account required. macOS 14 devices are overwhelmingly Apple Silicon; Intel users can add `ARCHS="arm64 x86_64"` back to the build script.
@@ -220,7 +230,7 @@ macbook-resizer/
 │       └── NotificationHelper.swift
 └── docs/
     ├── INSTALL.md                     # end-user install walkthrough
-    ├── TESTING.md                     # manual smoke-test checklist (V0.1–V0.4)
+    ├── TESTING.md                     # manual smoke-test checklist (V0.1–V0.5)
     └── media/                         # demo video + screenshots
 ```
 

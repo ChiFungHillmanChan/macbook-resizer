@@ -1,6 +1,6 @@
 # Scene
 
-一個 macOS menu bar app — click 一下，所有可見窗口即刻入位。V0.4 新加咗 Workspaces（情境切換）、layout thumbnail、3 個縱向 preset 同多語 UI，建基於 V0.3 嘅 drag-to-swap、V0.2 嘅自訂 layout、自訂 hotkey、smooth animation、設定視窗。
+一個 macOS menu bar app — click 一下，所有可見窗口即刻入位。V0.5.2 加咗首次啟動嘅歡迎畫面，新用家一開 app 就知 Scene 喺邊。V0.4 新加咗 Workspaces（情境切換）、layout thumbnail、3 個縱向 preset 同多語 UI，建基於 V0.3 嘅 drag-to-swap、V0.2 嘅自訂 layout、自訂 hotkey、smooth animation、設定視窗。
 
 **需要 macOS 14（Sonoma）或以上。**
 
@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 自動幫你清走 quarantine flag，唔會彈「cannot be verified」嘅 Gatekeeper 警告。首次開 Scene 嗰陣，去 **System Settings → Privacy & Security → Accessibility** 撳着 Scene 就得。
 
-**或者直接下載 DMG**：**[Scene-0.5.1.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.1/Scene-0.5.1.dmg)**（Apple Silicon，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
+**或者直接下載 DMG**：**[Scene-0.5.2.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.2/Scene-0.5.2.dmg)**（Apple Silicon，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
 
 所有版本：[Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · 用 DMG 嘅話，跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
 
@@ -25,6 +25,16 @@ brew install --cask chifunghillmanchan/tap/scene
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
   你個 browser 唔 render 到 embed 嘅 video。<a href="docs/media/scene-marketing.mp4">撳呢度 download 示範片（MP4，13 MB）</a>。
 </video>
+
+## V0.5.2 首次啟動歡迎畫面
+
+- **一次性 welcome window** — 新用家第一次授權 Accessibility 之後，會彈個歡迎視窗。確認 Scene 喺 menu bar 運行緊，用純 SwiftUI 畫咗個 menu bar mock，Scene icon 周圍有脈動嘅圈，下面有個彈上彈落嘅箭咀指住佢。兩個掣：**「知道喇」**（關閉）或者**「打開設定」**（主要 CTA，彈到 Workspaces tab）。
+- **用 `UserDefaults` flag 守** — `hasShownFirstLaunchWelcomeV1` flag 跨 reinstall 保留。Flag 係**彈出嚟嗰刻**就 set（唔係 dismiss 時），即使你 `⌘Q` 中途 quit，下次 launch 都唔會再彈。
+- **可以重新打開** — **Settings → About → 「再睇歡迎畫面」**可以隨時叫返個 welcome 出嚟，flag 唔會被清。
+- **AX 未畀權限路徑協調** — 如果啟動時 AX 未畀，舊有 AX onboarding 先彈；用家授權咗之後，welcome 接住彈。兩個窗口唔會重疊。
+- **多語支援** — 英文、繁體中文（香港）粵語、繁體中文（台灣）。
+- **Dynamic 版本號** — About tab 而家由 `CFBundleShortVersionString` 讀 bundle，唔再用死咗嘅 `"V0.4"` catalog 常數，將來 bump version 唔使改 String Catalog。
+- **SceneCore 冇改；測試仲係 177/177 全通過** — 純 SceneApp UI feature。
 
 ## V0.4.3 更新提示
 
