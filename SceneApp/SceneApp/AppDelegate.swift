@@ -94,6 +94,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         super.init()
     }
 
+    @MainActor
     func applicationDidFinishLaunching(_ notification: Notification) {
         // Phase 2 (see Cross-cutting §3): now that both stores exist, install
         // the cross-store hotkey conflict probes. Each probe captures the
