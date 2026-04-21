@@ -54,6 +54,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             calendarPermissionRequester: { [weak self] in
                 guard let watcher = self?.triggerSupervisor?.calendar else { return false }
                 return await watcher.requestAccess()
+            },
+            reopenWelcome: { [weak self] in
+                self?.firstLaunchWindow.show()
             }
         )
     }()
@@ -64,7 +67,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     /// force-show (e.g. the "Show welcome screen again" button on the About
     /// tab) simply call `firstLaunchWindow.show()` directly.
     @MainActor
-    lazy var firstLaunchWindow: FirstLaunchWindowController = {
+    private lazy var firstLaunchWindow: FirstLaunchWindowController = {
         let c = FirstLaunchWindowController()
         c.onOpenSettings = { [weak self] in self?.openSettings() }
         return c
