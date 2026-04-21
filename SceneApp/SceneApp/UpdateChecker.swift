@@ -1,3 +1,4 @@
+import AppKit
 import Combine
 import Foundation
 import SceneCore
@@ -27,6 +28,41 @@ final class UpdateChecker: ObservableObject {
     private let minInterval: TimeInterval = 24 * 60 * 60
 
     private let log = Logger(subsystem: "com.scene.app", category: "update-checker")
+
+    private var periodicTimer: Timer?
+    private var wakeObserver: NSObjectProtocol?
+
+    /// Immediate check + recurring hourly checks + wake-from-sleep trigger.
+    /// The 24-hour `UserDefaults` debounce in `checkIfDue()` rate-limits the
+    /// actual GitHub API calls; the timer just unblocks it. Menu bar apps can
+    /// stay resident for weeks — without this, the v0.4.3 launch-time nudge
+    /// never fires for long-running instances.
+    func startPeriodicChecks() {
+        checkIfDue()
+
+        periodicTimer?.invalidate()
+        periodicTimer = Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.checkIfDue() }
+        }
+
+        if let wakeObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver)
+        }
+        wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in self?.checkIfDue() }
+        }
+    }
+
+    deinit {
+        periodicTimer?.invalidate()
+        if let wakeObserver {
+            NSWorkspace.shared.notificationCenter.removeObserver(wakeObserver)
+        }
+    }
 
     /// Kick off a non-blocking check. Safe to call on every launch — the
     /// 24-hour per-device debounce (persisted in `UserDefaults`) keeps us
