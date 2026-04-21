@@ -25,6 +25,10 @@ Package.resolved
 /build/
 /dist/
 
+# Regenerable icon source (generate-icon.py writes this alongside the
+# asset-catalog copy; the one in Assets.xcassets is the canonical copy).
+/icon_1024x1024.png
+
 # AI / agent-session artifacts (local only — do not commit)
 CLAUDE.md
 GEMINI.md
