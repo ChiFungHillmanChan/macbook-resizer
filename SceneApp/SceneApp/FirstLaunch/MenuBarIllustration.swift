@@ -76,7 +76,7 @@ struct MenuBarIllustration: View {
                 .opacity(ringOpacity)
                 .frame(width: 22, height: 22)
 
-            Image(systemName: "rectangle.3.group.fill")
+            Image(systemName: "rectangle.3.group")
                 .font(.system(size: 12))
                 .foregroundStyle(.primary)
         }
