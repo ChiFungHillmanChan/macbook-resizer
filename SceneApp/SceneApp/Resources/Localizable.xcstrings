@@ -1411,19 +1411,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS ties Accessibility grants to the app's code signature. After each update, the previous grant becomes invalid — System Settings may still show Scene as ON but the new binary isn't trusted. The reliable fix: reset the grant with the command below, then relaunch Scene and re-authorize."
+            "value": "If you upgraded from Scene v0.4.3 or earlier, macOS may require you to re-authorize Accessibility because Scene is now notarized by Apple (a different signature lineage). This is a one-time step — future v0.5.0+ updates will preserve your grant automatically. Reset with the command below, then relaunch Scene and re-authorize."
           }
         },
         "zh-HK": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS 將輔助使用授權綁住個 app 嘅 code signature。每次更新之後，之前嘅授權就失效 — 系統設定可能仲顯示 Scene 係 ON，但新 build 其實未被信任。最可靠嘅解決方法：用下面嘅指令 reset 授權，然後重啟 Scene 再重新授權。"
+            "value": "如果你由 Scene v0.4.3 或更早版本升級上嚟，macOS 可能要求你重新授權輔助使用，因為 Scene 已經由 Apple notarize（簽名方式唔同咗）。呢個係一次性步驟 — 以後 v0.5.0+ 嘅更新會自動保留授權。用下面嘅指令 reset，然後重啟 Scene 再重新授權。"
           }
         },
         "zh-TW": {
           "stringUnit": {
             "state": "translated",
-            "value": "macOS 會將輔助使用權限繫結在 app 的 code signature。每次更新後，原本的權限就失效 — 系統設定或許仍顯示 Scene 為 ON，但新的 binary 並未被信任。最可靠的解法：用下方指令重設權限，再重新啟動 Scene 並重新授權。"
+            "value": "如果你從 Scene v0.4.3 或更早版本升級而來，macOS 可能要求你重新授權輔助使用，因為 Scene 現已由 Apple notarize（簽名方式不同）。這是一次性步驟 — 未來 v0.5.0+ 的更新會自動保留授權。用下方指令重設，再重新啟動 Scene 並重新授權。"
           }
         }
       }

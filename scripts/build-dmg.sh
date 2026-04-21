@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# build-dmg.sh — produces an arm64, ad-hoc-signed Scene DMG at dist/.
+# build-dmg.sh — produces an arm64, Developer ID-signed, notarized Scene DMG
+# at dist/.
 #
 # Produces a polished two-icon installer window (Scene.app on the left,
 # Applications folder alias on the right) with a background image showing a
@@ -11,7 +12,18 @@ set -euo pipefail
 #
 # Background image lives at dmg/background.tiff (committed to the repo).
 #
-# Usage: ./scripts/build-dmg.sh [version]
+# Signing + notarization:
+# - App signed with Developer ID Application certificate from login keychain.
+# - Notarization uses the "scene-notary" keychain profile created via
+#     xcrun notarytool store-credentials "scene-notary" \
+#         --apple-id <id> --team-id <TEAM> --password <app-specific-pw>
+# - Set SKIP_NOTARY=1 to skip the Apple notary submission (ad-hoc only).
+#   Useful for local DMG-layout iteration where you don't care about
+#   Gatekeeper acceptance.
+#
+# Usage:
+#   ./scripts/build-dmg.sh 0.5.0              # full notarized release
+#   SKIP_NOTARY=1 ./scripts/build-dmg.sh 0.5.0-dev  # local test, ad-hoc
 
 VERSION="${1:-0.1.0}"
 PROJECT="SceneApp/SceneApp.xcodeproj"
@@ -27,9 +39,24 @@ VOLUME_NAME="Scene ${VERSION}"
 ICON_ICNS="$DIST_DIR/Scene.icns"
 BG_TIFF="dmg/background.tiff"
 
+DEVELOPER_ID="Developer ID Application: Hillman Chan (22K6G3HH9G)"
+TEAM_ID="22K6G3HH9G"
+NOTARY_PROFILE="scene-notary"
+SKIP_NOTARY="${SKIP_NOTARY:-0}"
+
 echo "==> Cleaning previous build artifacts…"
 rm -rf "$BUILD_DIR" "$STAGE_DIR" "$DIST_DIR/$DMG_NAME" "$DMG_RW"
 mkdir -p "$DIST_DIR"
+
+if [[ "$SKIP_NOTARY" == "1" ]]; then
+    echo "==> SKIP_NOTARY=1 — ad-hoc signing (Apple notary skipped)"
+    SIGN_IDENTITY="-"
+    EXTRA_SIGN_FLAGS=""
+else
+    echo "==> Developer ID signing ($DEVELOPER_ID)"
+    SIGN_IDENTITY="$DEVELOPER_ID"
+    EXTRA_SIGN_FLAGS="--timestamp --options=runtime"
+fi
 
 echo "==> Building arm64 Release binary (Apple Silicon only)…"
 xcodebuild \
@@ -37,8 +64,10 @@ xcodebuild \
     -scheme "$SCHEME" \
     -configuration Release \
     -derivedDataPath "$BUILD_DIR" \
-    CODE_SIGN_IDENTITY="-" \
-    CODE_SIGNING_REQUIRED=NO \
+    CODE_SIGN_IDENTITY="$SIGN_IDENTITY" \
+    CODE_SIGN_STYLE=Manual \
+    DEVELOPMENT_TEAM="$TEAM_ID" \
+    OTHER_CODE_SIGN_FLAGS="$EXTRA_SIGN_FLAGS" \
     ARCHS="arm64" \
     VALID_ARCHS="arm64" \
     ONLY_ACTIVE_ARCH=NO \
@@ -154,6 +183,27 @@ hdiutil convert "$DMG_RW" \
 rm -f "$DMG_RW"
 
 hdiutil verify "$DIST_DIR/$DMG_NAME" >/dev/null
+
+if [[ "$SKIP_NOTARY" == "0" ]]; then
+    echo "==> Signing DMG itself with Developer ID…"
+    codesign --force --sign "$DEVELOPER_ID" --timestamp "$DIST_DIR/$DMG_NAME"
+
+    echo "==> Submitting DMG to Apple notary service…"
+    echo "    (通常 2-10 分鐘，唔好 interrupt。)"
+    xcrun notarytool submit "$DIST_DIR/$DMG_NAME" \
+        --keychain-profile "$NOTARY_PROFILE" \
+        --wait
+
+    echo "==> Stapling notary ticket to DMG…"
+    xcrun stapler staple "$DIST_DIR/$DMG_NAME"
+
+    echo "==> Verifying Gatekeeper acceptance…"
+    spctl --assess --type open --context context:primary-signature \
+        --verbose=4 "$DIST_DIR/$DMG_NAME"
+else
+    echo "==> SKIP_NOTARY=1 — ad-hoc signing DMG, skipping notary submission"
+    codesign --force --sign "-" "$DIST_DIR/$DMG_NAME"
+fi
 
 # Keep dist/dmg-contents out of the repo, but its layout is small — nothing
 # user-facing references it past this point.

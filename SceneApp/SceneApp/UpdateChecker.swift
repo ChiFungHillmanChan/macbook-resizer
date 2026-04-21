@@ -10,13 +10,11 @@ import os
 /// browser.
 ///
 /// Deliberately *not* Sparkle (and not silent auto-install):
-/// - Scene is ad-hoc signed. Every new build produces a fresh `cdhash`,
-///   which macOS treats as a different app and invalidates the existing
-///   Accessibility grant. An in-app auto-install would silently break
-///   the core feature after each update. The nudge keeps the user in
-///   charge of running the DMG so the tap's postflight (quarantine strip)
-///   still handles first-run concerns.
-/// - No signature verification here; Gatekeeper runs on the downloaded DMG.
+/// - Keeping the user in the DMG install path preserves the same install
+///   ritual across Homebrew and direct-download users — no divergence in
+///   support flows.
+/// - No signature verification here; Gatekeeper runs on the downloaded DMG
+///   (notarized v0.5.0+, so no prompt).
 @MainActor
 final class UpdateChecker: ObservableObject {
     @Published private(set) var availableVersion: String?

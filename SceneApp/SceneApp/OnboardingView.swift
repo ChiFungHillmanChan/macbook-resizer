@@ -35,9 +35,11 @@ struct OnboardingView: View {
             }
             .buttonStyle(.link)
 
-            // First failed "Check again" = likely stale TCC grant from a prior
-            // build's cdhash. Surface the reset command immediately — toggle
-            // OFF/ON is unreliable on macOS 14.x with ad-hoc signed apps.
+            // First failed "Check again" = likely stale TCC grant from upgrading
+            // an ad-hoc-signed build (v0.4.3 or earlier) to notarized v0.5.0+.
+            // The cdhash changed, invalidating the prior grant. One-time fix
+            // for the upgrade transition — same-lineage notarized updates
+            // preserve the grant automatically.
             if checkAttempts >= 1 {
                 Divider().padding(.vertical, 4)
                 VStack(spacing: 10) {
