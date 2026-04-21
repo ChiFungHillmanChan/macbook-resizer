@@ -25,29 +25,6 @@
         }
       }
     },
-    "about.version": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "V0.4"
-          }
-        },
-        "zh-HK": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "V0.4"
-          }
-        },
-        "zh-TW": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "V0.4"
-          }
-        }
-      }
-    },
     "about.welcome.reopen": {
       "extractionState": "manual",
       "localizations": {

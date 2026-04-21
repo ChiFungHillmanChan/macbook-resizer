@@ -9,7 +9,7 @@ struct AboutTab: View {
             Text("about.app_name")
                 .font(.largeTitle)
                 .bold()
-            Text("about.version")
+            Text(verbatim: "V\(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?")")
                 .foregroundStyle(.secondary)
             Link(
                 "github.com/ChiFungHillmanChan/macbook-resizer",
