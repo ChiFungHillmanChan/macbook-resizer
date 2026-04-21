@@ -193,3 +193,24 @@ Build & launch: `xcodebuild -project SceneApp/SceneApp.xcodeproj -scheme SceneAp
 | 13 (fr fallback)            | | |
 | 14 (menu bar restructure)   | | |
 | 15 (unsaved-work quit)      | | |
+
+---
+
+## V0.5.2 — First-launch welcome window
+
+Reset preconditions between checks as needed:
+
+```sh
+killall SceneApp 2>/dev/null; true
+defaults delete com.hillman.SceneApp hasShownFirstLaunchWelcomeV1 2>/dev/null; true
+```
+
+- [ ] **Fresh install, AX pre-granted**: welcome window appears on launch with illustration + both buttons. AX onboarding does NOT appear.
+- [ ] **Fresh install, AX missing**: AX onboarding appears first. After granting AX, AX onboarding closes and welcome appears. They never overlap.
+- [ ] **Second launch** (no flag reset): no welcome, no AX onboarding.
+- [ ] **Got it button** (or Enter key): welcome closes. No further UI appears.
+- [ ] **Open Settings button**: welcome closes, Settings window opens with the Workspaces tab selected.
+- [ ] **Quit during welcome** (cmd-Q before dismissing): relaunch does NOT re-show welcome — flag was set on show, not on dismiss (deliberate).
+- [ ] **Re-open from About tab**: Settings → About → "Show welcome screen again" shows the welcome. Dismiss. Relaunch — no welcome. Flag stays set.
+- [ ] **Locale coverage**: switch System Settings → Language to zh-HK, reset flag, relaunch — welcome uses Cantonese (粵語) copy. Repeat for zh-TW.
+- [ ] **Illustration animation**: Scene icon ring pulses, arrow bounces subtly. No perceptible performance impact.
