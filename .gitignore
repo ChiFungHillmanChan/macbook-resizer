@@ -34,6 +34,9 @@ AGENTS.md
 .aider*
 .roomodes
 docs/superpowers/
+docs/marketing/
+.superpowers/
 
 .env
 .env/*
+public/ 
