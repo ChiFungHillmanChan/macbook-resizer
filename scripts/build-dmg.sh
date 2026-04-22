@@ -59,6 +59,12 @@ else
 fi
 
 echo "==> Building universal Release binary (arm64 + x86_64)…"
+# SWIFT_OPTIMIZATION_LEVEL=-Onone workaround: Xcode 26.x's Swift Release
+# optimizer (-O / -Osize) crashes with an ICE in the SIL pipeline when the
+# deployment target is pre-26 (e.g. 14.0). Debug (-Onone) builds fine. Binary
+# size impact on a 1.4MB menu bar app is negligible; runtime cost is
+# imperceptible since Scene is mostly I/O-bound on AX / AppKit. Remove this
+# override once Apple ships a fixed Swift toolchain.
 xcodebuild \
     -project "$PROJECT" \
     -scheme "$SCHEME" \
@@ -71,6 +77,7 @@ xcodebuild \
     ARCHS="arm64 x86_64" \
     VALID_ARCHS="arm64 x86_64" \
     ONLY_ACTIVE_ARCH=NO \
+    SWIFT_OPTIMIZATION_LEVEL=-Onone \
     build >/dev/null
 
 SRC_APP="$BUILD_DIR/Build/Products/Release/SceneApp.app"
