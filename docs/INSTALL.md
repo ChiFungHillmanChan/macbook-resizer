@@ -3,7 +3,7 @@
 ## Requirements
 
 - **macOS 14 (Sonoma) or later**
-- **Apple Silicon (M1/M2/M3/M4/M5)**. The prebuilt DMG is arm64-only. Intel Macs need to build from source (see "Building from source" below) and adjust `ARCHS` in `scripts/build-dmg.sh`.
+- **Apple Silicon (M1/M2/M3/M4/M5) or Intel (x86_64)**. The prebuilt DMG from v0.5.3+ is a universal binary.
 
 Scene v0.5.0+ is **notarized by Apple** — no Gatekeeper bypass, no quarantine strip, no "cannot be verified" prompt. Double-click to install.
 

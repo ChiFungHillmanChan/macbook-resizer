@@ -2,7 +2,7 @@
 
 A macOS menu bar app for instant window layouts. Click one of ten presets and every visible window snaps into place. First-time users get a friendly welcome window on first launch.
 
-**Requires macOS 14 (Sonoma) or later.**
+**Requires macOS 14 (Sonoma) or later. Universal binary — runs native on both Apple Silicon and Intel.**
 
 > 繁體中文版本： [README.zh-HK.md](README.zh-HK.md)
 
@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 Quarantine is stripped automatically — no "cannot be verified" prompt. On first launch, grant Accessibility in **System Settings → Privacy & Security → Accessibility**.
 
-**Or download the DMG directly**: **[Scene-0.5.2.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.2/Scene-0.5.2.dmg)** (Apple Silicon, macOS 14+, notarized by Apple — no Gatekeeper prompt)
+**Or download the DMG directly**: **[Scene-0.5.3.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.3/Scene-0.5.3.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
 
 All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · DMG users, see [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
 
@@ -25,6 +25,15 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
   Your browser does not render embedded video. <a href="docs/media/scene-marketing.mp4">Download the demo clip (MP4, 13 MB)</a>.
 </video>
+
+## V0.5.3 smoother animation + Intel support
+
+- **60Hz window animation for native apps** — the AX-write throttle in `WindowAnimator` now picks its ceiling per-animation: 30Hz when any window belongs to a known Electron app (VS Code, Cursor, Chrome, Brave, Slack, Discord, Figma, Notion, Obsidian, Teams), 60Hz when all windows are native (Safari, Finder, Xcode, Notes, Preview, System Settings, Mail, Messages). Native apps get roughly twice the frame count inside the same animation window, which reads as noticeably smoother on ProMotion displays.
+- **Distance-proportional duration** — the configured `durationMs` is now treated as a reference for a ~600pt diagonal move. Short moves (same-screen nudges) contract toward ~70% of the base for a snappier feel; long moves (across-display / full-screen rearrangements) expand toward ~140% so they don't feel rushed. Clamped both ways; `AnimationConfig`'s own [100, 500]ms range is the final safety net.
+- **Tighter write de-dup** — per-window AX write dedup tolerance dropped from 0.5pt → 0.2pt, reclaiming a few frames at the end of easeOut curves where tiny deltas were previously suppressed.
+- **Universal binary** — Intel (x86_64) Macs now supported. One DMG ships both slices; macOS picks the native one at launch. No Rosetta required on Apple Silicon.
+- **Deployment target restored to macOS 14** — Xcode had silently bumped the Xcode project's `MACOSX_DEPLOYMENT_TARGET` to 26.4 (matching the build machine's OS); reset to 14.0 to match `Package.swift` and the documented minimum.
+- **No SceneCore changes; tests still 177/177** — all three smoothness tweaks live in `WindowAnimator`, the AppKit bridge.
 
 ## V0.5.2 first-launch welcome
 
@@ -105,7 +114,7 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 
 ## Install
 
-End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.5.2 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.2/Scene-0.5.2.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
+End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.5.3 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.3/Scene-0.5.3.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
 
 ## Build from source
 
@@ -128,10 +137,10 @@ In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu ba
 ### Build a distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.5.2    # produces dist/Scene-0.5.2.dmg (notarized)
+./scripts/build-dmg.sh 0.5.3    # produces dist/Scene-0.5.3.dmg (universal, notarized)
 ```
 
-This builds an Apple Silicon (arm64) binary, ad-hoc signs it, and packages it into a DMG with an `Applications` drop shortcut. No Apple Developer account required. macOS 14 devices are overwhelmingly Apple Silicon; Intel users can add `ARCHS="arm64 x86_64"` back to the build script.
+This builds a universal (arm64 + x86_64) binary, Developer ID-signs it, submits it to Apple for notarization, and packages it into a DMG with an `Applications` drop shortcut. Both Apple Silicon and Intel Macs install from the same DMG. Set `SKIP_NOTARY=1` for a local ad-hoc build that skips the Apple notary submission (useful while iterating on DMG layout).
 
 ### Run the core library tests
 

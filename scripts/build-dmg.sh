@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# build-dmg.sh — produces an arm64, Developer ID-signed, notarized Scene DMG
-# at dist/.
+# build-dmg.sh — produces a universal (arm64 + x86_64), Developer ID-signed,
+# notarized Scene DMG at dist/.
 #
 # Produces a polished two-icon installer window (Scene.app on the left,
 # Applications folder alias on the right) with a background image showing a
@@ -58,7 +58,7 @@ else
     EXTRA_SIGN_FLAGS="--timestamp --options=runtime"
 fi
 
-echo "==> Building arm64 Release binary (Apple Silicon only)…"
+echo "==> Building universal Release binary (arm64 + x86_64)…"
 xcodebuild \
     -project "$PROJECT" \
     -scheme "$SCHEME" \
@@ -68,8 +68,8 @@ xcodebuild \
     CODE_SIGN_STYLE=Manual \
     DEVELOPMENT_TEAM="$TEAM_ID" \
     OTHER_CODE_SIGN_FLAGS="$EXTRA_SIGN_FLAGS" \
-    ARCHS="arm64" \
-    VALID_ARCHS="arm64" \
+    ARCHS="arm64 x86_64" \
+    VALID_ARCHS="arm64 x86_64" \
     ONLY_ACTIVE_ARCH=NO \
     build >/dev/null
 

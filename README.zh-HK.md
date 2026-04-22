@@ -1,8 +1,8 @@
 # Scene
 
-一個 macOS menu bar app — click 一下，所有可見窗口即刻入位。V0.5.2 加咗首次啟動嘅歡迎畫面，新用家一開 app 就知 Scene 喺邊。V0.4 新加咗 Workspaces（情境切換）、layout thumbnail、3 個縱向 preset 同多語 UI，建基於 V0.3 嘅 drag-to-swap、V0.2 嘅自訂 layout、自訂 hotkey、smooth animation、設定視窗。
+一個 macOS menu bar app — click 一下，所有可見窗口即刻入位。V0.5.3 調順咗動畫（native app 升到 60Hz、duration 按距離 scale），同時加返 Intel Mac 支援（universal binary）。V0.5.2 加咗首次啟動嘅歡迎畫面，新用家一開 app 就知 Scene 喺邊。V0.4 新加咗 Workspaces（情境切換）、layout thumbnail、3 個縱向 preset 同多語 UI，建基於 V0.3 嘅 drag-to-swap、V0.2 嘅自訂 layout、自訂 hotkey、smooth animation、設定視窗。
 
-**需要 macOS 14（Sonoma）或以上。**
+**需要 macOS 14（Sonoma）或以上。Universal binary — Apple Silicon 同 Intel 都行到。**
 
 > English version: [README.md](README.md)
 
@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 自動幫你清走 quarantine flag，唔會彈「cannot be verified」嘅 Gatekeeper 警告。首次開 Scene 嗰陣，去 **System Settings → Privacy & Security → Accessibility** 撳着 Scene 就得。
 
-**或者直接下載 DMG**：**[Scene-0.5.2.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.2/Scene-0.5.2.dmg)**（Apple Silicon，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
+**或者直接下載 DMG**：**[Scene-0.5.3.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.3/Scene-0.5.3.dmg)**（Universal：Apple Silicon + Intel，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
 
 所有版本：[Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · 用 DMG 嘅話，跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
 
@@ -25,6 +25,15 @@ brew install --cask chifunghillmanchan/tap/scene
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
   你個 browser 唔 render 到 embed 嘅 video。<a href="docs/media/scene-marketing.mp4">撳呢度 download 示範片（MP4，13 MB）</a>。
 </video>
+
+## V0.5.3 動畫更順 + Intel 支援
+
+- **Native app 動畫升到 60Hz** — `WindowAnimator` 嘅 AX write throttle 而家按動畫嘅 window 組合揀 ceiling：入面有任何 Electron app（VS Code、Cursor、Chrome、Brave、Slack、Discord、Figma、Notion、Obsidian、Teams）就維持 30Hz 保護 back-pressure；全部係 native app（Safari、Finder、Xcode、Notes、Preview、系統設定、Mail、Messages）就升到 60Hz。native app 喺同一段動畫時間內得到差唔多兩倍幀數,喺 ProMotion 屏幕上感覺明顯順啲。
+- **Duration 按距離 scale** — 你喺 Settings 設定嘅 `durationMs` 而家當係「~600pt 對角線移動」嘅參考值。短距離（同 screen 內細幅度）縮到 ~70%，感覺 snappy 啲；長距離（跨屏 / 全屏重排）拉到 ~140%，冇咁匆忙。兩頭都有 clamp，最後仲有 `AnimationConfig` 本身嘅 [100, 500]ms 做 safety net。
+- **AX dedup 更 tight** — 每個 window 嘅 AX write dedup tolerance 由 0.5pt 降到 0.2pt，拎返少少本來喺 easeOut 尾段被食咗嘅幀。
+- **Universal binary** — Intel（x86_64）Mac 而家支援。一個 DMG 包埋兩個 slice，macOS launch 時自動揀 native 嗰個。Apple Silicon 唔使行 Rosetta。
+- **Deployment target 回到 macOS 14** — Xcode 之前喺 build 機嘅 macOS 26.4 下靜雞雞將 project 嘅 `MACOSX_DEPLOYMENT_TARGET` 改咗做 26.4，今次 reset 返 14.0 同 `Package.swift` 同埋文件 support 一致。
+- **SceneCore 冇改；測試仲係 177/177 全通過** — 三個 smoothness 改動全部喺 `WindowAnimator`（AppKit bridge）入面。
 
 ## V0.5.2 首次啟動歡迎畫面
 
@@ -102,7 +111,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 ## Install
 
-End user：去 [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者[直接撳呢度 download 最新嘅 v0.5.1 DMG](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.1/Scene-0.5.1.dmg)，又或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Accessibility 授權。
+End user：去 [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者[直接撳呢度 download 最新嘅 v0.5.3 DMG](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.3/Scene-0.5.3.dmg)，又或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Accessibility 授權。
 
 ## 由 source build
 
@@ -125,10 +134,10 @@ Xcode 揀 `SceneApp` scheme → ⌘R。App 以 menu bar extra 形式行（冇 Do
 ### Build distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.5.1    # 出 dist/Scene-0.5.1.dmg（notarized）
+./scripts/build-dmg.sh 0.5.3    # 出 dist/Scene-0.5.3.dmg（universal + notarized）
 ```
 
-Build Apple Silicon（arm64）binary，ad-hoc sign，pack 入 DMG 連 `Applications` drop shortcut。唔使 Apple Developer account。macOS 14 嘅機絕大多數都係 Apple Silicon；如果要兼容 Intel Mac，喺 build script 加返 `ARCHS="arm64 x86_64"`。
+Build universal（arm64 + x86_64）binary，Developer ID sign，submit 去 Apple notary，pack 入 DMG 連 `Applications` drop shortcut。Apple Silicon 同 Intel Mac 用同一個 DMG。如果想 local iterate DMG layout，set `SKIP_NOTARY=1` 會 skip Apple notary submission，改用 ad-hoc sign。
 
 ### 跑 SceneCore 嘅 unit test
 
