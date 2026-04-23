@@ -2,8 +2,11 @@ import SwiftUI
 import SceneCore
 
 /// Settings → Workspaces tab. NavigationSplitView with a list of workspaces on
-/// the left and the detail editor on the right. Toolbar exposes "+ New" and
-/// "Duplicate"; deletion is inline-swipe via `List.onDelete`.
+/// the left and the detail editor on the right. Toolbar exposes "+ New",
+/// "Duplicate" and "Delete" (V0.5.5 — was previously inline-swipe via
+/// `List.onDelete`, but on macOS NavigationSplitView the swipe gesture is
+/// barely discoverable, so users believed seeded workspaces couldn't be
+/// removed). The `.onDelete` modifier is preserved as a secondary affordance.
 ///
 /// §5 guard: "+ New" is disabled when no layouts exist, and `newWorkspace()`
 /// has a defensive `guard let firstLayout` fallback so we never synthesize a
@@ -49,6 +52,11 @@ struct WorkspacesTab: View {
                         Label("workspaces.duplicate", systemImage: "plus.square.on.square")
                     }
                     .disabled(selectedID == nil)
+
+                    Button(action: deleteSelected) {
+                        Image(systemName: "trash")
+                    }
+                    .disabled(selectedID == nil)
                 }
             }
         } detail: {
@@ -92,6 +100,16 @@ struct WorkspacesTab: View {
         guard let id = selectedID else { return }
         do {
             try workspaceStore.duplicate(id: id)
+        } catch {
+            errorMessage = String(describing: error)
+        }
+    }
+
+    private func deleteSelected() {
+        guard let id = selectedID else { return }
+        do {
+            try workspaceStore.delete(id: id)
+            selectedID = nil
         } catch {
             errorMessage = String(describing: error)
         }

@@ -1,6 +1,6 @@
 # Scene
 
-一個 macOS menu bar app — click 一下，所有可見窗口即刻入位。V0.5.4 修咗首次啟動嘅 welcome 同 Accessibility 升級時嘅 stuck 情況：welcome 唔再等 AX 先彈，stale TCC 嘅救援指令亦由一開始就睇到。V0.5.3 調順咗動畫（native app 升到 60Hz、duration 按距離 scale），同時加返 Intel Mac 支援（universal binary）。V0.5.2 加咗首次啟動嘅歡迎畫面。V0.4 新加咗 Workspaces（情境切換）、layout thumbnail、3 個縱向 preset 同多語 UI，建基於 V0.3 嘅 drag-to-swap、V0.2 嘅自訂 layout、自訂 hotkey、smooth animation、設定視窗。
+一個 macOS menu bar app — click 一下，所有可見窗口即刻入位。V0.5.5 修咗 quit-then-relaunch 之後 24 小時冷卻會吞咗新版本通知嘅 bug，又喺 Workspaces tab toolbar 加返 delete 掣（原本要用 swipe，喺 macOS 上幾乎冇人發現）。V0.5.4 修咗首次啟動嘅 welcome 同 Accessibility 升級時嘅 stuck 情況：welcome 唔再等 AX 先彈，stale TCC 嘅救援指令亦由一開始就睇到。V0.5.3 調順咗動畫（native app 升到 60Hz、duration 按距離 scale），同時加返 Intel Mac 支援（universal binary）。V0.5.2 加咗首次啟動嘅歡迎畫面。V0.4 新加咗 Workspaces（情境切換）、layout thumbnail、3 個縱向 preset 同多語 UI。
 
 **需要 macOS 14（Sonoma）或以上。Universal binary — Apple Silicon 同 Intel 都行到。**
 
@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 自動幫你清走 quarantine flag，唔會彈「cannot be verified」嘅 Gatekeeper 警告。首次開 Scene 嗰陣，去 **System Settings → Privacy & Security → Accessibility** 撳着 Scene 就得。
 
-**或者直接下載 DMG**：**[Scene-0.5.4.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.4/Scene-0.5.4.dmg)**（Universal：Apple Silicon + Intel，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
+**或者直接下載 DMG**：**[Scene-0.5.5.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.5/Scene-0.5.5.dmg)**（Universal：Apple Silicon + Intel，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
 
 所有版本：[Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · 用 DMG 嘅話，跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
 
@@ -25,6 +25,12 @@ brew install --cask chifunghillmanchan/tap/scene
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
   你個 browser 唔 render 到 embed 嘅 video。<a href="docs/media/scene-marketing.mp4">撳呢度 download 示範片（MP4，13 MB）</a>。
 </video>
+
+## V0.5.5 Quit-relaunch 即時 check 新版本 + Workspaces delete 掣
+
+- **Quit + relaunch 即時撳 GitHub check 新版本** — `UpdateChecker.startPeriodicChecks()` 喺 launch 時而家會 bypass 24 小時冷卻。之前如果 Scene 喺 v0.5.3 已經 cache 咗 `lastCheckedAt`（嗰時 v0.5.4 仲未 publish），而你喺 24 小時內 quit 再 relaunch，就會悄悄 skip 咗 GitHub call，menu bar 完全唔會見到「有新版本」。每個鐘嘅 background timer 同 wake-from-sleep 仍然守 24 小時冷卻（嗰啲 fire 唔需要用家 intent，要保護 GitHub rate limit）。
+- **Workspaces tab toolbar 加返 delete 掣** — `WorkspacesTab` toolbar 而家有 `trash` 掣，同 `LayoutsTab` 一樣。之前淨係靠 `List.onDelete` swipe gesture，但係 macOS NavigationSplitView 上幾乎冇人發現呢個手勢，用家以為四個 seeded workspace（Coding、Meeting、Reading、Streaming）係冇得 delete。Inline-swipe 保留做 secondary affordance。
+- **SceneCore 冇改；測試仲係 177/177 全通過** — 純 SceneApp UI / 生命週期修補。
 
 ## V0.5.4 首次啟動可靠性 + Accessibility 升級救援
 
@@ -118,7 +124,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 ## Install
 
-End user：去 [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者[直接撳呢度 download 最新嘅 v0.5.4 DMG](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.4/Scene-0.5.4.dmg)，又或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Accessibility 授權。
+End user：去 [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者[直接撳呢度 download 最新嘅 v0.5.5 DMG](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.5/Scene-0.5.5.dmg)，又或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Accessibility 授權。
 
 ## 由 source build
 
@@ -141,7 +147,7 @@ Xcode 揀 `SceneApp` scheme → ⌘R。App 以 menu bar extra 形式行（冇 Do
 ### Build distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.5.4    # 出 dist/Scene-0.5.4.dmg（universal + notarized）
+./scripts/build-dmg.sh 0.5.5    # 出 dist/Scene-0.5.5.dmg（universal + notarized）
 ```
 
 Build universal（arm64 + x86_64）binary，Developer ID sign，submit 去 Apple notary，pack 入 DMG 連 `Applications` drop shortcut。Apple Silicon 同 Intel Mac 用同一個 DMG。如果想 local iterate DMG layout，set `SKIP_NOTARY=1` 會 skip Apple notary submission，改用 ad-hoc sign。

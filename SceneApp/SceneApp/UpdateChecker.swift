@@ -33,12 +33,17 @@ final class UpdateChecker: ObservableObject {
     private var wakeObserver: NSObjectProtocol?
 
     /// Immediate check + recurring hourly checks + wake-from-sleep trigger.
-    /// The 24-hour `UserDefaults` debounce in `checkIfDue()` rate-limits the
-    /// actual GitHub API calls; the timer just unblocks it. Menu bar apps can
-    /// stay resident for weeks — without this, the v0.4.3 launch-time nudge
-    /// never fires for long-running instances.
+    /// V0.5.5: the launch-time check now bypasses the 24-hour debounce —
+    /// previously, if Scene had cached `lastCheckedAt` while the user was on
+    /// version N (before N+1 was published) and the user relaunched after
+    /// N+1 shipped but inside the 24-hour window, the check was skipped and
+    /// the user never saw the update menu item until tomorrow. An explicit
+    /// quit + relaunch is a strong user signal that they want fresh state.
+    /// The hourly timer and wake-from-sleep trigger keep the 24h debounce
+    /// (those fire automatically without user intent — protecting the GitHub
+    /// rate limit on long-running instances).
     func startPeriodicChecks() {
-        checkIfDue()
+        forceCheck()
 
         periodicTimer?.invalidate()
         periodicTimer = Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { [weak self] _ in
@@ -55,6 +60,14 @@ final class UpdateChecker: ObservableObject {
         ) { [weak self] _ in
             Task { @MainActor in self?.checkIfDue() }
         }
+    }
+
+    /// Bypass the 24-hour debounce. Used by `startPeriodicChecks()` so an
+    /// explicit launch always re-asks GitHub. GitHub's unauthenticated rate
+    /// limit (60 req/hr per IP) leaves plenty of headroom even for users who
+    /// relaunch many times per session.
+    func forceCheck() {
+        Task { [weak self] in await self?.performCheck() }
     }
 
     deinit {

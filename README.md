@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 Quarantine is stripped automatically — no "cannot be verified" prompt. On first launch, grant Accessibility in **System Settings → Privacy & Security → Accessibility**.
 
-**Or download the DMG directly**: **[Scene-0.5.4.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.4/Scene-0.5.4.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
+**Or download the DMG directly**: **[Scene-0.5.5.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.5/Scene-0.5.5.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
 
 All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · DMG users, see [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
 
@@ -25,6 +25,12 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
   Your browser does not render embedded video. <a href="docs/media/scene-marketing.mp4">Download the demo clip (MP4, 13 MB)</a>.
 </video>
+
+## V0.5.5 update-detection on relaunch + Workspaces delete button
+
+- **Quit-and-relaunch now refreshes the update check** — `UpdateChecker.startPeriodicChecks()` now bypasses the 24-hour debounce on launch. Previously, if Scene cached `lastCheckedAt` on a version where the next release wasn't published yet, a relaunch within 24 hours would silently skip the GitHub call and the user would never see the new release in the menu until the next day. The hourly background timer and the wake-from-sleep trigger keep the 24h debounce (those fire automatically without explicit user intent — the GitHub rate-limit guard belongs there, not on user-driven relaunches).
+- **Delete button in Workspaces tab toolbar** — `WorkspacesTab` now exposes a `trash` button next to "+ New" and "Duplicate", matching `LayoutsTab`. Previously the only way to remove a workspace was the inline `List.onDelete` swipe gesture, which on macOS NavigationSplitView is barely discoverable — users believed the four seeded workspaces (Coding, Meeting, Reading, Streaming) couldn't be removed. Inline-swipe is preserved as a secondary affordance.
+- **No SceneCore changes; tests still 177/177** — pure SceneApp UI / lifecycle fix.
 
 ## V0.5.4 first-launch reliability + Accessibility recovery
 
@@ -121,7 +127,7 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 
 ## Install
 
-End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.5.4 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.4/Scene-0.5.4.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
+End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.5.5 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.5/Scene-0.5.5.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
 
 ## Build from source
 
@@ -144,7 +150,7 @@ In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu ba
 ### Build a distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.5.4    # produces dist/Scene-0.5.4.dmg (universal, notarized)
+./scripts/build-dmg.sh 0.5.5    # produces dist/Scene-0.5.5.dmg (universal, notarized)
 ```
 
 This builds a universal (arm64 + x86_64) binary, Developer ID-signs it, submits it to Apple for notarization, and packages it into a DMG with an `Applications` drop shortcut. Both Apple Silicon and Intel Macs install from the same DMG. Set `SKIP_NOTARY=1` for a local ad-hoc build that skips the Apple notary submission (useful while iterating on DMG layout).
