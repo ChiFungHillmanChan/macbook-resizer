@@ -1,6 +1,6 @@
 # Scene
 
-一個 macOS menu bar app — click 一下，所有可見窗口即刻入位。V0.5.3 調順咗動畫（native app 升到 60Hz、duration 按距離 scale），同時加返 Intel Mac 支援（universal binary）。V0.5.2 加咗首次啟動嘅歡迎畫面，新用家一開 app 就知 Scene 喺邊。V0.4 新加咗 Workspaces（情境切換）、layout thumbnail、3 個縱向 preset 同多語 UI，建基於 V0.3 嘅 drag-to-swap、V0.2 嘅自訂 layout、自訂 hotkey、smooth animation、設定視窗。
+一個 macOS menu bar app — click 一下，所有可見窗口即刻入位。V0.5.4 修咗首次啟動嘅 welcome 同 Accessibility 升級時嘅 stuck 情況：welcome 唔再等 AX 先彈，stale TCC 嘅救援指令亦由一開始就睇到。V0.5.3 調順咗動畫（native app 升到 60Hz、duration 按距離 scale），同時加返 Intel Mac 支援（universal binary）。V0.5.2 加咗首次啟動嘅歡迎畫面。V0.4 新加咗 Workspaces（情境切換）、layout thumbnail、3 個縱向 preset 同多語 UI，建基於 V0.3 嘅 drag-to-swap、V0.2 嘅自訂 layout、自訂 hotkey、smooth animation、設定視窗。
 
 **需要 macOS 14（Sonoma）或以上。Universal binary — Apple Silicon 同 Intel 都行到。**
 
@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 自動幫你清走 quarantine flag，唔會彈「cannot be verified」嘅 Gatekeeper 警告。首次開 Scene 嗰陣，去 **System Settings → Privacy & Security → Accessibility** 撳着 Scene 就得。
 
-**或者直接下載 DMG**：**[Scene-0.5.3.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.3/Scene-0.5.3.dmg)**（Universal：Apple Silicon + Intel，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
+**或者直接下載 DMG**：**[Scene-0.5.4.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.4/Scene-0.5.4.dmg)**（Universal：Apple Silicon + Intel，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
 
 所有版本：[Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · 用 DMG 嘅話，跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
 
@@ -25,6 +25,13 @@ brew install --cask chifunghillmanchan/tap/scene
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
   你個 browser 唔 render 到 embed 嘅 video。<a href="docs/media/scene-marketing.mp4">撳呢度 download 示範片（MP4，13 MB）</a>。
 </video>
+
+## V0.5.4 首次啟動可靠性 + Accessibility 升級救援
+
+- **Welcome 唔再等 Accessibility 先彈** — 一次性 welcome 視窗而家喺第一次 launch 即刻彈，唔再 gate 喺 `AXIsProcessTrusted`。之前由 ad-hoc-signed v0.4.x 升上 notarized v0.5+ 嘅用家，因為 cdhash 改咗 TCC 對唔上，AX 永遠授唔到，結果 welcome 永遠唔出。新流程：welcome 先彈 → 用家 dismiss 之後，如果 AX 仲未授權，先彈 onboarding。
+- **Accessibility 救援提示一開始就睇到** — `tccutil reset Accessibility com.hillman.SceneApp` 指令、**複製指令**掣、貼到 Terminal 嘅步驟，喺 onboarding 視窗一開就睇到。之前要撳「再檢查」失敗一次先會出，但係大部分用家喺 System Settings 撳着之後就等 2 秒輪詢自動偵測，根本冇撳「再檢查」，所以一直冇睇過救援指令。
+- **返返嚟嘅用家如果未授權，自動彈 onboarding** — 如果 welcome flag 已經 set 但 AX 仲係冇授權，啟動時會自動彈 onboarding，唔使再喺 menu bar 度搵「Grant Accessibility」呢個收埋嘅選項。
+- **SceneCore 冇改；測試仲係 177/177 全通過** — 純 SceneApp UI / 生命週期修補。
 
 ## V0.5.3 動畫更順 + Intel 支援
 
@@ -111,7 +118,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 ## Install
 
-End user：去 [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者[直接撳呢度 download 最新嘅 v0.5.3 DMG](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.3/Scene-0.5.3.dmg)，又或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Accessibility 授權。
+End user：去 [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者[直接撳呢度 download 最新嘅 v0.5.4 DMG](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.4/Scene-0.5.4.dmg)，又或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Accessibility 授權。
 
 ## 由 source build
 
@@ -134,7 +141,7 @@ Xcode 揀 `SceneApp` scheme → ⌘R。App 以 menu bar extra 形式行（冇 Do
 ### Build distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.5.3    # 出 dist/Scene-0.5.3.dmg（universal + notarized）
+./scripts/build-dmg.sh 0.5.4    # 出 dist/Scene-0.5.4.dmg（universal + notarized）
 ```
 
 Build universal（arm64 + x86_64）binary，Developer ID sign，submit 去 Apple notary，pack 入 DMG 連 `Applications` drop shortcut。Apple Silicon 同 Intel Mac 用同一個 DMG。如果想 local iterate DMG layout，set `SKIP_NOTARY=1` 會 skip Apple notary submission，改用 ad-hoc sign。

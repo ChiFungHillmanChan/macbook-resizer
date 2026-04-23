@@ -18,13 +18,23 @@ final class FirstLaunchWindowController {
     /// the Workspaces tab.
     var onOpenSettings: () -> Void = {}
 
+    /// V0.5.4: Fires after either button dismisses the window. AppDelegate
+    /// uses this to chain the Accessibility prompt (when AX is still missing)
+    /// so a first-time user goes welcome → AX prompt without having to fish
+    /// in the menu bar.
+    var afterDismiss: () -> Void = {}
+
     func show() {
         if window == nil {
             let view = FirstLaunchView(
-                onDismiss: { [weak self] in self?.hide() },
+                onDismiss: { [weak self] in
+                    self?.hide()
+                    self?.afterDismiss()
+                },
                 onOpenSettings: { [weak self] in
                     self?.hide()
                     self?.onOpenSettings()
+                    self?.afterDismiss()
                 }
             )
             let host = NSHostingController(rootView: view)

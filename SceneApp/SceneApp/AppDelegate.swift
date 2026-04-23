@@ -24,7 +24,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         onPermissionChange: { [weak self] granted in
             DispatchQueue.main.async {
                 self?.permissionGranted = granted
-                if granted { self?.showFirstLaunchWelcomeIfNeeded() }
             }
         }
     )
@@ -61,15 +60,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         )
     }()
 
-    /// One-time welcome window shown on first install (after AX is granted).
-    /// Gating lives in `showFirstLaunchWelcomeIfNeeded()`; the controller
-    /// itself does not check the UserDefaults flag, so callers that want to
-    /// force-show (e.g. the "Show welcome screen again" button on the About
-    /// tab) simply call `firstLaunchWindow.show()` directly.
+    /// One-time welcome window shown on first install. V0.5.4: no longer
+    /// gated on Accessibility — the welcome shows on first launch regardless
+    /// of permission state, so users who get stuck on AX (e.g. stale TCC from
+    /// upgrading an ad-hoc-signed v0.4.x build) still see the introduction.
+    /// Gating still lives in `showFirstLaunchWelcomeIfNeeded()`; the
+    /// controller itself does not check the UserDefaults flag, so callers
+    /// that want to force-show (e.g. the "Show welcome screen again" button
+    /// on the About tab) simply call `firstLaunchWindow.show()` directly.
+    ///
+    /// `afterDismiss` chains the AX prompt — first-time users go welcome →
+    /// onboarding without having to fish in the menu bar.
     @MainActor
     private lazy var firstLaunchWindow: FirstLaunchWindowController = {
         let c = FirstLaunchWindowController()
         c.onOpenSettings = { [weak self] in self?.openSettings() }
+        c.afterDismiss = { [weak self] in
+            self?.openOnboardingIfMissingAX()
+        }
         return c
     }()
 
@@ -148,7 +156,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
 
         updateChecker.startPeriodicChecks()
 
-        showFirstLaunchWelcomeIfNeeded()
+        // V0.5.4: welcome on first launch regardless of AX state. If the
+        // welcome did NOT show (returning user with the flag already set)
+        // and AX is missing, surface the onboarding window automatically so
+        // returning users with a broken TCC grant don't have to discover the
+        // hidden "Grant Accessibility" menu item to recover.
+        if !showFirstLaunchWelcomeIfNeeded() {
+            openOnboardingIfMissingAX()
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -160,22 +175,35 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         settingsWindow.show()
     }
 
-    /// Shows the welcome window the very first time AX permission is both
-    /// granted and detected. Flag is set BEFORE showing so a cmd-Q during the
-    /// welcome does not cause it to re-appear — preferable to re-showing it
-    /// indefinitely until a clean dismiss.
+    /// Shows the welcome window on the very first launch, regardless of
+    /// Accessibility state (V0.5.4). Returns `true` when the welcome was
+    /// shown, `false` when the flag was already set and we skipped — the
+    /// caller uses the return value to decide whether to also chain the
+    /// onboarding window for returning users without AX.
     ///
-    /// Idempotent — safe to call multiple times. Called from
-    /// `applicationDidFinishLaunching` (covers the AX-already-granted case)
-    /// and from the permission-change closure (covers the grant-during-session
-    /// case).
+    /// Flag is set BEFORE showing so a cmd-Q during the welcome does not
+    /// cause it to re-appear — preferable to re-showing it indefinitely
+    /// until a clean dismiss.
     @MainActor
-    private func showFirstLaunchWelcomeIfNeeded() {
+    @discardableResult
+    private func showFirstLaunchWelcomeIfNeeded() -> Bool {
         let key = "hasShownFirstLaunchWelcomeV1"
         let defaults = UserDefaults.standard
-        if defaults.bool(forKey: key) { return }
-        guard permissionGranted else { return }
+        if defaults.bool(forKey: key) { return false }
         defaults.set(true, forKey: key)
         firstLaunchWindow.show()
+        return true
+    }
+
+    /// Opens the AX onboarding window if Accessibility is currently missing.
+    /// Called after the welcome dismisses (first-time users) and from
+    /// `applicationDidFinishLaunching` (returning users skipping the welcome).
+    /// Uses `forceRecheck()` so a grant made between launch and welcome
+    /// dismissal is honored even if the polling timer has not fired yet.
+    @MainActor
+    private func openOnboardingIfMissingAX() {
+        if !AXPermission.forceRecheck() {
+            coordinator.openOnboarding()
+        }
     }
 }

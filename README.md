@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 Quarantine is stripped automatically — no "cannot be verified" prompt. On first launch, grant Accessibility in **System Settings → Privacy & Security → Accessibility**.
 
-**Or download the DMG directly**: **[Scene-0.5.3.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.3/Scene-0.5.3.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
+**Or download the DMG directly**: **[Scene-0.5.4.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.4/Scene-0.5.4.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
 
 All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · DMG users, see [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
 
@@ -25,6 +25,13 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
   Your browser does not render embedded video. <a href="docs/media/scene-marketing.mp4">Download the demo clip (MP4, 13 MB)</a>.
 </video>
+
+## V0.5.4 first-launch reliability + Accessibility recovery
+
+- **Welcome window no longer gated on Accessibility** — the one-time welcome screen now appears on the very first launch regardless of permission state. Previously it was held back until `AXIsProcessTrusted` returned true, so anyone stuck on the cdhash-mismatch upgrade path (typical when going from an ad-hoc-signed v0.4.x to a notarized v0.5+) never saw the introduction. The welcome now runs first, then the Accessibility prompt chains automatically when the user dismisses it.
+- **Accessibility recovery hint shown upfront** — the `tccutil reset Accessibility com.hillman.SceneApp` command, the **Copy** button, and the "paste into Terminal" instructions are visible the moment the onboarding window opens. The previous behavior gated this hint behind a failed "Check again" click — but most users grant in System Settings and let the 2-second polling timer pick it up, so they never clicked Check again and never discovered the rescue command.
+- **Returning users without AX get the prompt automatically** — if Accessibility is missing on a launch where the welcome flag is already set, the onboarding window now opens by itself instead of waiting for the user to find the hidden "Grant Accessibility" item in the menu bar.
+- **No SceneCore changes; tests still 177/177** — pure SceneApp UI / lifecycle fix.
 
 ## V0.5.3 smoother animation + Intel support
 
@@ -114,7 +121,7 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 
 ## Install
 
-End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.5.3 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.3/Scene-0.5.3.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
+End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.5.4 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.4/Scene-0.5.4.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
 
 ## Build from source
 
@@ -137,7 +144,7 @@ In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu ba
 ### Build a distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.5.3    # produces dist/Scene-0.5.3.dmg (universal, notarized)
+./scripts/build-dmg.sh 0.5.4    # produces dist/Scene-0.5.4.dmg (universal, notarized)
 ```
 
 This builds a universal (arm64 + x86_64) binary, Developer ID-signs it, submits it to Apple for notarization, and packages it into a DMG with an `Applications` drop shortcut. Both Apple Silicon and Intel Macs install from the same DMG. Set `SKIP_NOTARY=1` for a local ad-hoc build that skips the Apple notary submission (useful while iterating on DMG layout).
