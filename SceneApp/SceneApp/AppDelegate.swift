@@ -39,8 +39,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     /// check plus an hourly timer and a wake-from-sleep observer; the actual
     /// GitHub call is rate-limited to once per 24h per device via UserDefaults,
     /// so long-running menu bar instances discover new releases without
-    /// requiring a relaunch (V0.5.1).
+    /// requiring a relaunch (V0.5.1). V0.5.5: launch-time check bypasses the
+    /// 24h debounce so quit + relaunch sees fresh state.
     let updateChecker = UpdateChecker()
+
+    /// V0.5.6 in-app installer. Downloads the new DMG, verifies signature,
+    /// and triggers the helper script that replaces this binary in place
+    /// (preserving the TCC `com.apple.macl` xattr so Accessibility survives).
+    let updateInstaller = UpdateInstaller()
 
     /// Single shared instance — re-shown on subsequent "Settings…" clicks
     /// rather than recreated, so view-model state survives close/reopen.

@@ -14,6 +14,7 @@ struct SceneAppEntry: App {
             .environmentObject(delegate.coordinator)
             .environmentObject(delegate)
             .environmentObject(delegate.updateChecker)
+            .environmentObject(delegate.updateInstaller)
         }
         .menuBarExtraStyle(.menu)
     }

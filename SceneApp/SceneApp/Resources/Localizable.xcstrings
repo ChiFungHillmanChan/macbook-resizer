@@ -1273,19 +1273,226 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Update available: v%@ — click to download"
+            "value": "Update available: v%@ — click to install"
           }
         },
         "zh-HK": {
           "stringUnit": {
             "state": "translated",
-            "value": "有新版本 v%@ — 撳呢度 download"
+            "value": "有新版本 v%@ — 撳呢度即時安裝"
           }
         },
         "zh-TW": {
           "stringUnit": {
             "state": "translated",
-            "value": "有新版本 v%@ — 點此下載"
+            "value": "有新版本 v%@ — 點此立即安裝"
+          }
+        }
+      }
+    },
+    "update.install.alert.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install Scene v%@?"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安裝 Scene v%@？"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安裝 Scene v%@？"
+          }
+        }
+      }
+    },
+    "update.install.alert.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scene will quit, install the update, and relaunch automatically. Your workspaces, layouts, settings, and Accessibility permission are preserved."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scene 會 quit、自動裝新版本、然後重開。你嘅 workspaces、layouts、設定，連埋 Accessibility 授權都會保留。"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scene 將會結束、自動安裝新版本、然後重新啟動。您的 workspaces、layouts、設定，以及 Accessibility 授權都會保留。"
+          }
+        }
+      }
+    },
+    "update.install.alert.install_and_restart": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Install and Restart"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安裝並重開"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安裝並重新啟動"
+          }
+        }
+      }
+    },
+    "update.install.alert.release_notes": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Release Notes…"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "睇 Release Notes…"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "查看更新說明…"
+          }
+        }
+      }
+    },
+    "update.install.alert.later": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Later"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "遲啲先"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "稍後"
+          }
+        }
+      }
+    },
+    "update.installer.downloading": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Downloading Scene v%@…"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "下載緊 Scene v%@…"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在下載 Scene v%@…"
+          }
+        }
+      }
+    },
+    "update.installer.verifying": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verifying signature…"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "核對簽名…"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在驗證簽名…"
+          }
+        }
+      }
+    },
+    "update.installer.installing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Installing…"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "安裝緊…"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在安裝…"
+          }
+        }
+      }
+    },
+    "update.installer.failed.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update failed"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新失敗"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "更新失敗"
           }
         }
       }

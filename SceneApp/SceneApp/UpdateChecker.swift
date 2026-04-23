@@ -20,6 +20,11 @@ import os
 final class UpdateChecker: ObservableObject {
     @Published private(set) var availableVersion: String?
     @Published private(set) var releasePageURL: URL?
+    /// V0.5.6: direct URL to the `.dmg` asset attached to the GitHub release,
+    /// surfaced so the in-app `UpdateInstaller` can download + install in one
+    /// click. `nil` if the release has no DMG asset (defensive — every Scene
+    /// release since v0.4.x has shipped one).
+    @Published private(set) var dmgURL: URL?
 
     private let apiURL = URL(string:
         "https://api.github.com/repos/ChiFungHillmanChan/macbook-resizer/releases/latest"
@@ -107,6 +112,12 @@ final class UpdateChecker: ObservableObject {
 
             self.availableVersion = Self.normalizeTag(release.tagName)
             self.releasePageURL = url
+            // First .dmg asset wins. Releases bundling multiple DMGs (e.g.
+            // separate Apple Silicon / Intel slices) would need extra
+            // routing here, but v0.5.3+ ships a single universal DMG.
+            self.dmgURL = release.assets
+                .first(where: { $0.name.lowercased().hasSuffix(".dmg") })
+                .flatMap { URL(string: $0.browserDownloadURL) }
         } catch {
             log.debug("update check failed: \(String(describing: error), privacy: .public)")
         }
@@ -119,9 +130,20 @@ final class UpdateChecker: ObservableObject {
     private struct Release: Decodable {
         let tagName: String
         let htmlURL: String
+        let assets: [Asset]
         enum CodingKeys: String, CodingKey {
             case tagName = "tag_name"
             case htmlURL = "html_url"
+            case assets
+        }
+    }
+
+    private struct Asset: Decodable {
+        let name: String
+        let browserDownloadURL: String
+        enum CodingKeys: String, CodingKey {
+            case name
+            case browserDownloadURL = "browser_download_url"
         }
     }
 }

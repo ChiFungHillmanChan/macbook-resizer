@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 Quarantine is stripped automatically — no "cannot be verified" prompt. On first launch, grant Accessibility in **System Settings → Privacy & Security → Accessibility**.
 
-**Or download the DMG directly**: **[Scene-0.5.5.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.5/Scene-0.5.5.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
+**Or download the DMG directly**: **[Scene-0.5.6.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.6/Scene-0.5.6.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
 
 All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · DMG users, see [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
 
@@ -25,6 +25,14 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
   Your browser does not render embedded video. <a href="docs/media/scene-marketing.mp4">Download the demo clip (MP4, 13 MB)</a>.
 </video>
+
+## V0.5.6 in-app update installer
+
+- **Click → install → relaunch, no manual download.** The "Update available" menu item now opens a confirmation alert instead of just opening the GitHub release page. Click **Install and Restart** and Scene downloads the new DMG (verifying it's signed by Team ID `22K6G3HH9G`), spawns a detached helper, quits, lets the helper replace `/Applications/Scene.app` (or wherever Scene is installed) via `ditto --noqtn` to preserve the `com.apple.macl` xattr that anchors the TCC Accessibility grant, and relaunches the new Scene. The "View Release Notes" button is still available for users who want to read the changelog before updating.
+- **Accessibility permission survives across updates.** TCC binds the grant to the binary's Designated Requirement, which is stable across any release signed with the same Developer ID. Combined with the `ditto --noqtn` xattr-preserving copy, the new Scene launches with `AXIsProcessTrusted` already true — no re-grant, no toggling System Settings, no `tccutil reset`. (V0.5.5 → V0.5.6 still needs one manual install since V0.5.5 ships with the old release-page-opening menu item; subsequent updates from V0.5.6+ go through the in-app installer.)
+- **Verification before install.** The downloaded DMG is `codesign -dv` checked and the `TeamIdentifier` is matched against the expected Developer ID before the helper script runs. A DMG with a different Team ID is rejected and the user sees an error alert instead of being silently downgraded.
+- **Helper script is self-contained and safe.** Writes to `/tmp/`, backs up the old app to `/tmp/Scene.app.bak-$$` before `ditto`, rolls back if `ditto` fails, unmounts the DMG, deletes the cached download, and self-deletes. Logs to `/tmp/scene-update-<pid>.log` for post-mortems if something does break.
+- **No SceneCore changes; tests still 177/177** — `UpdateInstaller.swift` is new in SceneApp, plus a few lines in `UpdateChecker` to surface `dmgURL` from the GitHub release `assets[]`.
 
 ## V0.5.5 update-detection on relaunch + Workspaces delete button
 
@@ -127,7 +135,7 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 
 ## Install
 
-End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.5.5 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.5/Scene-0.5.5.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
+End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.5.6 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.6/Scene-0.5.6.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
 
 ## Build from source
 
@@ -150,7 +158,7 @@ In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu ba
 ### Build a distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.5.5    # produces dist/Scene-0.5.5.dmg (universal, notarized)
+./scripts/build-dmg.sh 0.5.6    # produces dist/Scene-0.5.6.dmg (universal, notarized)
 ```
 
 This builds a universal (arm64 + x86_64) binary, Developer ID-signs it, submits it to Apple for notarization, and packages it into a DMG with an `Applications` drop shortcut. Both Apple Silicon and Intel Macs install from the same DMG. Set `SKIP_NOTARY=1` for a local ad-hoc build that skips the Apple notary submission (useful while iterating on DMG layout).

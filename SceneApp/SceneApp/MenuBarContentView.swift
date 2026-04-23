@@ -5,6 +5,7 @@ struct MenuBarContentView: View {
     @EnvironmentObject var coordinator: Coordinator
     @EnvironmentObject var appDelegate: AppDelegate
     @EnvironmentObject var updateChecker: UpdateChecker
+    @EnvironmentObject var updateInstaller: UpdateInstaller
     @ObservedObject var workspaceStore: WorkspaceStoreViewModel
     @ObservedObject var layoutStore: LayoutStoreViewModel
 
@@ -22,8 +23,8 @@ struct MenuBarContentView: View {
         let _ = coordinator.layoutListVersion
 
         if let version = updateChecker.availableVersion,
-           let url = updateChecker.releasePageURL {
-            Button(action: { NSWorkspace.shared.open(url) }) {
+           let releaseURL = updateChecker.releasePageURL {
+            Button(action: { handleUpdateClick(version: version, releaseURL: releaseURL) }) {
                 HStack(spacing: 6) {
                     Image(systemName: "arrow.down.circle.fill")
                         .foregroundStyle(.tint)
@@ -111,6 +112,40 @@ struct MenuBarContentView: View {
         }
         Divider()
         Button("menu.quit") { NSApp.terminate(nil) }
+    }
+
+    /// Confirmation flow before kicking off the in-app installer (V0.5.6).
+    /// Three-button NSAlert: **Install and Restart** (default), **Release
+    /// Notes** (opens GitHub in browser like the pre-V0.5.6 behavior),
+    /// **Later** (dismiss). When `dmgURL` is missing — an unusual GitHub
+    /// release with no `.dmg` asset — we silently fall back to opening the
+    /// release page so the user can still find the install path.
+    private func handleUpdateClick(version: String, releaseURL: URL) {
+        guard let dmgURL = updateChecker.dmgURL else {
+            NSWorkspace.shared.open(releaseURL)
+            return
+        }
+        let alert = NSAlert()
+        alert.messageText = String(
+            format: String(localized: "update.install.alert.title"),
+            version
+        )
+        alert.informativeText = String(localized: "update.install.alert.body")
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: String(localized: "update.install.alert.install_and_restart"))
+        alert.addButton(withTitle: String(localized: "update.install.alert.release_notes"))
+        alert.addButton(withTitle: String(localized: "update.install.alert.later"))
+        let response = alert.runModal()
+        switch response {
+        case .alertFirstButtonReturn:
+            Task { @MainActor in
+                await updateInstaller.install(dmgURL: dmgURL, version: version)
+            }
+        case .alertSecondButtonReturn:
+            NSWorkspace.shared.open(releaseURL)
+        default:
+            break
+        }
     }
 
     private func activate(workspace: Workspace) {
