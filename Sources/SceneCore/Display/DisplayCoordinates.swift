@@ -51,4 +51,21 @@ public enum DisplayCoordinates {
     public static func axToNS(_ rect: CGRect) -> CGRect {
         axToNS(rect, primaryHeight: primaryHeight())
     }
+
+    /// Point variant — same flip formula, no height term.
+    public static func axToNS(_ point: CGPoint, primaryHeight: CGFloat) -> CGPoint {
+        CGPoint(x: point.x, y: primaryHeight - point.y)
+    }
+
+    public static func nsToAX(_ point: CGPoint, primaryHeight: CGFloat) -> CGPoint {
+        axToNS(point, primaryHeight: primaryHeight)  // own inverse for points too
+    }
+
+    public static func axToNS(_ point: CGPoint) -> CGPoint {
+        axToNS(point, primaryHeight: primaryHeight())
+    }
+
+    public static func nsToAX(_ point: CGPoint) -> CGPoint {
+        nsToAX(point, primaryHeight: primaryHeight())
+    }
 }

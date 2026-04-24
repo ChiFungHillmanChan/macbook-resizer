@@ -122,6 +122,33 @@ final class DisplayCoordinatesTests: XCTestCase {
         XCTAssertEqual(ax.height, ns.height)
     }
 
+    // MARK: - point variants
+
+    /// AX point on a secondary display ABOVE primary has negative y. Flipping
+    /// with the primary-height pivot should land it inside the secondary's
+    /// NS frame (which has minY >= primaryHeight). This is exactly what
+    /// `AXWindowEnumerator` needs to correctly filter windows on a
+    /// secondary-above arrangement — the previous code used the target
+    /// screen's own `frame.maxY` as pivot, which silently dropped windows.
+    func testAXPointAbovePrimaryFlipsIntoSecondaryVisibleFrame() {
+        let primaryH: CGFloat = 800
+        // Window center on a secondary (600 tall) arranged above primary,
+        // physically centered vertically on that secondary: AX y = -300.
+        let ax = CGPoint(x: 500, y: -300)
+        let ns = DisplayCoordinates.axToNS(ax, primaryHeight: primaryH)
+        XCTAssertEqual(ns, CGPoint(x: 500, y: 1100))
+    }
+
+    func testPointFlipIsItsOwnInverse() {
+        let primaryH: CGFloat = 1440
+        let ax = CGPoint(x: 1440, y: 558)
+        let roundTrip = DisplayCoordinates.nsToAX(
+            DisplayCoordinates.axToNS(ax, primaryHeight: primaryH),
+            primaryHeight: primaryH
+        )
+        XCTAssertEqual(roundTrip, ax)
+    }
+
     func testZeroPrimaryHeightProducesNegatedY() {
         // Defensive: if NSScreen.screens is empty (shouldn't happen on a real
         // Mac), the helper returns primaryHeight=0. Verify the math still

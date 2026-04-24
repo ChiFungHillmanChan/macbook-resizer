@@ -28,7 +28,7 @@ public enum AXWindowEnumerator {
             else { continue }
 
             let centerTopLeft = CGPoint(x: cgBounds.midX, y: cgBounds.midY)
-            guard screen.visibleFrame.contains(flip(centerTopLeft, screen: screen)) else { continue }
+            guard screen.visibleFrame.contains(DisplayCoordinates.axToNS(centerTopLeft)) else { continue }
 
             let bundleID = NSRunningApplication(processIdentifier: pid)?.bundleIdentifier
             if let axWindow = buildAXWindow(pid: pid, id: id, bundleID: bundleID, bounds: cgBounds) {
@@ -48,11 +48,6 @@ public enum AXWindowEnumerator {
             let w = dict["Width"], let h = dict["Height"]
         else { return nil }
         return CGRect(x: x, y: y, width: w, height: h)
-    }
-
-    /// CGWindowList uses top-left origin; NSScreen uses bottom-left. Flip y.
-    private static func flip(_ point: CGPoint, screen: NSScreen) -> CGPoint {
-        CGPoint(x: point.x, y: screen.frame.maxY - point.y)
     }
 
     private static func buildAXWindow(pid: pid_t, id: CGWindowID, bundleID: String?, bounds: CGRect) -> AXWindow? {
