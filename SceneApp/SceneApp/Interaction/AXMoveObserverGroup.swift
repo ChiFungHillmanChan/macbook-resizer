@@ -5,13 +5,15 @@ import os
 import SceneCore
 
 /// Conforms to `SceneCore.WindowMoveObserving`. Wraps one `AXObserver` per
-/// placed window (V0.3 only subscribes to `kAXMovedNotification`). Rebuilds
-/// wholesale on every `startObserving(windowIDs:onMove:)` call — the Coordinator
-/// calls this after every `applyLayout`.
+/// placed window and subscribes it to both `kAXMovedNotification` (drag-swap)
+/// and `kAXResizedNotification` (V0.6 seam drag). Rebuilds wholesale on every
+/// `startObserving(windowIDs:onMove:onResize:)` call — the Coordinator calls
+/// this after every `applyLayout`.
 ///
 /// Lifecycle: the group holds the `AXObserver` + `AXUIElement` references
 /// (retaining them prevents deallocation while they're on the run loop).
-/// `stopObserving()` removes them from the main run loop and releases the refs.
+/// `stopObserving()` removes both notification subscriptions, detaches the
+/// run loop source, and releases the refs.
 @MainActor
 final class AXMoveObserverGroup: WindowMoveObserving {
     private struct Entry {
@@ -21,14 +23,17 @@ final class AXMoveObserverGroup: WindowMoveObserving {
 
     private var entries: [CGWindowID: Entry] = [:]
     private var onMove: ((CGWindowID, CGRect) -> Void)?
+    private var onResize: ((CGWindowID, CGRect) -> Void)?
     private let log = Logger(subsystem: "com.scene.app", category: "ax-observer")
 
     func startObserving(
         windowIDs: Set<CGWindowID>,
-        onMove: @escaping (CGWindowID, CGRect) -> Void
+        onMove: @escaping (CGWindowID, CGRect) -> Void,
+        onResize: @escaping (CGWindowID, CGRect) -> Void
     ) {
         stopObserving()
         self.onMove = onMove
+        self.onResize = onResize
 
         for id in windowIDs {
             guard let element = AXWindowLookup.element(for: id) else {
@@ -46,15 +51,27 @@ final class AXMoveObserverGroup: WindowMoveObserving {
             }
 
             let refcon = Unmanaged.passUnretained(self).toOpaque()
-            let addErr = AXObserverAddNotification(
+            let addMoveErr = AXObserverAddNotification(
                 observer,
                 element,
                 kAXMovedNotification as CFString,
                 refcon
             )
-            guard addErr == .success else {
-                log.error("AXObserverAddNotification failed id=\(id, privacy: .public) err=\(addErr.rawValue, privacy: .public)")
+            guard addMoveErr == .success else {
+                log.error("AXObserverAddNotification(move) failed id=\(id, privacy: .public) err=\(addMoveErr.rawValue, privacy: .public)")
                 continue
+            }
+            let addResizeErr = AXObserverAddNotification(
+                observer,
+                element,
+                kAXResizedNotification as CFString,
+                refcon
+            )
+            // V0.6 seam drag: if resize subscription fails (rare — some apps
+            // refuse selectively), we still keep the move observer live so
+            // drag-swap continues to work. Log and proceed.
+            if addResizeErr != .success {
+                log.error("AXObserverAddNotification(resize) failed id=\(id, privacy: .public) err=\(addResizeErr.rawValue, privacy: .public)")
             }
 
             CFRunLoopAddSource(
@@ -75,16 +92,18 @@ final class AXMoveObserverGroup: WindowMoveObserving {
                 .commonModes
             )
             AXObserverRemoveNotification(entry.observer, entry.element, kAXMovedNotification as CFString)
+            AXObserverRemoveNotification(entry.observer, entry.element, kAXResizedNotification as CFString)
         }
         entries.removeAll()
         onMove = nil
+        onResize = nil
     }
 
     // C-style callback: no captured context allowed. Pull self back from refcon.
     // The AXObserver fires on the main run loop (because we added its source to
     // CFRunLoopGetMain()), so we're already on main here. Still use
     // MainActor.assumeIsolated to satisfy strict concurrency.
-    private static let observerCallback: AXObserverCallback = { _, element, _, refcon in
+    private static let observerCallback: AXObserverCallback = { _, element, notification, refcon in
         guard let refcon else { return }
         let group = Unmanaged<AXMoveObserverGroup>.fromOpaque(refcon).takeUnretainedValue()
         MainActor.assumeIsolated {
@@ -96,7 +115,13 @@ final class AXMoveObserverGroup: WindowMoveObserving {
             }
             guard let id = foundID else { return }
             guard let frame = AXWindowLookup.axFrame(of: element) else { return }
-            group.onMove?(id, frame)
+
+            let notifName = notification as String
+            if notifName == (kAXMovedNotification as String) {
+                group.onMove?(id, frame)
+            } else if notifName == (kAXResizedNotification as String) {
+                group.onResize?(id, frame)
+            }
         }
     }
 

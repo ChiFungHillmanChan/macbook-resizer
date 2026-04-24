@@ -34,9 +34,19 @@ final class Coordinator: ObservableObject {
     private let observerGroup = AXMoveObserverGroup()
     private lazy var dragSwapSink = DragSwapAnimationSink(animator: animator, settingsStore: settingsStore)
     private lazy var dragSwapController: DragSwapController = makeDragSwapController()
+    /// V0.6 seam-drag: companion resize. Shares the AX observer group and
+    /// `DragSwapConfig.enabled` toggle with drag-swap (same gesture family —
+    /// enabling one without the other would surprise users). Triggered from
+    /// `kAXResizedNotification`, short-circuits for unsupported templates.
+    private lazy var seamResizeController: SeamResizeController = makeSeamResizeController()
     private var escMonitor: Any?
     private var lastPlacedWindows: [any SceneWindowRef] = []
     private var lastAppliedLayout: Layout?
+    /// V0.6: snapshot the full `CustomLayout` applied most recently so
+    /// `SeamResizeController` can read `template` + `slotProportions` off it
+    /// each event (the derived `Layout.slots` alone can't be reversed back to
+    /// proportions without template context).
+    private var lastAppliedCustomLayout: CustomLayout?
     private var lastScreen: NSScreen?
     private var lastWindowToSlotIdx: [CGWindowID: Int] = [:]
     /// Tracks the last `applyLayout` fire. When the user re-fires the same
@@ -202,7 +212,7 @@ final class Coordinator: ObservableObject {
                 _ = try LayoutEngine.apply(plan, on: windows)
             }
             log.info("applied \(custom.name, privacy: .public) animated=\(shouldAnimate)")
-            rebuildDragSwapObservers(plan: plan, windows: windows, layout: custom.toLayout(), screen: screen)
+            rebuildDragSwapObservers(plan: plan, windows: windows, layout: custom.toLayout(), customLayout: custom, screen: screen)
             return true
         } catch AXWindowEnumerator.EnumerationError.permissionDenied {
             stopDragSwapInfrastructure()
@@ -304,6 +314,30 @@ final class Coordinator: ObservableObject {
         )
     }
 
+    /// V0.6 companion to `makeDragSwapController`. Returns a SeamResizeController
+    /// pointed at the same snapshot of placed windows and the same settings toggle,
+    /// but carrying the `CustomLayout`'s template + proportions (not just the
+    /// derived `Layout.slots`) so reflow math can compute an updated proportion
+    /// axis.
+    private func makeSeamResizeController() -> SeamResizeController {
+        SeamResizeController(
+            contextProvider: { [weak self] in
+                guard let self,
+                      let custom = self.lastAppliedCustomLayout,
+                      let screen = self.lastScreen
+                else { return nil }
+                return SeamResizeController.Context(
+                    template: custom.template,
+                    proportions: custom.slotProportions,
+                    screen: screen,
+                    windows: self.lastPlacedWindows,
+                    windowToSlotIdx: self.lastWindowToSlotIdx
+                )
+            },
+            config: { [weak self] in self?.settingsStore.dragSwap ?? .default }
+        )
+    }
+
     private func startDragSwapInfrastructure() {
         if escMonitor == nil {
             escMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
@@ -313,11 +347,13 @@ final class Coordinator: ObservableObject {
             }
         }
         dragSwapController.start()
+        seamResizeController.start()
     }
 
     private func stopDragSwapInfrastructure() {
         observerGroup.stopObserving()
         dragSwapController.stop()
+        seamResizeController.stop()
         if let escMonitor { NSEvent.removeMonitor(escMonitor) }
         escMonitor = nil
     }
@@ -325,12 +361,16 @@ final class Coordinator: ObservableObject {
     /// Replace the AX observer set with the windows that were just placed by the
     /// most recent successful `applyLayout`. Either starts the drag-swap infra
     /// (when enabled in settings and there's a non-empty placed set) or stops it.
-    private func rebuildDragSwapObservers(plan: Plan, windows: [any SceneWindowRef], layout: Layout, screen: NSScreen) {
+    /// V0.6: the observer also feeds `kAXResizedNotification` into the seam
+    /// resize controller — both features share the same toggle and observer
+    /// lifecycle.
+    private func rebuildDragSwapObservers(plan: Plan, windows: [any SceneWindowRef], layout: Layout, customLayout: CustomLayout, screen: NSScreen) {
         observerGroup.stopObserving()
         lastPlacedWindows = plan.placements.compactMap { p in
             windows.first(where: { $0.id == p.windowID })
         }
         lastAppliedLayout = layout
+        lastAppliedCustomLayout = customLayout
         lastScreen = screen
         // Snapshot window→slot mapping. Plan.placements is parallel to layout.slots,
         // so index in the array = slot index. finishDrag uses this to recover the
@@ -343,9 +383,15 @@ final class Coordinator: ObservableObject {
             stopDragSwapInfrastructure()
             return
         }
-        observerGroup.startObserving(windowIDs: placedIDs) { [weak self] id, frame in
-            self?.dragSwapController.handleWindowMoved(windowID: id, currentFrame: frame)
-        }
+        observerGroup.startObserving(
+            windowIDs: placedIDs,
+            onMove: { [weak self] id, frame in
+                self?.dragSwapController.handleWindowMoved(windowID: id, currentFrame: frame)
+            },
+            onResize: { [weak self] id, frame in
+                self?.seamResizeController.handleWindowResized(windowID: id, newFrame: frame)
+            }
+        )
         startDragSwapInfrastructure()
     }
 
