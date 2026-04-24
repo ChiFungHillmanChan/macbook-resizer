@@ -15,10 +15,17 @@ public final class AXWindow: WindowRef {
         self.bundleID = bundleID
     }
 
+    /// Window frame in **NS coordinates** (bottom-left origin), matching
+    /// `NSScreen.frame` / `NSScreen.visibleFrame`. The underlying AX API
+    /// actually returns top-left origin values; we flip once here so every
+    /// caller (LayoutEngine, WindowAnimator, DragSwapController) can work in a
+    /// single coordinate system. Without this flip, windows on any secondary
+    /// display with a non-zero NS y offset land at the wrong vertical position.
     public var frame: CGRect {
         let pos = axValue(kAXPositionAttribute, type: .cgPoint) as CGPoint? ?? .zero
         let size = axValue(kAXSizeAttribute, type: .cgSize) as CGSize? ?? .zero
-        return CGRect(origin: pos, size: size)
+        let axFrame = CGRect(origin: pos, size: size)
+        return DisplayCoordinates.axToNS(axFrame)
     }
 
     public var isMinimized: Bool {
@@ -29,9 +36,13 @@ public final class AXWindow: WindowRef {
         (axAttribute("AXFullScreen") as? Bool) ?? false
     }
 
+    /// Writes `rect` to the window, interpreting it in **NS coordinates**
+    /// (same system as `NSScreen.frame`). This is the only AX write boundary
+    /// in the codebase, so we do the NS→AX vertical flip exactly once, here.
     public func setFrame(_ rect: CGRect) throws {
-        try setPosition(rect.origin)
-        try setSize(rect.size)
+        let axRect = DisplayCoordinates.nsToAX(rect)
+        try setPosition(axRect.origin)
+        try setSize(axRect.size)
     }
 
     public func minimize() throws {
