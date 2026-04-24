@@ -715,6 +715,213 @@
         }
       }
     },
+    "layouts.new.template.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a template-based layout"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新增一個用樣板嘅排列"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新增一個以範本為基礎的排列"
+          }
+        }
+      }
+    },
+    "layouts.new.custom.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add a custom canvas layout"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新增一個自訂嘅畫布排列"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "新增一個自訂畫布排列"
+          }
+        }
+      }
+    },
+    "layouts.new.custom.default_name": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom Layout"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自訂排列"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自訂排列"
+          }
+        }
+      }
+    },
+    "layouts.custom.slot_count": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld slots"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 個格"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld 個格位"
+          }
+        }
+      }
+    },
+    "layouts.custom.canvas_hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click a slot to split or delete it. Drag a seam to adjust proportions."
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "撳任何一個格就可以拆或者刪除。揸住隔隙拖曳可以調比例。"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "點選任一格即可分割或刪除。拖曳分隔線調整比例。"
+          }
+        }
+      }
+    },
+    "layouts.custom.split_horizontal": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split horizontally"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "橫向拆開"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "水平分割"
+          }
+        }
+      }
+    },
+    "layouts.custom.split_vertical": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split vertically"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "縱向拆開"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "垂直分割"
+          }
+        }
+      }
+    },
+    "layouts.custom.delete_slot": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete this slot"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刪除呢格"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "刪除此格"
+          }
+        }
+      }
+    },
+    "layouts.custom.leaf_menu_help": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Click for options"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "撳嚟睇選項"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "點選以顯示選項"
+          }
+        }
+      }
+    },
     "layouts.restore_defaults": {
       "extractionState": "manual",
       "localizations": {
@@ -1907,6 +2114,29 @@
           "stringUnit": {
             "state": "translated",
             "value": "儲存"
+          }
+        }
+      }
+    },
+    "settings.action.saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saved"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已儲存"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已儲存"
           }
         }
       }

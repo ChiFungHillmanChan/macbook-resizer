@@ -2,8 +2,11 @@ import SwiftUI
 import SceneCore
 
 /// Pure SwiftUI renderer that draws a `CustomLayout`'s slot proportions as
-/// accent-colored rounded rects. Source of truth is `LayoutTemplate.slots(proportions:)`,
-/// so the thumbnail always matches the live layout preview in `LayoutEditorView`.
+/// accent-colored rounded rects. Source of truth is `CustomLayout.toLayout().slots`,
+/// which transparently handles both template-based layouts
+/// (`LayoutTemplate.slots(proportions:)`) and V0.7 custom-tree layouts
+/// (`LayoutNode.flatten()`) — the thumbnail stays in sync with whatever the
+/// engine will actually plan.
 ///
 /// Used at 3 sizes:
 ///   - 24×16 : menu bar dropdown
@@ -15,8 +18,7 @@ struct LayoutThumbnail: View {
 
     var body: some View {
         Canvas { ctx, canvasSize in
-            let template = layout.template
-            let slots = template.slots(proportions: layout.slotProportions)
+            let slots = layout.toLayout().slots
             for slot in slots {
                 let rect = CGRect(
                     x: slot.rect.minX * canvasSize.width,

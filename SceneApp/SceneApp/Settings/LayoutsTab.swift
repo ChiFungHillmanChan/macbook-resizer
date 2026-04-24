@@ -55,6 +55,17 @@ struct LayoutsTab: View {
             Button {
                 newLayout()
             } label: { Image(systemName: "plus") }
+                .help("layouts.new.template.help")
+
+            // V0.7: a second create-new button that seeds `customTree = .leaf`,
+            // routing the new layout into the canvas editor instead of the
+            // template editor. The sidebar list and everything downstream
+            // (hotkey, store, plan, drag-swap) treats it identically to a
+            // template-based layout — only the EDITOR view differs.
+            Button {
+                newCustomLayout()
+            } label: { Image(systemName: "square.on.square.squareshape.controlhandles") }
+                .help("layouts.new.custom.help")
 
             Button {
                 deleteSelected()
@@ -97,6 +108,32 @@ struct LayoutsTab: View {
         }
     }
 
+    /// V0.7: inserts a new user-authored custom layout with a single-leaf
+    /// tree (full-screen slot). The user immediately sees the canvas editor
+    /// and can click the leaf to split it into their desired shape.
+    /// `template` / `slotProportions` are filled with sentinel values —
+    /// `toLayout()` ignores them while `customTree` is non-nil, and the
+    /// on-disk JSON decodes cleanly on older binaries (which would just
+    /// ignore the unfamiliar `customTree` key).
+    private func newCustomLayout() {
+        let new = CustomLayout(
+            id: UUID(),
+            name: String(localized: "layouts.new.custom.default_name"),
+            template: .single,
+            slotProportions: [],
+            hotkey: nil,
+            isPresetSeed: false,
+            isModified: false,
+            customTree: .leaf
+        )
+        do {
+            try layoutVM.store.insert(new)
+            selectedID = new.id
+        } catch {
+            errorMessage = String(describing: error)
+        }
+    }
+
     private func deleteSelected() {
         guard let id = selectedID else { return }
         do { try layoutVM.store.delete(id: id); selectedID = nil }
@@ -128,23 +165,47 @@ struct LayoutsTab: View {
 /// because a new wrapper instance owns a fresh `@State`, so `.onChange` only
 /// fires for actual user template-picker changes.
 private struct LayoutDraftEditor: View {
-    let original: CustomLayout
     @ObservedObject var layoutVM: LayoutStoreViewModel
     @State private var draft: CustomLayout
+    /// Snapshot of the draft as of the last successful save (or the initial
+    /// load if the user hasn't saved yet). Drives the dirty-state Save button:
+    /// when `draft == lastSaved`, there's nothing new to commit, so the Save
+    /// button darkens. Any edit diverges draft from lastSaved and re-enables it.
+    /// Cancel reverts to this snapshot, not the initial load — so a user who
+    /// saves, edits further, then cancels, returns to their saved state instead
+    /// of losing everything back to the pristine load.
+    @State private var lastSaved: CustomLayout
     @State private var errorMessage: String?
 
     init(original: CustomLayout, layoutVM: LayoutStoreViewModel) {
-        self.original = original
         self.layoutVM = layoutVM
         self._draft = State(initialValue: original)
+        self._lastSaved = State(initialValue: original)
     }
 
+    private var hasUnsavedChanges: Bool { draft != lastSaved }
+
     var body: some View {
-        LayoutEditorView(
-            draft: $draft,
-            onSave: save,
-            onCancel: { draft = original }
-        )
+        Group {
+            // V0.7: branch on `customTree`. A non-nil tree means the user
+            // created this via the "+ Custom" button and wants the canvas
+            // editor. Nil means template-based — fall back to the V0.2 editor.
+            if draft.customTree != nil {
+                CustomLayoutCanvasEditor(
+                    draft: $draft,
+                    canSave: hasUnsavedChanges,
+                    onSave: save,
+                    onCancel: { draft = lastSaved }
+                )
+            } else {
+                LayoutEditorView(
+                    draft: $draft,
+                    canSave: hasUnsavedChanges,
+                    onSave: save,
+                    onCancel: { draft = lastSaved }
+                )
+            }
+        }
         .alert("common.error", isPresented: .constant(errorMessage != nil)) {
             Button("common.ok") { errorMessage = nil }
         } message: {
@@ -155,6 +216,11 @@ private struct LayoutDraftEditor: View {
     private func save() {
         do {
             try layoutVM.store.update(draft)
+            // Snapshot the just-committed draft so the dirty-state computation
+            // sees "nothing to save" and the Save button darkens. Has to happen
+            // AFTER the successful store.update so a thrown error (hotkey
+            // conflict, etc.) doesn't fool the UI into thinking the save landed.
+            lastSaved = draft
         } catch let LayoutStoreError.hotkeyConflict(existingResource) {
             errorMessage = String(format: String(localized: "hotkeys.conflict"), existingResource)
         } catch {

@@ -3,6 +3,10 @@ import SceneCore
 
 struct LayoutEditorView: View {
     @Binding var draft: CustomLayout
+    /// Parent computes whether the draft has unsaved changes relative to the
+    /// last-saved snapshot. When false, the Save button is disabled (darkened)
+    /// — standard dirty-state pattern.
+    let canSave: Bool
     let onSave: () -> Void
     let onCancel: () -> Void
 
@@ -58,7 +62,9 @@ struct LayoutEditorView: View {
             HStack {
                 Spacer()
                 Button("settings.action.cancel", action: onCancel)
-                Button("settings.action.save", action: onSave).keyboardShortcut(.defaultAction)
+                Button("settings.action.save", action: onSave)
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(!canSave)
             }
         }
         .padding()

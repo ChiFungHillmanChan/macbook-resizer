@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 Quarantine is stripped automatically — no "cannot be verified" prompt. On first launch, grant Accessibility in **System Settings → Privacy & Security → Accessibility**.
 
-**Or download the DMG directly**: **[Scene-0.5.6.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.6/Scene-0.5.6.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
+**Or download the DMG directly**: **[Scene-0.5.7.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.7/Scene-0.5.7.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
 
 All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · DMG users, see [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
 
@@ -25,6 +25,14 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
   Your browser does not render embedded video. <a href="docs/media/scene-marketing.mp4">Download the demo clip (MP4, 13 MB)</a>.
 </video>
+
+## V0.5.7 custom layouts, seam drag, dirty-state save
+
+- **Build-your-own layouts.** Settings → Layouts has a new "+ Custom" button (the square-on-square icon). Clicking it gives you a blank canvas — click any slot to split it horizontally or vertically, drag seams to adjust proportions, delete a slot to collapse it into its sibling. Design any tile shape you want (3-narrow over 2-wide, asymmetric L+4, a 7-slot dashboard — whatever); save it, bind a hotkey, and it fires like any built-in layout. User-authored custom layouts are now first-class citizens next to the 11 built-in templates.
+- **Companion resize when dragging.** When Scene has already tiled your windows and you drag the edge of one, the neighbouring tile now follows — shrinks or grows to fill the gap — in real time. Supported on `twoCol` / `twoRow` / `threeCol` / `threeRow` layouts (single-seam splits; the middle slot of a 3-way split auto-picks whichever edge you grabbed). Custom-tree layouts don't reflow yet — the reflow math is template-axis-based for now, and extending it to arbitrary trees will come in a later release. Hold Option during drag to bypass the reflow and let macOS do its native resize without Scene interfering.
+- **Save button actually persists and gives visual feedback.** Fixed two bugs in Settings → Layouts. (a) The Save button on existing layouts was a silent no-op — changes appeared to apply because the binding auto-wrote to the store on every slider tick, but `.onChange(of: draft.template)` reset proportions to their defaults the moment you clicked away, so your customisations got silently wiped on return. The editor now uses a proper `@State draft` with explicit commit through `LayoutStore.update`, matching `WorkspaceEditorView`. (b) The Save button is now wired to a dirty-state check — darkens after a successful save, re-enables only when you edit further. No more guessing whether the save actually took.
+- **Multi-display coordinate fix.** Reworked the AX ↔ NSScreen coordinate conversion at the `AXWindow` wrapper boundary and the drag-swap observer callback — all drag-swap / seam-resize math now operates in a single NSScreen (bottom-left) coordinate system, with top-left AX conversion done once at the boundary. On multi-display setups where the secondary display is positioned below or to the left of the primary, drag-swap and seam-resize now compute the correct seam target instead of landing windows off-screen.
+- **Tests: 177 → 244.** Added 67 new unit tests covering `LayoutReflow` (pure seam math), `SeamResizeController` (event handling + self-fire guards + config gating), `LayoutNode` (tree flatten + Codable + 100%-coverage invariant + the canonical 5-slot example verbatim), plus legacy-JSON decode round-trip on `CustomLayout` so upgrading from v0.5.6 never loses existing layouts.
 
 ## V0.5.6 in-app update installer
 
@@ -135,7 +143,7 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 
 ## Install
 
-End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.5.6 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.6/Scene-0.5.6.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
+End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.5.7 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.7/Scene-0.5.7.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
 
 ## Build from source
 
@@ -158,7 +166,7 @@ In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu ba
 ### Build a distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.5.6    # produces dist/Scene-0.5.6.dmg (universal, notarized)
+./scripts/build-dmg.sh 0.5.7    # produces dist/Scene-0.5.7.dmg (universal, notarized)
 ```
 
 This builds a universal (arm64 + x86_64) binary, Developer ID-signs it, submits it to Apple for notarization, and packages it into a DMG with an `Applications` drop shortcut. Both Apple Silicon and Intel Macs install from the same DMG. Set `SKIP_NOTARY=1` for a local ad-hoc build that skips the Apple notary submission (useful while iterating on DMG layout).

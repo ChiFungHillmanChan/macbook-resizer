@@ -1,6 +1,6 @@
 # Scene
 
-一個 macOS menu bar app — click 一下，所有可見窗口即刻入位。V0.5.6 加咗 in-app update installer：撳 menu 入面「有新版本」→ 確認 → Scene 自動下載 DMG、quit、原地換 binary、再開 Scene，Accessibility 授權保留唔使重新 grant。V0.5.5 修咗 quit-then-relaunch 之後 24 小時冷卻會吞咗新版本通知嘅 bug，又喺 Workspaces tab toolbar 加返 delete 掣。V0.5.4 修咗首次啟動嘅 welcome 同 Accessibility 升級時嘅 stuck 情況。V0.5.3 調順咗動畫，加返 Intel Mac 支援（universal binary）。V0.4 新加咗 Workspaces、layout thumbnail、縱向 preset 同多語 UI。
+一個 macOS menu bar app — click 一下，所有可見窗口即刻入位。V0.5.7 加咗「自訂畫布排列」：撳「+ Custom」由零開始畫任何形狀嘅 tile 組合，分、拖、刪都得；又加咗「拖邊同步」 — 拖一個 window 邊，隔籬嗰個自動跟住縮放；Settings → Layouts 嘅 Save 掣終於真係有用（之前係冇做嘢，切走就打回 default），而家做完 save 會暗返，有改嘢先再光返。V0.5.6 加咗 in-app update installer：撳 menu 入面「有新版本」→ 確認 → Scene 自動下載 DMG、quit、原地換 binary、再開 Scene，Accessibility 授權保留唔使重新 grant。V0.5.5 修咗 quit-then-relaunch 之後 24 小時冷卻會吞咗新版本通知嘅 bug，又喺 Workspaces tab toolbar 加返 delete 掣。V0.5.4 修咗首次啟動嘅 welcome 同 Accessibility 升級時嘅 stuck 情況。V0.5.3 調順咗動畫，加返 Intel Mac 支援（universal binary）。V0.4 新加咗 Workspaces、layout thumbnail、縱向 preset 同多語 UI。
 
 **需要 macOS 14（Sonoma）或以上。Universal binary — Apple Silicon 同 Intel 都行到。**
 
@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 自動幫你清走 quarantine flag，唔會彈「cannot be verified」嘅 Gatekeeper 警告。首次開 Scene 嗰陣，去 **System Settings → Privacy & Security → Accessibility** 撳着 Scene 就得。
 
-**或者直接下載 DMG**：**[Scene-0.5.6.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.6/Scene-0.5.6.dmg)**（Universal：Apple Silicon + Intel，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
+**或者直接下載 DMG**：**[Scene-0.5.7.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.7/Scene-0.5.7.dmg)**（Universal：Apple Silicon + Intel，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
 
 所有版本：[Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · 用 DMG 嘅話，跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
 
@@ -25,6 +25,14 @@ brew install --cask chifunghillmanchan/tap/scene
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
   你個 browser 唔 render 到 embed 嘅 video。<a href="docs/media/scene-marketing.mp4">撳呢度 download 示範片（MP4，13 MB）</a>。
 </video>
+
+## V0.5.7 自訂排列 + 拖邊同步 + Save 掣有反應
+
+- **自己畫任何形狀嘅排列。** Settings → Layouts 多咗個「+ Custom」掣（square-on-square 個 icon）。撳落去，右邊係一個全屏嘅空白畫布 — 撳任何一格，出 menu：「橫向拆開」、「縱向拆開」、「刪除呢格」。逐層切，切到你想要嘅形狀：3 窄 + 2 闊、唔對稱嘅 L+4、7 格嘅 dashboard — 你諗到嘅都畫到。存 + 綁 hotkey，跟內建排列一樣用。用戶自己畫嘅排列而家同 11 個內建 template 平起平坐。
+- **拖一個 window 邊，隔籬嗰個自動跟住郁。** Scene 已經幫你 tile 好之後，你拉邊個 window 嘅邊，隔籬嗰個會實時縮放填滿個 gap。支援 `twoCol` / `twoRow` / `threeCol` / `threeRow`（單隔隙切法；三欄/三行中間格會自動判斷你拉緊邊嗰個邊）。自訂排列（custom tree）暫時未跟郁 — reflow 數學而家仲係靠 template 嘅 axis，要支援任意 tree 要再寫；下個 release 補。拖嗰陣揸住 Option 就 bypass 呢個行為，macOS 自己去 resize，Scene 唔理。
+- **Save 掣終於真係有用，仲會俾你知做咗嘢。** 修咗 Settings → Layouts 嘅兩個 bug。(a) 以前撳 Save 係 silent no-op — 睇落似 save 咗係因為 slider 每動一下都 auto 寫入 store，但係 `.onChange(of: draft.template)` 會喺你切去第二個 layout 嗰陣悄悄將 proportion reset 返 default，結果你改過嘅嘢就咁被洗咗。而家個 editor 用 `@State draft` + 明確 call `LayoutStore.update`，同 `WorkspaceEditorView` pattern 一致。(b) Save 掣而家配合 dirty-state — 成功 save 完之後即刻暗咗，有新改動先再光返。再唔駛估你撳嗰下究竟入咗去冇。
+- **多 screen coordinate 修補。** 重寫咗 `AXWindow` wrapper 同 drag-swap observer callback 嘅 AX ↔ NSScreen coordinate 轉換 — 所有 drag-swap / seam-resize 嘅計算而家統一喺 NSScreen（bottom-left）coordinate system 入面行，top-left 嘅 AX 轉換淨係喺 boundary 一次到位。多 screen setup（第二個 monitor 喺主 screen 下面或者左邊嗰啲 arrangement）而家 drag-swap 同 seam-resize 都會計到正確嘅目標位置，唔會再有 window 飛出 screen 外面嘅情況。
+- **Tests：177 → 244。** 加咗 67 個新 unit test 覆蓋 `LayoutReflow`（pure seam math）、`SeamResizeController`（event handling + self-fire guard + config gating）、`LayoutNode`（tree flatten + Codable + 100% coverage invariant + 完整 5 格示例）、加 `CustomLayout` 嘅 legacy JSON decode round-trip — 由 v0.5.6 升上嚟，舊 layouts.json 一定 decode 到，啲舊 layout 唔會冇咗。
 
 ## V0.5.6 In-app update installer
 
@@ -132,7 +140,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 ## Install
 
-End user：去 [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者[直接撳呢度 download 最新嘅 v0.5.6 DMG](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.6/Scene-0.5.6.dmg)，又或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Accessibility 授權。
+End user：去 [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者[直接撳呢度 download 最新嘅 v0.5.7 DMG](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.7/Scene-0.5.7.dmg)，又或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Accessibility 授權。
 
 ## 由 source build
 
@@ -155,7 +163,7 @@ Xcode 揀 `SceneApp` scheme → ⌘R。App 以 menu bar extra 形式行（冇 Do
 ### Build distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.5.6    # 出 dist/Scene-0.5.6.dmg（universal + notarized）
+./scripts/build-dmg.sh 0.5.7    # 出 dist/Scene-0.5.7.dmg（universal + notarized）
 ```
 
 Build universal（arm64 + x86_64）binary，Developer ID sign，submit 去 Apple notary，pack 入 DMG 連 `Applications` drop shortcut。Apple Silicon 同 Intel Mac 用同一個 DMG。如果想 local iterate DMG layout，set `SKIP_NOTARY=1` 會 skip Apple notary submission，改用 ad-hoc sign。
