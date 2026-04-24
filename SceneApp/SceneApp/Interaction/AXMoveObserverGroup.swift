@@ -114,13 +114,19 @@ final class AXMoveObserverGroup: WindowMoveObserving {
                 break
             }
             guard let id = foundID else { return }
-            guard let frame = AXWindowLookup.axFrame(of: element) else { return }
+            guard let axFrame = AXWindowLookup.axFrame(of: element) else { return }
+
+            // The observer fires with AX (top-left) coordinates, but the
+            // drag-swap / seam-resize controllers compare against
+            // `AXWindow.frame` which now exposes NS (bottom-left). Flip once
+            // here so the handlers see a single coordinate system.
+            let nsFrame = DisplayCoordinates.axToNS(axFrame)
 
             let notifName = notification as String
             if notifName == (kAXMovedNotification as String) {
-                group.onMove?(id, frame)
+                group.onMove?(id, nsFrame)
             } else if notifName == (kAXResizedNotification as String) {
-                group.onResize?(id, frame)
+                group.onResize?(id, nsFrame)
             }
         }
     }
