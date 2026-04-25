@@ -32,6 +32,9 @@ final class WorkspaceSeedsTests: XCTestCase {
         for seed in WorkspaceSeeds.all {
             XCTAssertTrue(seed.appsToLaunch.isEmpty, "\(seed.name) must ship with empty appsToLaunch")
             XCTAssertTrue(seed.appsToQuit.isEmpty,   "\(seed.name) must ship with empty appsToQuit")
+            XCTAssertTrue(seed.pinnedApps.isEmpty,   "\(seed.name) must ship with empty pinnedApps")
+            XCTAssertNil(seed.assignedDesktop, "\(seed.name) must not force a Desktop by default")
+            XCTAssertEqual(seed.enforcementMode, .off, "\(seed.name) must not enforce apps by default")
         }
     }
 

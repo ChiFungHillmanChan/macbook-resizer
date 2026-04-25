@@ -30,7 +30,7 @@ final class Coordinator: ObservableObject {
     let layoutStore: LayoutStore
     let workspaceStore: WorkspaceStore?
     let settingsStore: SettingsStore
-    private let animator = WindowAnimator()
+    private lazy var animator = WindowAnimator(diagnostics: diagnostics)
     private let observerGroup = AXMoveObserverGroup()
     private lazy var dragSwapSink = DragSwapAnimationSink(animator: animator, settingsStore: settingsStore)
     private lazy var dragSwapController: DragSwapController = makeDragSwapController()
@@ -78,16 +78,20 @@ final class Coordinator: ObservableObject {
     /// Registered by `AppDelegate` on launch via `configure(workspaceStore:)`.
     private var workspaceStoreObserver: SceneCancellable?
 
+    private let diagnostics: DiagnosticSink
+
     init(
         layoutStore: LayoutStore,
         workspaceStore: WorkspaceStore? = nil,
         settingsStore: SettingsStore,
-        onPermissionChange: @escaping (Bool) -> Void
+        onPermissionChange: @escaping (Bool) -> Void,
+        diagnostics: DiagnosticSink = .noop
     ) {
         self.layoutStore = layoutStore
         self.workspaceStore = workspaceStore
         self.settingsStore = settingsStore
         self.onPermissionChange = onPermissionChange
+        self.diagnostics = diagnostics
         self.onboarding.onCheck = { [weak self] in
             Task { @MainActor in self?.refreshPermission() }
         }
@@ -151,16 +155,16 @@ final class Coordinator: ObservableObject {
     /// Bool is consumed by `WorkspaceActivator` so it can skip the success
     /// banner and `setActive` on failure; hotkey/menu callers discard it.
     @discardableResult
-    func applyLayout(id: UUID) -> Bool {
+    func applyLayout(id: UUID, from source: LayoutFiredPayload.Source = .menu) -> Bool {
         guard let layout = layoutStore.layouts.first(where: { $0.id == id }) else {
             log.error("applyLayout: unknown id \(id.uuidString, privacy: .public)")
             return false
         }
-        return applyLayout(layout)
+        return applyLayout(layout, from: source)
     }
 
     @discardableResult
-    func applyLayout(_ custom: CustomLayout) -> Bool {
+    func applyLayout(_ custom: CustomLayout, from source: LayoutFiredPayload.Source = .menu) -> Bool {
         guard permissionGranted else { onboarding.show(); return false }
         if let lastID = lastApplyCustomLayoutID, lastID == custom.id,
            let lastTime = lastApplyTime,
@@ -174,16 +178,16 @@ final class Coordinator: ObservableObject {
             let settle = repeatFireSettleMs
             Task { @MainActor [weak self] in
                 try? await Task.sleep(for: .milliseconds(settle))
-                _ = self?.performApplyLayout(custom)
+                _ = self?.performApplyLayout(custom, source: source)
             }
             return true
         }
         lastApplyCustomLayoutID = custom.id
         lastApplyTime = Date()
-        return performApplyLayout(custom)
+        return performApplyLayout(custom, source: source)
     }
 
-    private func performApplyLayout(_ custom: CustomLayout) -> Bool {
+    private func performApplyLayout(_ custom: CustomLayout, source: LayoutFiredPayload.Source) -> Bool {
         guard permissionGranted else { onboarding.show(); return false }
         let screen = ScreenResolver.activeScreen()
         do {
@@ -192,6 +196,18 @@ final class Coordinator: ObservableObject {
                 notification?.notifyNoWindows()
                 return false
             }
+            // Diagnostic event — captured BEFORE apply so the snapshot
+            // reflects the environment that produced this layout fire.
+            diagnostics.log(.layoutFired(.init(
+                layoutID: custom.id,
+                source: source,
+                snapshot: EnvironmentCapture.snapshot(
+                    activeScreen: screen,
+                    winCount: windows.count,
+                    activeWS: workspaceStore?.activeWorkspaceID,
+                    secsSinceLastChange: nil
+                )
+            )))
             let plan = LayoutEngine.plan(
                 windows: windows,
                 visibleFrame: screen.visibleFrame,
@@ -200,7 +216,7 @@ final class Coordinator: ObservableObject {
             let cfg = settingsStore.animation
             let shouldAnimate = cfg.enabled && windows.count <= 6
             if shouldAnimate {
-                animator.animate(windows: windows, placements: plan.placements, config: cfg)
+                animator.animate(layoutID: custom.id, windows: windows, placements: plan.placements, config: cfg)
                 // Animation only covers placements — minimize overflow synchronously.
                 if !plan.toMinimize.isEmpty {
                     _ = try LayoutEngine.apply(
@@ -209,7 +225,14 @@ final class Coordinator: ObservableObject {
                     )
                 }
             } else {
-                _ = try LayoutEngine.apply(plan, on: windows)
+                let outcome = try LayoutEngine.apply(plan, on: windows)
+                if case .applied(let placed, let minimized, let leftEmpty, let failed) = outcome {
+                    diagnostics.log(.layoutOutcomeInstant(.init(
+                        layoutID: custom.id,
+                        placed: placed, minimized: minimized,
+                        leftEmpty: leftEmpty, failed: failed
+                    )))
+                }
             }
             log.info("applied \(custom.name, privacy: .public) animated=\(shouldAnimate)")
             rebuildDragSwapObservers(plan: plan, windows: windows, layout: custom.toLayout(), customLayout: custom, screen: screen)
@@ -232,6 +255,7 @@ final class Coordinator: ObservableObject {
     private func setPermission(_ granted: Bool) {
         guard granted != permissionGranted else { return }
         permissionGranted = granted
+        diagnostics.log(.axPermissionChanged(.init(granted: granted)))
         onPermissionChange(granted)
         if granted {
             registerHotkeysFromStore()
@@ -273,7 +297,7 @@ final class Coordinator: ObservableObject {
                 keyCode: binding.keyCode,
                 modifiers: binding.carbonModifiers,
                 handler: { [weak self] in
-                    Task { @MainActor in self?.applyLayout(id: captured) }
+                    Task { @MainActor in self?.applyLayout(id: captured, from: .hotkey) }
                 }
             )
         }

@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 Quarantine is stripped automatically — no "cannot be verified" prompt. On first launch, grant Accessibility in **System Settings → Privacy & Security → Accessibility**.
 
-**Or download the DMG directly**: **[Scene-0.5.7.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.7/Scene-0.5.7.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
+**Or download the DMG directly**: **[Scene-0.6.0.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.6.0/Scene-0.6.0.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
 
 All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · DMG users, see [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
 
@@ -25,6 +25,13 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
   Your browser does not render embedded video. <a href="docs/media/scene-marketing.mp4">Download the demo clip (MP4, 13 MB)</a>.
 </video>
+
+## V0.6.0 diagnostics + persistent workspaces
+
+- **Diagnostics.** New "Diagnostics" section in Settings → About. When enabled (default ON), Scene records orchestration events to `~/Library/Application Support/Scene/diagnostics/events-YYYY-MM-DD.jsonl` — layout fires, workspace step timing, AX permission changes, screen arrangement diffs, animation outcomes (including silent AX `setFrame` failures previously swallowed by `os.Logger`). Capped at 2 MB total disk, gzip rotation on day boundary, 7-day retention. Toggling off drains the writer + deletes everything; toggling back on regenerates the salt for forward secrecy. The **"Export Diagnostics for Bug Report"** button packages a sanitized zip — workspace names, app bundle IDs, monitor names, calendar keywords, and Focus shortcut names are all replaced with 11-character SHA hashes; the salt itself never leaves your Mac (only `hashID` does, so within one bundle hashes are correlatable but not reversible) — reveals it in Finder, and opens a pre-filled GitHub issue with environment info. Reporting a bug now takes 30 seconds.
+- **Persistent Workspaces.** Workspaces gain three new fields: **Pinned Apps** (always launched on activation; treated as belonging to this workspace), **Assign to Desktop 1-9** (Scene posts your Mission Control "Switch to Desktop N" shortcut so the activation lands on a specific Space), and **Enforcement Mode** (Off / Arrange only / Hide inactive pinned apps / Quit inactive pinned apps). With Hide or Quit, switching workspaces auto-hides or terminates the previous workspace's pinned apps so each context stays visually clean. macOS doesn't expose a public API for forcing third-party windows onto a specific Space, so this is "switch desktop + pin apps + hide/quit enforcement", not literal window relocation. Requires "Switch to Desktop N" enabled in System Settings → Keyboard → Keyboard Shortcuts → Mission Control.
+- **Workspace editor Save UX.** The Save button is now disabled when there are no unsaved edits, shows a grey "Unsaved changes" badge while you have a dirty draft, and flashes a green "Saved ✓" indicator for 2 seconds after a successful commit. No more guessing whether your click registered.
+- **Tests: 244 → 317.** 73 new tests covering `DiagnosticEvent` Codable + byte-cap, `EnvironmentSnapshot` signature stability + sensitivity to resolution / scale / main-flag / active changes, `EventLog` ring buffer, `DiagnosticWriter` actor (race-safe drain — single `AsyncStream` + sole consumer; no detached `Task {}`), `DiagnosticBudget` (newline-aware truncation, eviction policy, 7-day retention), `GzipWriter` (round-trip verified via `/usr/bin/gunzip`), `SaltStore` (mode 0600, regeneration), `ExportSanitizer` (PII-drop property check across realistic input), `SettingsStore` v2→v3 migration.
 
 ## V0.5.7 custom layouts, seam drag, dirty-state save
 
@@ -143,7 +150,7 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 
 ## Install
 
-End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.5.7 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.7/Scene-0.5.7.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
+End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.6.0 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.6.0/Scene-0.6.0.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
 
 ## Build from source
 
@@ -166,7 +173,7 @@ In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu ba
 ### Build a distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.5.7    # produces dist/Scene-0.5.7.dmg (universal, notarized)
+./scripts/build-dmg.sh 0.6.0    # produces dist/Scene-0.6.0.dmg (universal, notarized)
 ```
 
 This builds a universal (arm64 + x86_64) binary, Developer ID-signs it, submits it to Apple for notarization, and packages it into a DMG with an `Applications` drop shortcut. Both Apple Silicon and Intel Macs install from the same DMG. Set `SKIP_NOTARY=1` for a local ad-hoc build that skips the Apple notary submission (useful while iterating on DMG layout).

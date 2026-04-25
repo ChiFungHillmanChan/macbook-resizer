@@ -143,7 +143,7 @@ Expected: all 17 pass. Record any failures on the V0.3 release issue.
 
 ### V0.3 Settings migration smoke
 
-18. Start from V0.2 install with an existing `~/Library/Application Support/Scene/settings.json` (version: 1) → launch V0.3 → file auto-upgrades to version: 2 with `dragSwap: { enabled: true, distanceThresholdPt: 30 }` appended. Verify with `cat ~/Library/Application\ Support/Scene/settings.json | jq`.
+18. Start from V0.2 install with an existing `~/Library/Application Support/Scene/settings.json` (version: 1) → launch V0.3 → file auto-upgrades to version: 2 with `dragSwap: { enabled: true, distanceThresholdPt: 30 }` appended. Verify with `cat ~/Library/Application\ Support/Scene-testing/settings.json | jq`.
 
 ---
 
@@ -214,3 +214,181 @@ defaults delete com.hillman.SceneApp hasShownFirstLaunchWelcomeV1 2>/dev/null; t
 - [ ] **Re-open from About tab**: Settings → About → "Show welcome screen again" shows the welcome. Dismiss. Relaunch — no welcome. Flag stays set.
 - [ ] **Locale coverage**: switch System Settings → Language to zh-HK, reset flag, relaunch — welcome uses Cantonese (粵語) copy. Repeat for zh-TW.
 - [ ] **Illustration animation**: Scene icon ring pulses, arrow bounces subtly. No perceptible performance impact.
+
+---
+
+## V0.6 — Diagnostics
+
+### Pre-condition: build a side-by-side testing app
+
+To avoid disturbing the installed `Scene.app` (its layouts, AX grant,
+running hotkeys, and on-disk state), build a parallel `Scene-testing.app`:
+
+```sh
+./scripts/build-testing.sh
+# or build + launch in one step:
+./scripts/build-testing.sh --run
+```
+
+`Scene-testing.app` differs from production:
+
+| Attribute            | Production              | Testing                          |
+|----------------------|-------------------------|----------------------------------|
+| Bundle ID            | com.hillman.SceneApp    | com.hillman.SceneApp.testing     |
+| Binary / Dock name   | SceneApp                | Scene-testing                    |
+| Application Support  | ~/Library/Application Support/Scene/ | ~/Library/Application Support/Scene-testing/ |
+| AX TCC entry         | "SceneApp"              | "Scene-testing" (separate grant) |
+| UserDefaults domain  | com.hillman.SceneApp    | com.hillman.SceneApp.testing     |
+
+`AppDelegate.applicationSupportFolderName()` detects the `.testing`
+bundle suffix and routes everything (layouts.json / settings.json /
+workspaces.json / diagnostics/) into the parallel folder.
+
+Hotkey collision: the seeded layout chords (⌘⌃1-9,0) are global and will
+collide if both apps are running at once. Quit production Scene before
+launching testing:
+
+```sh
+killall SceneApp 2>/dev/null; true
+open dist/Scene-testing.app
+```
+
+First run will prompt for Accessibility — grant it to `Scene-testing`
+(fresh TCC entry, separate from production).
+
+### Reset between runs
+
+```sh
+killall Scene-testing 2>/dev/null; true
+rm -rf ~/Library/Application\ Support/Scene-testing/diagnostics
+```
+
+To wipe everything (layouts/settings/workspaces too — start fresh):
+
+```sh
+killall Scene-testing 2>/dev/null; true
+rm -rf ~/Library/Application\ Support/Scene-testing
+```
+
+### A. SceneCore unit tests
+
+```sh
+cd /Users/hillmanchan/Desktop/macbook-resizer
+swift test
+# expect: 317+ tests passing — privacy contract, ring buffer, writer race
+# test, gunzip round-trip via /usr/bin/gunzip, sanitizer property check
+```
+
+### B. Hooks fire end-to-end
+
+After a fresh `rm -rf` of `~/Library/Application Support/Scene-testing/diagnostics/`:
+
+- [ ] Launch app, fire 5 layouts via hotkey + 2 workspaces via menu over ~2 minutes. Plug or unplug a monitor at least once.
+- [ ] `tail -20 ~/Library/Application\ Support/Scene-testing/diagnostics/events-*.jsonl` shows valid compact JSON, one line per event, each line < 500 B.
+- [ ] Inspect with `jq -c '.t' ~/Library/Application\ Support/Scene-testing/diagnostics/events-*.jsonl | sort | uniq -c` — at minimum: `lf`, `loi` (or `loa`), `axp` (when permission granted), `wst` (workspace step), `scd` (screen diff if you replugged a monitor).
+
+### C. Privacy contract — raw log
+
+- [ ] No user-authored text leaks into the raw `.jsonl`:
+  ```sh
+  grep -E "(YourName|Slack|Chrome|password|tinyspeck|com\.apple)" \
+    ~/Library/Application\ Support/Scene-testing/diagnostics/events-*.jsonl
+  # expect: zero matches
+  ```
+- [ ] Salt file is mode 0600:
+  ```sh
+  ls -l ~/Library/Application\ Support/Scene-testing/diagnostics/.salt
+  # expect: -rw-------
+  ```
+
+### D. Disk budget
+
+- [ ] Spam 500 layout fires (hotkey held). Verify total directory < 200 KB:
+  ```sh
+  du -sh ~/Library/Application\ Support/Scene-testing/diagnostics/
+  ```
+- [ ] **Cap-hit simulation**: pre-create 5 MB of fake jsonl, restart app, verify eviction:
+  ```sh
+  killall Scene-testing
+  yes "abc" | head -c 5000000 > ~/Library/Application\ Support/Scene-testing/diagnostics/events-2025-01-01.jsonl.gz
+  # relaunch Scene-testing.app, fire one layout
+  du -sh ~/Library/Application\ Support/Scene-testing/diagnostics/
+  # expect: ≤ 2 MB total (the V0.6 hard cap)
+  ```
+
+### E. Export bundle + GitHub issue handoff
+
+- [ ] Settings → About → "Export Diagnostics for Bug Report" opens NSSavePanel with default filename `scene-diagnostics-YYYYMMDD-HHMMSS.zip`. Save to ~/Downloads.
+- [ ] **After save, Finder activates and the saved `.zip` is selected** (so the user can drag it into the GitHub issue without hunting for it).
+- [ ] **Default browser opens to** `https://github.com/ChiFungHillmanChan/macbook-resizer/issues/new` with:
+  - Title pre-filled: `Bug: ` (cursor positioned for user to type)
+  - Body pre-filled with `Scene version`, `macOS` version string, and `Diagnostic hash ID`
+  - Labels applied: `bug,diagnostics`
+  - Reminder section asking the user to drag the `.zip` into the issue
+- [ ] Drag the zip from the Finder window into the issue body — GitHub accepts the upload and shows an attachment link.
+- [ ] **Hash ID in the issue body matches `Hash ID` line in `system-info.txt`** (so the maintainer can verify zip + issue belong together).
+- [ ] Unzip and inspect:
+  ```sh
+  cd ~/Downloads
+  unzip -d /tmp/scene-diag scene-diagnostics-*.zip
+  ls /tmp/scene-diag
+  # expect: README.txt, system-info.txt, layouts.json, workspaces.json,
+  # settings.json, events-*.jsonl, recent-events.jsonl
+  ```
+- [ ] PII scan on the exported zip:
+  ```sh
+  grep -rE "(YourWorkspaceName|tinyspeck|slackmacgap|com\.apple\.Safari)" /tmp/scene-diag
+  # expect: zero matches — every name + bundle ID is hashed
+  ```
+- [ ] Salt is NOT in the bundle:
+  ```sh
+  grep -i "salt" /tmp/scene-diag/system-info.txt
+  # expect: zero matches; only "Hash ID" line should appear
+  ```
+
+### F. Toggle off → on
+
+- [ ] About tab → "Enable diagnostic logging" toggle off → confirm dialog appears in correct locale → confirm.
+- [ ] `~/Library/Application Support/Scene-testing/diagnostics/` directory is empty (or gone). Fire some layouts — no new events written.
+- [ ] Toggle back on. Fire layouts — new events appear, but the `.salt` is fresh (regenerated). Hash family changed.
+
+### G. v2 → v3 settings migration
+
+Reset to a V0.5.x state by writing a v2 settings file:
+
+```sh
+killall Scene-testing
+cat > ~/Library/Application\ Support/Scene-testing/settings.json <<'EOF'
+{"version":2,"animation":{"enabled":true,"durationMs":250,"easing":"easeOut"},"dragSwap":{"enabled":true,"distanceThresholdPt":40}}
+EOF
+# relaunch Scene-testing.app
+cat ~/Library/Application\ Support/Scene-testing/settings.json
+# expect: version is now 3, diagnosticsEnabled: true is present
+```
+
+### H. Localization spot-check
+
+Switch System Settings → Language to zh-HK. Reopen Scene Settings → About:
+
+- [ ] "Diagnostics" section title reads `診斷紀錄` in Cantonese.
+- [ ] Toggle label reads `開啟診斷紀錄`. Help text uses 粵語 (撳/嘅/係/啲/喺).
+- [ ] Confirm-disable dialog title reads `停止紀錄同埋刪晒？`.
+- [ ] Repeat in zh-TW — copy uses 書面語 (`啟用診斷紀錄`, `停用並刪除`).
+
+### I. Sign-off
+
+- [ ] Build DMG: `./scripts/build-dmg.sh 0.6.0`
+- [ ] Notarization succeeds. Mount DMG, drag to /Applications, launch — no Gatekeeper warnings.
+- [ ] AX permission survives across the upgrade (cdhash unchanged for same Developer ID-signed binary).
+
+| Check                       | First pass | Notes |
+|-----------------------------|------------|-------|
+| A (unit tests)              | | |
+| B (hooks fire)              | | |
+| C (raw-log privacy)         | | |
+| D (disk budget)             | | |
+| E (export bundle)           | | |
+| F (toggle off/on)           | | |
+| G (v2→v3 migration)         | | |
+| H (zh-HK / zh-TW UI)        | | |
+| I (DMG)                     | | |

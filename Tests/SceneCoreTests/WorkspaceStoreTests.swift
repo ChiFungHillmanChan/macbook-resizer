@@ -49,12 +49,18 @@ final class WorkspaceStoreTests: XCTestCase {
     func testUpdateMarksIsModified() throws {
         let store = try WorkspaceStore(fileURL: fileURL, hotkeyConflictProbe: { _ in nil })
         var coding = store.workspaces.first { $0.id == WorkspaceSeeds.codingID }!
+        coding.assignedDesktop = 2
+        coding.pinnedApps = ["com.apple.dt.Xcode"]
         coding.appsToLaunch = ["com.apple.Safari"]
+        coding.enforcementMode = .hideWhenInactive
         try store.update(coding)
 
         let reloaded = try WorkspaceStore(fileURL: fileURL, hotkeyConflictProbe: { _ in nil })
         let edited = reloaded.workspaces.first { $0.id == WorkspaceSeeds.codingID }!
+        XCTAssertEqual(edited.assignedDesktop, 2)
+        XCTAssertEqual(edited.pinnedApps, ["com.apple.dt.Xcode"])
         XCTAssertEqual(edited.appsToLaunch, ["com.apple.Safari"])
+        XCTAssertEqual(edited.enforcementMode, .hideWhenInactive)
         XCTAssertTrue(edited.isModified)
     }
 
