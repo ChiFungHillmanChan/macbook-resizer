@@ -33,13 +33,42 @@ typealias SceneWindowRef = WindowRef
 final class WindowAnimator: WindowFrameSink {
     private let runner: AnimationRunner
     private let clock: Clock
+    private let diagnostics: DiagnosticSink
     private var displayLink: CVDisplayLink?
     private var byID: [CGWindowID: any SceneWindowRef] = [:]
+    /// Tracks per-animation diagnostic state. Set when `animate()` starts a
+    /// run; cleared by `emitOutcome(...)` once the summary lands on the
+    /// diagnostic sink. R2-4: when `animate()` is re-called with a run
+    /// still active, the previous run's summary is emitted with
+    /// `.interrupted` BEFORE replacing tracks — so neither lost nor double
+    /// counted.
+    private var currentRun: AnimationRunState?
     /// Last frame actually written to each window. Used to suppress redundant
     /// AX writes: when the interpolator emits a frame within 0.5pt of what we
     /// last wrote, another round-trip would be indistinguishable to the target
     /// app and only costs IPC time.
     private var lastWritten: [CGWindowID: CGRect] = [:]
+
+    private struct AnimationRunState {
+        let layoutID: UUID
+        let windowCount: Int
+        let plannedDurationMs: Int
+        /// `Clock.now()` (monotonic seconds, `CACurrentMediaTime`-based).
+        /// We use clock time, not wall-clock, so the elapsed measurement is
+        /// immune to system clock adjustments mid-animation.
+        let startedAtClockTime: Double
+        var setFrameFailures: Int
+
+        func summary(endReason: AnimatedOutcomePayload.EndReason, now: Double) -> AnimatedOutcomePayload {
+            AnimatedOutcomePayload(
+                layoutID: layoutID,
+                windowCount: windowCount,
+                durationMs: max(0, Int((now - startedAtClockTime) * 1000)),
+                setFrameFailures: setFrameFailures,
+                endReason: endReason
+            )
+        }
+    }
     /// Wall time of the most recent `tick` we actually forwarded to the runner.
     /// Used to throttle CVDisplayLink to `currentMinTickInterval` — ProMotion
     /// displays fire at 120Hz, which quadruples AX write count on Electron-family
@@ -70,8 +99,9 @@ final class WindowAnimator: WindowFrameSink {
 
     private let log = Logger(subsystem: "com.scene.app", category: "animator")
 
-    init(clock: Clock = SystemClock()) {
+    init(clock: Clock = SystemClock(), diagnostics: DiagnosticSink = .noop) {
         self.clock = clock
+        self.diagnostics = diagnostics
         self.runner = AnimationRunner(clock: clock)
         self.runner.setSink(self)
     }
@@ -85,7 +115,24 @@ final class WindowAnimator: WindowFrameSink {
     /// Start a new animation, or splice into the in-flight one without jumping.
     /// `windows` provides the live `WindowRef` instances (so we can write back to
     /// AX). `placements` maps each `windowID` to its target frame.
-    func animate(windows: [any SceneWindowRef], placements: [Placement], config: AnimationConfig) {
+    ///
+    /// R2-4: if a previous animation is still in flight, its diagnostic
+    /// summary is emitted with `.interrupted` BEFORE this call replaces the
+    /// in-memory tracks. Without that order, the prior animation's
+    /// outcome would be lost (state overwritten) or double-counted (emitted
+    /// later when the new run finishes).
+    ///
+    /// `layoutID == nil` means the animation isn't a layout fire (drag-swap,
+    /// seam-resize, etc.) — those paths skip the diagnostic outcome event.
+    func animate(layoutID: UUID? = nil, windows: [any SceneWindowRef], placements: [Placement], config: AnimationConfig) {
+        // Emit prior-run summary BEFORE we touch any state.
+        if let prior = currentRun {
+            diagnostics.log(.layoutOutcomeAnimated(
+                prior.summary(endReason: .interrupted, now: clock.now())
+            ))
+            currentRun = nil
+        }
+
         // Refresh the live window registry. Animations always replace the prior set.
         byID.removeAll()
         lastWritten.removeAll()
@@ -120,6 +167,18 @@ final class WindowAnimator: WindowFrameSink {
             easing: config.easing
         )
 
+        if let layoutID {
+            currentRun = AnimationRunState(
+                layoutID: layoutID,
+                windowCount: tracks.count,
+                plannedDurationMs: scaledConfig.durationMs,
+                startedAtClockTime: clock.now(),
+                setFrameFailures: 0
+            )
+        } else {
+            currentRun = nil
+        }
+
         if runner.isFinished {
             runner.start(tracks: tracks, config: scaledConfig)
         } else {
@@ -148,6 +207,7 @@ final class WindowAnimator: WindowFrameSink {
         do { try window.setFrame(frame) }
         catch {
             log.error("AX setFrame failed for \(windowID, privacy: .public): \(String(describing: error), privacy: .public)")
+            currentRun?.setFrameFailures += 1
         }
     }
 
@@ -183,6 +243,13 @@ final class WindowAnimator: WindowFrameSink {
         lastTickTime = now
         runner.tick(now: now)
         if runner.isFinished {
+            // R2-4: emit normal-completion summary BEFORE clearing state
+            if let run = currentRun {
+                diagnostics.log(.layoutOutcomeAnimated(
+                    run.summary(endReason: .normal, now: now)
+                ))
+                currentRun = nil
+            }
             stopDisplayLink()
             byID.removeAll()
             lastWritten.removeAll()

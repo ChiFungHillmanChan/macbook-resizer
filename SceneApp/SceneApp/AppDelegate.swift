@@ -2,6 +2,7 @@ import AppKit
 import SwiftUI
 import Combine
 import SceneCore
+import UniformTypeIdentifiers
 
 final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     @Published private(set) var permissionGranted: Bool = false
@@ -14,9 +15,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     let workspaceVM: WorkspaceStoreViewModel
     let settingsVM: SettingsStoreViewModel
 
+    /// V0.6 diagnostic pipeline. Constructed in `init()` after the support
+    /// dir is computed but before stores are wired, so `Coordinator` /
+    /// `WorkspaceActivator` / `TriggerSupervisor` can inject the sink.
+    let diagnostics: DiagnosticController
+
     /// V0.4: Coordinator gains a reference to `WorkspaceStore` so its hotkey
     /// registrar can fold Workspace chords into `HotkeyManager` alongside
-    /// Layout chords.
+    /// Layout chords. V0.6: also accepts a `DiagnosticSink`.
     lazy var coordinator: Coordinator = Coordinator(
         layoutStore: layoutStore,
         workspaceStore: workspaceStore,
@@ -25,7 +31,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             DispatchQueue.main.async {
                 self?.permissionGranted = granted
             }
-        }
+        },
+        diagnostics: diagnostics.sink
     )
 
     /// V0.4 app-layer bridges. Constructed lazily — `applicationDidFinishLaunching`
@@ -34,6 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private(set) var focusController: FocusController?
     private(set) var workspaceActivator: WorkspaceActivator?
     private(set) var triggerSupervisor: TriggerSupervisor?
+    private(set) var workspaceAppPolicyEnforcer: WorkspaceAppPolicyEnforcer?
 
     /// V0.4.2 passive update nudge. `startPeriodicChecks()` wires an immediate
     /// check plus an hourly timer and a wake-from-sleep observer; the actual
@@ -62,9 +70,89 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             },
             reopenWelcome: { [weak self] in
                 self?.firstLaunchWindow.show()
+            },
+            exportDiagnostics: { [weak self] in
+                await self?.runDiagnosticsExport()
             }
         )
     }()
+
+    /// Presents `NSSavePanel` and runs the V0.6 diagnostic export. No-op
+    /// when diagnostics are disabled. Errors are NSLog'd; surfacing them
+    /// through the UI is a future polish.
+    @MainActor
+    private func runDiagnosticsExport() async {
+        guard diagnostics.enabled else {
+            NSLog("[Scene] runDiagnosticsExport: diagnostics disabled, skipping")
+            return
+        }
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = DiagnosticExporter.defaultFilename()
+        panel.canCreateDirectories = true
+        panel.allowedContentTypes = [.zip]
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        let exporter = DiagnosticExporter(
+            layoutStore: layoutStore,
+            workspaceStore: workspaceStore,
+            settingsStore: settingsStore,
+            controller: diagnostics
+        )
+        do {
+            try await exporter.export(to: url)
+            NSLog("[Scene] diagnostics exported to \(url.path)")
+            // Reveal the zip in Finder so the user can drag it straight
+            // into the GitHub issue we're about to open.
+            NSWorkspace.shared.activateFileViewerSelecting([url])
+            // Pre-fill a GitHub issue with environment info + zip-attach
+            // reminder. The body is plaintext markdown; user reviews
+            // everything in their browser before clicking Submit.
+            if let issueURL = buildGitHubIssueURL() {
+                NSWorkspace.shared.open(issueURL)
+            }
+        } catch {
+            NSLog("[Scene] diagnostics export failed: \(error)")
+        }
+    }
+
+    /// Builds a pre-filled "new issue" URL on the project's GitHub repo.
+    /// Body carries Scene + macOS versions plus the diagnostic bundle's
+    /// `hashID` so the maintainer can correlate it with the dropped zip
+    /// without revealing the salt.
+    @MainActor
+    private func buildGitHubIssueURL() -> URL? {
+        let bundleVersion = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "?"
+        let buildVersion = (Bundle.main.infoDictionary?["CFBundleVersion"] as? String) ?? "?"
+        let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
+        let hashID = diagnostics.hasher.hashID()
+
+        // Body kept short on purpose. NSWorkspace.open / Launch Services
+        // truncates very long URLs (>~1.5 KB) before passing them to the
+        // browser, which silently drops the params on long bodies. The
+        // detailed privacy explanation lives inside the zip's README.txt.
+        let body = """
+        **Environment**
+        - Scene version: \(bundleVersion) (build \(buildVersion))
+        - macOS: \(osVersion)
+        - Hash ID: `\(hashID)`
+
+        **What happened?**
+
+
+        **Steps to reproduce**
+        1.
+
+        **Diagnostic bundle**
+        Drag the `scene-diagnostics-*.zip` from the Finder window into this issue. The bundle is sanitized — see `README.txt` inside.
+        """
+
+        var components = URLComponents(string: "https://github.com/ChiFungHillmanChan/macbook-resizer/issues/new")
+        components?.queryItems = [
+            URLQueryItem(name: "title", value: "Bug report (Scene v\(bundleVersion))"),
+            URLQueryItem(name: "body", value: body),
+            URLQueryItem(name: "labels", value: "bug,diagnostics"),
+        ]
+        return components?.url
+    }
 
     /// One-time welcome window shown on first install. V0.5.4: no longer
     /// gated on Accessibility — the welcome shows on first launch regardless
@@ -87,13 +175,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         return c
     }()
 
+    /// Returns the Application Support subfolder this build should use.
+    /// Default is `Scene`. Builds whose bundle ID ends in `.testing`
+    /// (produced by `scripts/build-testing.sh`) get a separate
+    /// `Scene-testing` folder so a developer can run the test build
+    /// alongside their production install without colliding layouts /
+    /// settings / workspaces / diagnostics. Bundle name fallback covers
+    /// ad-hoc renames.
+    static func applicationSupportFolderName() -> String {
+        if let id = Bundle.main.bundleIdentifier, id.hasSuffix(".testing") {
+            return "Scene-testing"
+        }
+        let name = (Bundle.main.infoDictionary?["CFBundleName"] as? String) ?? ""
+        if name.lowercased().contains("testing") {
+            return "Scene-testing"
+        }
+        return "Scene"
+    }
+
     override init() {
         let supportDir = FileManager.default
             .urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-            .appendingPathComponent("Scene", isDirectory: true)
+            .appendingPathComponent(Self.applicationSupportFolderName(), isDirectory: true)
         let layoutsURL    = supportDir.appendingPathComponent("layouts.json")
         let settingsURL   = supportDir.appendingPathComponent("settings.json")
         let workspacesURL = supportDir.appendingPathComponent("workspaces.json")
+        let diagnosticsDir = supportDir.appendingPathComponent("diagnostics", isDirectory: true)
         do {
             // Phase 1 (see Cross-cutting §3): both stores constructed with the
             // default no-op `hotkeyConflictProbe`. The real cross-probes are
@@ -102,6 +209,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             self.layoutStore    = try LayoutStore(fileURL: layoutsURL)
             self.workspaceStore = try WorkspaceStore(fileURL: workspacesURL)
             self.settingsStore  = try SettingsStore(fileURL: settingsURL)
+            // V0.6: diagnostic pipeline. Default ON (M5 wires the toggle).
+            self.diagnostics = try DiagnosticController(directory: diagnosticsDir)
         } catch {
             fatalError("Scene: failed to initialize stores at \(supportDir.path): \(error)")
         }
@@ -126,6 +235,25 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             layoutStore?.layouts.first(where: { $0.hotkey == chord })?.name
         }
 
+        // V0.6 wire the diagnostics toggle. Persisted preference flowed
+        // through `SettingsStore.diagnosticsEnabled`; SettingsStoreViewModel
+        // pushes user-driven changes through `onDiagnosticsToggle` so the
+        // controller can drain (off) or rebuild (on) its writer.
+        settingsVM.onDiagnosticsToggle = { [weak self] enabled in
+            guard let self else { return }
+            if enabled {
+                try? self.diagnostics.enable()
+            } else {
+                await self.diagnostics.disable()
+            }
+        }
+        // Sync controller state with the persisted setting in case the
+        // user toggled off in a previous session — `init` defaulted to
+        // ON, so we may need to retroactively disable.
+        if !settingsStore.diagnosticsEnabled {
+            Task { await diagnostics.disable() }
+        }
+
         // Starts permission polling + notification helper + hotkey registrar.
         coordinator.start()
 
@@ -138,8 +266,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         }
         let launcher = AppLauncher()
         let focus = FocusController()
+        let desktopSwitcher = DesktopSwitcher()
+        let appPolicyEnforcer = WorkspaceAppPolicyEnforcer(workspaceStore: workspaceStore)
         self.appLauncher = launcher
         self.focusController = focus
+        self.workspaceAppPolicyEnforcer = appPolicyEnforcer
+        appPolicyEnforcer.start()
 
         let activator = WorkspaceActivator(
             appLauncher: launcher,
@@ -147,15 +279,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             workspaceStore: workspaceStore,
             layoutStore: layoutStore,
             applyLayout: { [weak self] id in
-                await MainActor.run { self?.coordinator.applyLayout(id: id) ?? false }
+                await MainActor.run {
+                    self?.coordinator.applyLayout(id: id, from: .workspace) ?? false
+                }
             },
-            notifier: notifier
+            notifier: notifier,
+            desktopSwitcher: desktopSwitcher,
+            appPolicyEnforcer: appPolicyEnforcer,
+            diagnostics: diagnostics.sink
         )
         self.workspaceActivator = activator
 
         let supervisor = TriggerSupervisor(
             workspaceStore: workspaceStore,
-            activator: activator
+            activator: activator,
+            diagnostics: diagnostics.sink
         )
         self.triggerSupervisor = supervisor
         coordinator.configure(triggerSupervisor: supervisor)
@@ -173,6 +311,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        workspaceAppPolicyEnforcer?.stop()
         triggerSupervisor?.stop()
     }
 

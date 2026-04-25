@@ -16,7 +16,8 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         settingsVM: SettingsStoreViewModel,
         workspaceVM: WorkspaceStoreViewModel,
         calendarPermissionRequester: @escaping () async -> Bool,
-        reopenWelcome: @escaping () -> Void
+        reopenWelcome: @escaping () -> Void,
+        exportDiagnostics: @escaping () async -> Void
     ) {
         self.layoutVM = layoutVM
         self.settingsVM = settingsVM
@@ -24,7 +25,8 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         let host = NSHostingController(
             rootView: SettingsRoot(
                 calendarPermissionRequester: calendarPermissionRequester,
-                reopenWelcome: reopenWelcome
+                reopenWelcome: reopenWelcome,
+                exportDiagnostics: exportDiagnostics
             )
                 .environmentObject(layoutVM)
                 .environmentObject(settingsVM)

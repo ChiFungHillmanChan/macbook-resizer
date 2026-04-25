@@ -34,6 +34,7 @@ struct SettingsRoot: View {
     @EnvironmentObject var workspaceVM: WorkspaceStoreViewModel
     let calendarPermissionRequester: () async -> Bool
     let reopenWelcome: () -> Void
+    let exportDiagnostics: () async -> Void
 
     @State private var selection: Tab = .workspaces
 
@@ -55,7 +56,7 @@ struct SettingsRoot: View {
                 case .layouts:     LayoutsTab()
                 case .hotkeys:     HotkeysTab()
                 case .interaction: InteractionTab()
-                case .about:       AboutTab(reopenWelcome: reopenWelcome)
+                case .about:       AboutTab(reopenWelcome: reopenWelcome, exportDiagnostics: exportDiagnostics)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

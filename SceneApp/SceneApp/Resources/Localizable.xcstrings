@@ -48,6 +48,86 @@
         }
       }
     },
+    "about.diagnostics.section.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Diagnostics" } },
+        "zh-HK": { "stringUnit": { "state": "translated", "value": "診斷紀錄" } },
+        "zh-TW": { "stringUnit": { "state": "translated", "value": "診斷紀錄" } }
+      }
+    },
+    "about.diagnostics.toggle": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Enable diagnostic logging" } },
+        "zh-HK": { "stringUnit": { "state": "translated", "value": "開啟診斷紀錄" } },
+        "zh-TW": { "stringUnit": { "state": "translated", "value": "啟用診斷紀錄" } }
+      }
+    },
+    "about.diagnostics.toggle.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Logs orchestration events locally for bug reports. No data leaves your Mac unless you export." } },
+        "zh-HK": { "stringUnit": { "state": "translated", "value": "喺本機紀錄低運作事件以便日後報 bug。除非你自己 export，否則啲資料唔會離開你部 Mac。" } },
+        "zh-TW": { "stringUnit": { "state": "translated", "value": "在本機紀錄運作事件以便日後回報問題。除非你主動匯出，否則資料不會離開你的 Mac。" } }
+      }
+    },
+    "about.diagnostics.export.button": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Export Diagnostics for Bug Report" } },
+        "zh-HK": { "stringUnit": { "state": "translated", "value": "匯出診斷紀錄畀 bug 報告用" } },
+        "zh-TW": { "stringUnit": { "state": "translated", "value": "匯出診斷紀錄供問題回報" } }
+      }
+    },
+    "about.diagnostics.export.exporting": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Exporting…" } },
+        "zh-HK": { "stringUnit": { "state": "translated", "value": "匯出緊⋯" } },
+        "zh-TW": { "stringUnit": { "state": "translated", "value": "匯出中⋯" } }
+      }
+    },
+    "about.diagnostics.export.disabled.help": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Enable diagnostic logging first." } },
+        "zh-HK": { "stringUnit": { "state": "translated", "value": "要先開咗診斷紀錄。" } },
+        "zh-TW": { "stringUnit": { "state": "translated", "value": "請先啟用診斷紀錄。" } }
+      }
+    },
+    "about.diagnostics.confirm.disable.title": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Stop logging and delete?" } },
+        "zh-HK": { "stringUnit": { "state": "translated", "value": "停止紀錄同埋刪晒？" } },
+        "zh-TW": { "stringUnit": { "state": "translated", "value": "停止紀錄並刪除？" } }
+      }
+    },
+    "about.diagnostics.confirm.disable.body": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Disabling will delete all current diagnostics on this Mac." } },
+        "zh-HK": { "stringUnit": { "state": "translated", "value": "閂咗會將呢部 Mac 上面所有現有嘅診斷紀錄全部刪走。" } },
+        "zh-TW": { "stringUnit": { "state": "translated", "value": "停用後將會刪除這部 Mac 上所有現有的診斷紀錄。" } }
+      }
+    },
+    "about.diagnostics.confirm.disable.ok": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Disable and Delete" } },
+        "zh-HK": { "stringUnit": { "state": "translated", "value": "閂咗並刪晒" } },
+        "zh-TW": { "stringUnit": { "state": "translated", "value": "停用並刪除" } }
+      }
+    },
+    "about.diagnostics.confirm.disable.cancel": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Cancel" } },
+        "zh-HK": { "stringUnit": { "state": "translated", "value": "取消" } },
+        "zh-TW": { "stringUnit": { "state": "translated", "value": "取消" } }
+      }
+    },
     "common.error": {
       "extractionState": "manual",
       "localizations": {
@@ -3107,6 +3187,138 @@
         }
       }
     },
+    "workspace.editor.desktop.assign": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Assign to Desktop"
+          }
+        }
+      }
+    },
+    "workspace.editor.desktop.hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Requires macOS Settings → Keyboard → Keyboard Shortcuts → Mission Control → Switch to Desktop N."
+          }
+        }
+      }
+    },
+    "workspace.editor.desktop.number": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desktop %d"
+          }
+        }
+      }
+    },
+    "workspace.editor.enforcement": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enforcement"
+          }
+        }
+      }
+    },
+    "workspace.editor.enforcement.arrange_only": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Arrange only"
+          }
+        }
+      }
+    },
+    "workspace.editor.enforcement.arrange_only.hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scene switches Desktop, launches pinned apps, and applies the layout without hiding or quitting other apps."
+          }
+        }
+      }
+    },
+    "workspace.editor.enforcement.hide_when_inactive": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide inactive pinned apps"
+          }
+        }
+      }
+    },
+    "workspace.editor.enforcement.hide_when_inactive.hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While this Workspace is active, Scene hides apps pinned only to another Workspace."
+          }
+        }
+      }
+    },
+    "workspace.editor.enforcement.off": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Off"
+          }
+        }
+      }
+    },
+    "workspace.editor.enforcement.off.hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned apps are saved and launched with this Workspace, but Scene does not enforce where other apps belong."
+          }
+        }
+      }
+    },
+    "workspace.editor.enforcement.quit_when_inactive": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit inactive pinned apps"
+          }
+        }
+      }
+    },
+    "workspace.editor.enforcement.quit_when_inactive.hint": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "While this Workspace is active, Scene gently asks apps pinned only to another Workspace to quit."
+          }
+        }
+      }
+    },
     "workspace.editor.error.hotkey_conflict": {
       "extractionState": "manual",
       "localizations": {
@@ -3406,6 +3618,17 @@
         }
       }
     },
+    "workspace.editor.pinned_apps": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pinned Apps"
+          }
+        }
+      }
+    },
     "workspace.editor.save": {
       "extractionState": "manual",
       "localizations": {
@@ -3425,6 +3648,33 @@
           "stringUnit": {
             "state": "translated",
             "value": "儲存"
+          }
+        }
+      }
+    },
+    "workspace.editor.saved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Saved" } },
+        "zh-HK": { "stringUnit": { "state": "translated", "value": "已儲存" } },
+        "zh-TW": { "stringUnit": { "state": "translated", "value": "已儲存" } }
+      }
+    },
+    "workspace.editor.unsaved": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": { "stringUnit": { "state": "translated", "value": "Unsaved changes" } },
+        "zh-HK": { "stringUnit": { "state": "translated", "value": "有未儲存嘅改動" } },
+        "zh-TW": { "stringUnit": { "state": "translated", "value": "有未儲存的變更" } }
+      }
+    },
+    "workspace.editor.section.persistent": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persistent Workspace"
           }
         }
       }

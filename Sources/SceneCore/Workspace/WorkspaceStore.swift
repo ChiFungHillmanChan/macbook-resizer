@@ -150,8 +150,11 @@ public final class WorkspaceStore {
         guard let seed = WorkspaceSeeds.all.first(where: { $0.id == workspace.id }) else { return false }
         return seed.name == workspace.name &&
                seed.layoutID == workspace.layoutID &&
+               seed.assignedDesktop == workspace.assignedDesktop &&
+               seed.pinnedApps == workspace.pinnedApps &&
                seed.appsToLaunch == workspace.appsToLaunch &&
                seed.appsToQuit == workspace.appsToQuit &&
+               seed.enforcementMode == workspace.enforcementMode &&
                seed.focusMode == workspace.focusMode &&
                seed.hotkey == workspace.hotkey &&
                seed.triggers == workspace.triggers

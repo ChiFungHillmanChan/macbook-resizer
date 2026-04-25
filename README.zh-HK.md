@@ -1,6 +1,6 @@
 # Scene
 
-一個 macOS menu bar app — click 一下，所有可見窗口即刻入位。V0.5.7 加咗「自訂畫布排列」：撳「+ Custom」由零開始畫任何形狀嘅 tile 組合，分、拖、刪都得；又加咗「拖邊同步」 — 拖一個 window 邊，隔籬嗰個自動跟住縮放；Settings → Layouts 嘅 Save 掣終於真係有用（之前係冇做嘢，切走就打回 default），而家做完 save 會暗返，有改嘢先再光返。V0.5.6 加咗 in-app update installer：撳 menu 入面「有新版本」→ 確認 → Scene 自動下載 DMG、quit、原地換 binary、再開 Scene，Accessibility 授權保留唔使重新 grant。V0.5.5 修咗 quit-then-relaunch 之後 24 小時冷卻會吞咗新版本通知嘅 bug，又喺 Workspaces tab toolbar 加返 delete 掣。V0.5.4 修咗首次啟動嘅 welcome 同 Accessibility 升級時嘅 stuck 情況。V0.5.3 調順咗動畫，加返 Intel Mac 支援（universal binary）。V0.4 新加咗 Workspaces、layout thumbnail、縱向 preset 同多語 UI。
+一個 macOS menu bar app — click 一下，所有可見窗口即刻入位。V0.6.0 加咗「診斷紀錄」（默認開咗，喺本機紀錄低運作事件，方便日後報 bug — 撳一個掣就 export 一個 sanitized zip + 自動開預先填好嘅 GitHub issue，所有 app 名 / bundle ID / workspace 名都已 hash 處理，salt 永遠唔會離開你部 Mac）；同埋「持續性 Workspaces」（Pin app 落 workspace、指定 Desktop 1-9、揀 enforcement mode：Off / Arrange only / Hide inactive / Quit inactive）。Workspace 編輯器嘅 Save 掣終於有反應 — 冇改動 disable，改緊嘢顯示「有未儲存嘅改動」，撳完顯示「已儲存 ✓」。V0.5.7 加咗「自訂畫布排列」：撳「+ Custom」由零開始畫任何形狀嘅 tile 組合，分、拖、刪都得；又加咗「拖邊同步」 — 拖一個 window 邊，隔籬嗰個自動跟住縮放；Settings → Layouts 嘅 Save 掣終於真係有用（之前係冇做嘢，切走就打回 default），而家做完 save 會暗返，有改嘢先再光返。V0.5.6 加咗 in-app update installer：撳 menu 入面「有新版本」→ 確認 → Scene 自動下載 DMG、quit、原地換 binary、再開 Scene，Accessibility 授權保留唔使重新 grant。V0.5.5 修咗 quit-then-relaunch 之後 24 小時冷卻會吞咗新版本通知嘅 bug，又喺 Workspaces tab toolbar 加返 delete 掣。V0.5.4 修咗首次啟動嘅 welcome 同 Accessibility 升級時嘅 stuck 情況。V0.5.3 調順咗動畫，加返 Intel Mac 支援（universal binary）。V0.4 新加咗 Workspaces、layout thumbnail、縱向 preset 同多語 UI。
 
 **需要 macOS 14（Sonoma）或以上。Universal binary — Apple Silicon 同 Intel 都行到。**
 
@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 自動幫你清走 quarantine flag，唔會彈「cannot be verified」嘅 Gatekeeper 警告。首次開 Scene 嗰陣，去 **System Settings → Privacy & Security → Accessibility** 撳着 Scene 就得。
 
-**或者直接下載 DMG**：**[Scene-0.5.7.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.7/Scene-0.5.7.dmg)**（Universal：Apple Silicon + Intel，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
+**或者直接下載 DMG**：**[Scene-0.6.0.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.6.0/Scene-0.6.0.dmg)**（Universal：Apple Silicon + Intel，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
 
 所有版本：[Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · 用 DMG 嘅話，跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
 
@@ -25,6 +25,13 @@ brew install --cask chifunghillmanchan/tap/scene
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
   你個 browser 唔 render 到 embed 嘅 video。<a href="docs/media/scene-marketing.mp4">撳呢度 download 示範片（MP4，13 MB）</a>。
 </video>
+
+## V0.6.0 診斷紀錄 + 持續性 Workspaces
+
+- **診斷紀錄。** Settings → 關於 加咗「診斷紀錄」section。Default 開咗，Scene 會將 layout / workspace 啟動 / AX 權限變化 / 螢幕排列改變 / 動畫結果等運作事件紀錄落 `~/Library/Application Support/Scene/diagnostics/events-YYYY-MM-DD.jsonl`，連動畫入面被 `os.Logger` 食咗嘅 AX `setFrame` 失敗都見到。disk 上限 2 MB hard cap，每日切檔 gzip 壓縮，保留 7 日。撳 toggle off 會 drain 個 writer + 完全刪走啲嘢；off → on 會重新 generate salt（forward secrecy）。**「匯出診斷紀錄畀 bug 報告用」**個掣會包一個 sanitized zip — workspace 名、bundle ID、mon 名、calendar 關鍵字、Focus shortcut 名全部換成 11-character SHA hash，salt 永遠唔會離開你部 Mac（只係 export 個 `hashID` 出去，bundle 入面嘅 hash 可以互相對照但唔會反向出 plaintext） — 完成之後 Finder 跳出嚟 highlight 個 zip + 自動開瀏覽器去 GitHub issue（已 pre-fill 環境資料同 hash ID）。報 bug 而家 30 秒搞掂。
+- **持續性 Workspaces。** Workspace 多咗三個 field：**Pinned Apps**（啟動時必定 launch，視為屬於呢個 workspace），**Assign to Desktop 1-9**（Scene 會 post Mission Control 嘅「Switch to Desktop N」shortcut 切去指定嘅 Space），同**Enforcement Mode**（Off / Arrange only / Hide inactive pinned apps / Quit inactive pinned apps）。揀 Hide 或者 Quit 嘅話，切 workspace 嗰陣會自動 hide 或者 quit 上一個 workspace 嘅 pinned apps，每個 workspace 永遠都係淨係見到自己嘅 app。macOS 冇公開 API 強制第三方 window 留喺指定 Space，所以呢個係「切 desktop + pin app + hide/quit 強制」，唔係真係搬 window 過去。要喺 System Settings → 鍵盤 → 鍵盤快速鍵 → Mission Control 入面 enable 咗「Switch to Desktop N」先 work。
+- **Workspace 編輯器 Save UX。** Save 掣冇改動時 disable，改緊嘢時顯示灰色「有未儲存嘅改動」，撳完顯示綠色「已儲存 ✓」2 秒。冇得再撳完唔知有冇 save 到。
+- **測試：244 → 317。** 73 個新 test，覆蓋 `DiagnosticEvent` Codable + byte-cap、`EnvironmentSnapshot` signature 嘅穩定性同對解像度 / scale / main flag / active 變化嘅敏感度、`EventLog` ring buffer、`DiagnosticWriter` actor（race-safe drain — 單一 `AsyncStream` + 唯一 consumer，冇 detached `Task {}`）、`DiagnosticBudget`（newline 安全 truncate + eviction + 7 日 retention）、`GzipWriter`（用 `/usr/bin/gunzip` round-trip 驗證）、`SaltStore`（mode 0600 + regenerate）、`ExportSanitizer`（PII drop 嘅 property check）、`SettingsStore` v2 → v3 migration。
 
 ## V0.5.7 自訂排列 + 拖邊同步 + Save 掣有反應
 
@@ -140,7 +147,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 ## Install
 
-End user：去 [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者[直接撳呢度 download 最新嘅 v0.5.7 DMG](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.5.7/Scene-0.5.7.dmg)，又或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Accessibility 授權。
+End user：去 [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) download DMG（或者[直接撳呢度 download 最新嘅 v0.6.0 DMG](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.6.0/Scene-0.6.0.dmg)，又或者 local 跑 `scripts/build-dmg.sh`）→ 拖 `Scene.app` 入 `/Applications` → 跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Accessibility 授權。
 
 ## 由 source build
 
@@ -163,7 +170,7 @@ Xcode 揀 `SceneApp` scheme → ⌘R。App 以 menu bar extra 形式行（冇 Do
 ### Build distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.5.7    # 出 dist/Scene-0.5.7.dmg（universal + notarized）
+./scripts/build-dmg.sh 0.6.0    # 出 dist/Scene-0.6.0.dmg（universal + notarized）
 ```
 
 Build universal（arm64 + x86_64）binary，Developer ID sign，submit 去 Apple notary，pack 入 DMG 連 `Applications` drop shortcut。Apple Silicon 同 Intel Mac 用同一個 DMG。如果想 local iterate DMG layout，set `SKIP_NOTARY=1` 會 skip Apple notary submission，改用 ad-hoc sign。

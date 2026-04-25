@@ -25,22 +25,32 @@ final class TriggerSupervisor {
     /// @MainActor isolation makes the read-modify-write atomic.
     private var activationInFlight: Bool = false
 
-    init(workspaceStore: WorkspaceStore, activator: WorkspaceActivator) {
+    private let diagnostics: DiagnosticSink
+
+    init(
+        workspaceStore: WorkspaceStore,
+        activator: WorkspaceActivator,
+        diagnostics: DiagnosticSink = .noop
+    ) {
         self.workspaceStore = workspaceStore
         self.activator = activator
-        self.monitorWatcher = MonitorTriggerWatcher { [weak self] trigger in
-            self?.handle(systemEvent: trigger)
-        }
+        self.diagnostics = diagnostics
+        self.monitorWatcher = MonitorTriggerWatcher(
+            onEvent: { [weak self] trigger in
+                self?.handle(systemEvent: trigger)
+            },
+            diagnostics: diagnostics
+        )
         self.timeScheduler = TimeTriggerScheduler(
             workspaces: { [weak workspaceStore] in workspaceStore?.workspaces ?? [] },
             onEvent: { [weak self] id, _ in
-                self?.handleDirectActivation(workspaceID: id)
+                self?.handleDirectActivation(workspaceID: id, kind: .timeOfDay)
             }
         )
         self.calendarWatcher = CalendarTriggerWatcher(
             workspaces: { [weak workspaceStore] in workspaceStore?.workspaces ?? [] },
             onEvent: { [weak self] id, _ in
-                self?.handleDirectActivation(workspaceID: id)
+                self?.handleDirectActivation(workspaceID: id, kind: .calendarEvent)
             }
         )
     }
@@ -65,9 +75,13 @@ final class TriggerSupervisor {
     func activateManually(workspaceID: UUID) {
         guard !activationInFlight else {
             NSLog("[Scene] TriggerSupervisor: activation in flight, dropping manual request \(workspaceID.uuidString)")
+            diagnostics.log(.triggerSuppressed(.init(
+                workspaceID: workspaceID, reason: .inFlight
+            )))
             return
         }
         lastActivation[workspaceID] = Date()
+        diagnostics.log(.triggerFired(.init(workspaceID: workspaceID, kind: .manual)))
         startActivation(workspaceID: workspaceID)
     }
 
@@ -75,24 +89,61 @@ final class TriggerSupervisor {
     private func handle(systemEvent: WorkspaceTrigger) {
         for workspace in workspaceStore.workspaces {
             guard workspace.triggers.contains(systemEvent) else { continue }
-            handleDirectActivation(workspaceID: workspace.id)
+            let kind = TriggerSupervisor.kind(for: systemEvent)
+            handleDirectActivation(workspaceID: workspace.id, kind: kind, source: systemEvent)
             return  // first match wins
         }
     }
 
-    private func handleDirectActivation(workspaceID: UUID) {
+    private func handleDirectActivation(
+        workspaceID: UUID,
+        kind: TriggerFiredPayload.Kind,
+        source: WorkspaceTrigger? = nil
+    ) {
         // Skip if already active (avoid thrash).
-        if workspaceStore.activeWorkspaceID == workspaceID { return }
-        // Cooldown (auto-triggers only; manual path bypasses).
-        if let last = lastActivation[workspaceID], Date().timeIntervalSince(last) < cooldown {
+        if workspaceStore.activeWorkspaceID == workspaceID {
+            diagnostics.log(.triggerSuppressed(.init(
+                workspaceID: workspaceID, reason: .alreadyActive
+            )))
             return
+        }
+        // Cooldown (auto-triggers only; manual path bypasses).
+        if let last = lastActivation[workspaceID] {
+            let remaining = cooldown - Date().timeIntervalSince(last)
+            if remaining > 0 {
+                diagnostics.log(.triggerSuppressed(.init(
+                    workspaceID: workspaceID, reason: .cooldown,
+                    cooldownRemainingMs: Int(remaining * 1000)
+                )))
+                return
+            }
         }
         guard !activationInFlight else {
             NSLog("[Scene] TriggerSupervisor: activation in flight, dropping auto request \(workspaceID.uuidString)")
+            diagnostics.log(.triggerSuppressed(.init(
+                workspaceID: workspaceID, reason: .inFlight
+            )))
             return
         }
         lastActivation[workspaceID] = Date()
+        // Hash the source-specific identifier so the diagnostic stream
+        // never carries plaintext monitor names / calendar keywords.
+        diagnostics.log(.triggerFired(.init(
+            workspaceID: workspaceID, kind: kind,
+            displayNameHash: nil, keywordHash: nil
+        )))
         startActivation(workspaceID: workspaceID)
+        _ = source  // reserved for future hashed payloads
+    }
+
+    private static func kind(for trigger: WorkspaceTrigger) -> TriggerFiredPayload.Kind {
+        switch trigger {
+        case .manual:             return .manual
+        case .monitorConnect:     return .monitorConnect
+        case .monitorDisconnect:  return .monitorDisconnect
+        case .timeOfDay:          return .timeOfDay
+        case .calendarEvent:      return .calendarEvent
+        }
     }
 
     private func startActivation(workspaceID: UUID) {
