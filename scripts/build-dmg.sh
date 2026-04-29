@@ -39,7 +39,13 @@ VOLUME_NAME="Scene ${VERSION}"
 ICON_ICNS="$DIST_DIR/Scene.icns"
 BG_TIFF="dmg/background.tiff"
 
-DEVELOPER_ID="Developer ID Application: Hillman Chan (22K6G3HH9G)"
+# Pinned to the SHA-1 of the cert in login.keychain-db (the original).
+# macOS occasionally spins off a duplicate "login_renamed_*.keychain-db"
+# during sync/migration, leaving two identically-named Developer ID certs;
+# codesign then errors out as "ambiguous". Pinning to the hash sidesteps
+# the ambiguity. The human-readable name is kept in a comment for clarity:
+#   "Developer ID Application: Hillman Chan (22K6G3HH9G)"
+DEVELOPER_ID="70A2E3C96D7CC3E72D776A41C6F02C89D9E85CCE"
 TEAM_ID="22K6G3HH9G"
 NOTARY_PROFILE="scene-notary"
 SKIP_NOTARY="${SKIP_NOTARY:-0}"
