@@ -20,6 +20,19 @@ final class Coordinator: ObservableObject {
     /// `ObservableObject`.
     @Published private(set) var layoutListVersion: Int = 0
 
+    /// V0.6.1 Free Mode toggle. When `true`, all of Scene's automatic
+    /// behavior pauses: layout hotkeys / menu clicks no-op, workspace
+    /// activation no-ops, drag-swap and seam-resize observers short-circuit,
+    /// and `TriggerSupervisor` ignores auto-trigger events. State is
+    /// in-memory only — every launch starts with `false`. The dimmed menu
+    /// rows + the swapped `MenuBarExtra` icon are the user's signal.
+    @Published var freeMode: Bool = false {
+        didSet {
+            guard oldValue != freeMode else { return }
+            triggerSupervisor?.paused = freeMode
+        }
+    }
+
     private let log = Logger(subsystem: "com.scene.app", category: "coordinator")
     private let hotkeyManager = HotkeyManager()
     private let onboarding = OnboardingWindowController()
@@ -142,6 +155,7 @@ final class Coordinator: ObservableObject {
     /// yet (Block C runs before Block D's `AppDelegate` wiring).
     @MainActor
     func applyWorkspace(id: UUID) async {
+        guard !freeMode else { return }
         guard let supervisor = triggerSupervisor else {
             log.info("applyWorkspace: supervisor not configured, dropping \(id.uuidString, privacy: .public)")
             return
@@ -166,6 +180,7 @@ final class Coordinator: ObservableObject {
     @discardableResult
     func applyLayout(_ custom: CustomLayout, from source: LayoutFiredPayload.Source = .menu) -> Bool {
         guard permissionGranted else { onboarding.show(); return false }
+        guard !freeMode else { return false }
         if let lastID = lastApplyCustomLayoutID, lastID == custom.id,
            let lastTime = lastApplyTime,
            Date().timeIntervalSince(lastTime) < repeatFireWindow {
@@ -410,10 +425,12 @@ final class Coordinator: ObservableObject {
         observerGroup.startObserving(
             windowIDs: placedIDs,
             onMove: { [weak self] id, frame in
-                self?.dragSwapController.handleWindowMoved(windowID: id, currentFrame: frame)
+                guard let self, !self.freeMode else { return }
+                self.dragSwapController.handleWindowMoved(windowID: id, currentFrame: frame)
             },
             onResize: { [weak self] id, frame in
-                self?.seamResizeController.handleWindowResized(windowID: id, newFrame: frame)
+                guard let self, !self.freeMode else { return }
+                self.seamResizeController.handleWindowResized(windowID: id, newFrame: frame)
             }
         )
         startDragSwapInfrastructure()

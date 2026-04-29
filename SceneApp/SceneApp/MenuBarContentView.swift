@@ -75,6 +75,7 @@ struct MenuBarContentView: View {
                             }
                         }
                     }
+                    .disabled(coordinator.freeMode)
                 }
             }
         }
@@ -93,8 +94,21 @@ struct MenuBarContentView: View {
                     Text(label(for: layout))
                 }
             }
+            .disabled(coordinator.freeMode)
         }
 
+        Divider()
+        Button(action: { coordinator.freeMode.toggle() }) {
+            HStack {
+                if coordinator.freeMode {
+                    Image(systemName: "checkmark")
+                        .foregroundStyle(.tint)
+                } else {
+                    Spacer().frame(width: 14)
+                }
+                Text("menu.free_mode")
+            }
+        }
         Divider()
         Button("menu.settings") {
             appDelegate.openSettings()
