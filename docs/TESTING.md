@@ -394,7 +394,7 @@ Switch System Settings → Language to zh-HK. Reopen Scene Settings → About:
 | I (DMG)                     | | |
 
 
-## V0.7.0 Free Mode smoke checklist
+## V0.6.1 Free Mode smoke checklist
 
 Manual verification — run after each `xcodebuild` of the SceneApp target. No `swift test` coverage; this checklist is the gate.
 

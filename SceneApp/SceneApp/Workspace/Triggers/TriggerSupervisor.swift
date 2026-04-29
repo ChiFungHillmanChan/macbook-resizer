@@ -19,7 +19,7 @@ final class TriggerSupervisor {
     private var calendarWatcher: CalendarTriggerWatcher!
     private var lastActivation: [UUID: Date] = [:]
     private let cooldown: TimeInterval = 30.0
-    /// V0.7.0 Free Mode gate. When `true`, all auto-trigger paths
+    /// V0.6.1 Free Mode gate. When `true`, all auto-trigger paths
     /// (monitor / time / calendar) short-circuit before activation. Manual
     /// activation paths are NOT gated here — `Coordinator.applyWorkspace`
     /// blocks them upstream. Watchers stay running so toggling Free Mode

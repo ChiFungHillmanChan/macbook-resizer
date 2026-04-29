@@ -20,7 +20,7 @@ final class Coordinator: ObservableObject {
     /// `ObservableObject`.
     @Published private(set) var layoutListVersion: Int = 0
 
-    /// V0.7.0 Free Mode toggle. When `true`, all of Scene's automatic
+    /// V0.6.1 Free Mode toggle. When `true`, all of Scene's automatic
     /// behavior pauses: layout hotkeys / menu clicks no-op, workspace
     /// activation no-ops, drag-swap and seam-resize observers short-circuit,
     /// and `TriggerSupervisor` ignores auto-trigger events. State is
