@@ -19,6 +19,12 @@ final class TriggerSupervisor {
     private var calendarWatcher: CalendarTriggerWatcher!
     private var lastActivation: [UUID: Date] = [:]
     private let cooldown: TimeInterval = 30.0
+    /// V0.7.0 Free Mode gate. When `true`, all auto-trigger paths
+    /// (monitor / time / calendar) short-circuit before activation. Manual
+    /// activation paths are NOT gated here — `Coordinator.applyWorkspace`
+    /// blocks them upstream. Watchers stay running so toggling Free Mode
+    /// off resumes immediately. Set by `Coordinator.freeMode.didSet`.
+    var paused: Bool = false
     /// Single-flight guard: at most one activation in flight at a time. Second
     /// taps on a hotkey (manual) or overlapping auto-triggers are dropped with a
     /// log line — prevents interleaved quit/launch/layout state from racing.
@@ -100,6 +106,7 @@ final class TriggerSupervisor {
         kind: TriggerFiredPayload.Kind,
         source: WorkspaceTrigger? = nil
     ) {
+        guard !paused else { return }
         // Skip if already active (avoid thrash).
         if workspaceStore.activeWorkspaceID == workspaceID {
             diagnostics.log(.triggerSuppressed(.init(
