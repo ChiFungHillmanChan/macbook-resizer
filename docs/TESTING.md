@@ -392,3 +392,26 @@ Switch System Settings → Language to zh-HK. Reopen Scene Settings → About:
 | G (v2→v3 migration)         | | |
 | H (zh-HK / zh-TW UI)        | | |
 | I (DMG)                     | | |
+
+
+## V0.7.0 Free Mode smoke checklist
+
+Manual verification — run after each `xcodebuild` of the SceneApp target. No `swift test` coverage; this checklist is the gate.
+
+1. **Cold launch is OFF.** Quit Scene if running, relaunch. Confirm the menu bar icon is `rectangle.3.group` (the un-paused glyph) and the Free Mode row in the menu shows no leading checkmark.
+2. **Hotkey fires when OFF.** Press ⌘⌃1. A layout fires on the active screen.
+3. **Toggle ON via menu.** Open the menu, click "Free Mode". Verify:
+   - The Free Mode row gains a leading ✓.
+   - All Workspaces rows are dimmed (disabled).
+   - All Layouts rows are dimmed (disabled).
+   - The menu bar icon swaps to `pause.rectangle`.
+4. **Hotkey is silent when ON.** Press ⌘⌃1. Nothing happens. No notification, no log spam.
+5. **Drag-swap is silent when ON.** Drag a window that was previously placed by a layout near a slot edge. The window stays where you dragged it; no snap.
+6. **Auto-trigger is silent when ON.** If a workspace has a `.timeOfDay` trigger set within the next minute, wait for that minute. Confirm the workspace does NOT activate.
+7. **Toggle OFF via menu.** Click "Free Mode" again. Verify:
+   - The ✓ disappears.
+   - All Workspaces and Layouts rows un-dim.
+   - The menu bar icon reverts to `rectangle.3.group`.
+8. **Hotkey fires after toggling OFF.** Press ⌘⌃1. A layout fires normally.
+9. **Drag-swap works after toggling OFF.** Re-fire a layout (so observers re-attach to the new placed set), drag a window near a slot edge. Snap occurs.
+10. **Free Mode does NOT survive relaunch.** With Free Mode ON, ⌘Q the app, relaunch. Confirm Scene comes back with Free Mode OFF.
