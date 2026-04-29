@@ -1508,6 +1508,29 @@
         }
       }
     },
+    "menu.free_mode": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Free Mode"
+          }
+        },
+        "zh-HK": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "閒置模式"
+          }
+        },
+        "zh-TW": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "自由模式"
+          }
+        }
+      }
+    },
     "menu.section.workspaces": {
       "extractionState": "manual",
       "localizations": {
