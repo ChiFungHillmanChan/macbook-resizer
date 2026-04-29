@@ -16,7 +16,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 Quarantine is stripped automatically — no "cannot be verified" prompt. On first launch, grant Accessibility in **System Settings → Privacy & Security → Accessibility**.
 
-**Or download the DMG directly**: **[Scene-0.6.0.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.6.0/Scene-0.6.0.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
+**Or download the DMG directly**: **[Scene-0.6.1.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.6.1/Scene-0.6.1.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
 
 All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · DMG users, see [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
 
@@ -25,6 +25,12 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 <video src="https://github.com/ChiFungHillmanChan/macbook-resizer/raw/main/docs/media/scene-marketing.mp4" controls muted width="720">
   Your browser does not render embedded video. <a href="docs/media/scene-marketing.mp4">Download the demo clip (MP4, 13 MB)</a>.
 </video>
+
+## V0.6.1 Free Mode
+
+- **Free Mode toggle.** New "Free Mode" entry in the menu bar (between Layouts and Settings). One click pauses every automatic Scene behavior: layout hotkeys (⌘⌃1-9,0), workspace hotkeys (⌘⌥1-4), drag-swap, seam-resize, and workspace auto-triggers (monitor connect / time / calendar). Saved layouts, workspaces, hotkey bindings, and settings are all preserved — they just don't fire until you toggle back on. The Free Mode row gains a leading checkmark when active, the Layouts and Workspaces rows visibly dim, and the menu bar icon swaps from `rectangle.3.group` to `pause.rectangle` so dormant state is visible at a glance.
+- **Always starts active on launch.** Free Mode is in-memory only — every quit + relaunch returns Scene to its normal active state. There is no persisted "Scene is paused" state to forget about.
+- **No SceneCore changes; tests still 317/317** — pure SceneApp UI + Coordinator gating. State lives in `Coordinator.freeMode` (`@Published Bool`), with early-returns at `applyLayout(_:)` / `applyWorkspace(id:)` and a matching `paused` flag on `TriggerSupervisor` for auto-triggers. Drag-swap is gated in the AX observer closures so the observer itself stays installed and re-enables instantly when toggled back.
 
 ## V0.6.0 diagnostics + persistent workspaces
 
@@ -150,7 +156,7 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 
 ## Install
 
-End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.6.0 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.6.0/Scene-0.6.0.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
+End users: download the DMG from the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) (or grab the [latest v0.6.1 DMG directly](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.6.1/Scene-0.6.1.dmg), or run `scripts/build-dmg.sh` locally), drag `Scene.app` into `/Applications`, and follow [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Accessibility-permission step.
 
 ## Build from source
 
@@ -173,7 +179,7 @@ In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu ba
 ### Build a distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.6.0    # produces dist/Scene-0.6.0.dmg (universal, notarized)
+./scripts/build-dmg.sh 0.6.1    # produces dist/Scene-0.6.1.dmg (universal, notarized)
 ```
 
 This builds a universal (arm64 + x86_64) binary, Developer ID-signs it, submits it to Apple for notarization, and packages it into a DMG with an `Applications` drop shortcut. Both Apple Silicon and Intel Macs install from the same DMG. Set `SKIP_NOTARY=1` for a local ad-hoc build that skips the Apple notary submission (useful while iterating on DMG layout).
