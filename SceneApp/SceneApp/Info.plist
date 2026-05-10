@@ -17,5 +17,16 @@
 			<string>Default</string>
 		</dict>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.hillman.SceneApp.url</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>scene</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>
