@@ -51,15 +51,23 @@ final class URLRouterTests: XCTestCase {
         XCTAssertEqual(URLRouter.parse(url), .success(.toggleFreeMode))
     }
 
-    func testParse_freeModeOnOff() {
+    func testParse_freeModeOn() {
         XCTAssertEqual(
             URLRouter.parse(URL(string: "scene://free-mode/on")!),
             .success(.setFreeMode(enabled: true))
         )
+    }
+
+    func testParse_freeModeOff() {
         XCTAssertEqual(
             URLRouter.parse(URL(string: "scene://free-mode/off")!),
             .success(.setFreeMode(enabled: false))
         )
+    }
+
+    func testParse_freeModeUnknownAction() {
+        let url = URL(string: "scene://free-mode/sleep")!
+        XCTAssertEqual(URLRouter.parse(url), .failure(.unknownRoute))
     }
 
     // MARK: - Errors
@@ -76,6 +84,11 @@ final class URLRouterTests: XCTestCase {
 
     func testParse_missingIdentifier() {
         let url = URL(string: "scene://workspace")!
+        XCTAssertEqual(URLRouter.parse(url), .failure(.missingIdentifier))
+    }
+
+    func testParse_layoutMissingIdentifier() {
+        let url = URL(string: "scene://layout")!
         XCTAssertEqual(URLRouter.parse(url), .failure(.missingIdentifier))
     }
 

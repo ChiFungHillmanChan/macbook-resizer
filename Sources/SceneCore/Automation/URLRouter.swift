@@ -60,11 +60,12 @@ public enum URLRouter {
     }
 
     private static func parseIdentifier(_ raw: String) -> RawIdentifier {
-        let decoded = raw.removingPercentEncoding ?? raw
-        if let uuid = UUID(uuidString: decoded) {
+        // `url.pathComponents` already decodes percent-encoded segments, so
+        // the raw input here is already decoded. No second decode pass.
+        if let uuid = UUID(uuidString: raw) {
             return .uuid(uuid)
         }
-        return .name(decoded)
+        return .name(raw)
     }
 
     private static func makeLayoutID(_ raw: RawIdentifier) -> LayoutIdentifier {
