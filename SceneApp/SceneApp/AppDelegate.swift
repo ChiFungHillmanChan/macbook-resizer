@@ -43,6 +43,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     private(set) var triggerSupervisor: TriggerSupervisor?
     private(set) var workspaceAppPolicyEnforcer: WorkspaceAppPolicyEnforcer?
 
+    /// V0.7 automation surface. Constructed in `applicationDidFinishLaunching`
+    /// once `coordinator.notification` exists. Both URL-scheme and AppIntents
+    /// paths route through this.
+    private(set) var automationDispatcher: AutomationDispatcher?
+
     /// V0.4.2 passive update nudge. `startPeriodicChecks()` wires an immediate
     /// check plus an hourly timer and a wake-from-sleep observer; the actual
     /// GitHub call is rate-limited to once per 24h per device via UserDefaults,
@@ -298,6 +303,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
         self.triggerSupervisor = supervisor
         coordinator.configure(triggerSupervisor: supervisor)
 
+        self.automationDispatcher = AutomationDispatcher(
+            coordinator: coordinator,
+            notifier: notifier
+        )
+
         updateChecker.startPeriodicChecks()
 
         // V0.5.4: welcome on first launch regardless of AX state. If the
@@ -313,6 +323,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
     func applicationWillTerminate(_ notification: Notification) {
         workspaceAppPolicyEnforcer?.stop()
         triggerSupervisor?.stop()
+    }
+
+    /// V0.7 — URL scheme entry point. macOS dispatches `scene://...` URLs here
+    /// (registered via Info.plist `CFBundleURLTypes`). All work routes through
+    /// `AutomationDispatcher` to share the Free Mode + AX gate with AppIntents.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        Task { @MainActor in
+            for url in urls {
+                switch URLRouter.parse(url) {
+                case .success(let command):
+                    await self.automationDispatcher?.dispatchFromURL(command)
+                case .failure(let error):
+                    NSLog("[Scene] URL routing error for \(url.absoluteString): \(error)")
+                }
+            }
+        }
     }
 
     @MainActor
