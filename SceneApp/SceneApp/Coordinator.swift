@@ -277,36 +277,51 @@ final class Coordinator: ObservableObject {
             // `screen` is parsed forward-compatibly but currently unused —
             // ScreenResolver.activeScreen() picks under-mouse regardless until
             // per-display layouts ship.
+            let resolved: UUID
+            let label: String
             switch id {
             case .uuid(let uuid):
-                if !force, freeMode { return .blockedByFreeMode }
-                let applied = applyLayout(id: uuid, from: .automation, force: force)
-                return applied ? .ok : .notFoundLayout(uuid.uuidString)
+                guard layoutStore.layouts.contains(where: { $0.id == uuid }) else {
+                    return .notFoundLayout(uuid.uuidString)
+                }
+                resolved = uuid
+                label = uuid.uuidString
             case .name(let name):
                 guard let match = layoutStore.layouts.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) else {
                     return .notFoundLayout(name)
                 }
-                if !force, freeMode { return .blockedByFreeMode }
-                let applied = applyLayout(id: match.id, from: .automation, force: force)
-                return applied ? .ok : .notFoundLayout(name)
+                resolved = match.id
+                label = name
             }
+            if !force, freeMode { return .blockedByFreeMode }
+            // Downstream `applyLayout` may return false for non-"not-found"
+            // reasons (no visible windows, mid-call AX revocation). Report
+            // `.ok` once the target was located; the underlying notification
+            // path surfaces "no windows" separately.
+            _ = applyLayout(id: resolved, from: .automation, force: force)
+            _ = label   // reserved for future enriched outcome reporting
+            return .ok
 
         case .activateWorkspace(let id, let force):
+            guard let store = workspaceStore else {
+                return .notFoundWorkspace(String(describing: id))
+            }
+            let resolved: UUID
             switch id {
             case .uuid(let uuid):
-                if !force, freeMode { return .blockedByFreeMode }
-                await applyWorkspace(id: uuid, force: force)
-                return .ok
+                guard store.workspaces.contains(where: { $0.id == uuid }) else {
+                    return .notFoundWorkspace(uuid.uuidString)
+                }
+                resolved = uuid
             case .name(let name):
-                guard let store = workspaceStore,
-                      let match = store.workspaces.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame })
-                else {
+                guard let match = store.workspaces.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) else {
                     return .notFoundWorkspace(name)
                 }
-                if !force, freeMode { return .blockedByFreeMode }
-                await applyWorkspace(id: match.id, force: force)
-                return .ok
+                resolved = match.id
             }
+            if !force, freeMode { return .blockedByFreeMode }
+            await applyWorkspace(id: resolved, force: force)
+            return .ok
 
         case .listWorkspaces:
             let names = workspaceStore?.workspaces.map(\.name).sorted() ?? []
