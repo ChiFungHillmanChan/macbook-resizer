@@ -6,6 +6,7 @@ final class AutomationDispatcherInputsTests: XCTestCase {
     func testOK_returnsNoMessage() {
         XCTAssertNil(AutomationFeedback.message(for: .ok))
         XCTAssertNil(AutomationFeedback.message(for: .okWithValue([])))
+        XCTAssertNil(AutomationFeedback.message(for: .okWithValue(["A", "B"])))
     }
 
     func testWorkspaceNotFound_carriesNameArgument() {
@@ -29,5 +30,12 @@ final class AutomationDispatcherInputsTests: XCTestCase {
     func testBlockedByMissingAX_noArgument() {
         let m = AutomationFeedback.message(for: .blockedByMissingAX)
         XCTAssertEqual(m?.bodyKey, "automation.notify.blocked_by_missing_ax")
+        XCTAssertNil(m?.bodyArgument)
+    }
+
+    func testInvalidArgument_carriesDetailArgument() {
+        let m = AutomationFeedback.message(for: .invalidArgument("bad-screen-index"))
+        XCTAssertEqual(m?.bodyKey, "automation.notify.invalid_argument")
+        XCTAssertEqual(m?.bodyArgument, "bad-screen-index")
     }
 }

@@ -43,6 +43,10 @@ final class AutomationDispatcher {
     }
 
     private func notify(_ msg: AutomationFeedback.Message) {
+        // Dynamic key: `String.LocalizationValue` bridge is required because
+        // `msg.titleKey` / `msg.bodyKey` are runtime Strings. Do not simplify
+        // to a bare String literal — the `String(localized:)` overload that
+        // accepts a String literal is not the one we want here.
         let title = String(localized: String.LocalizationValue(msg.titleKey))
         let bodyTemplate = String(localized: String.LocalizationValue(msg.bodyKey))
         let body: String
