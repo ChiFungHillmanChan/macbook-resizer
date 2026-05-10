@@ -52,6 +52,7 @@ public enum DiagnosticEvent: Codable, Sendable, Equatable {
 public struct LayoutFiredPayload: Codable, Sendable, Equatable {
     public enum Source: String, Codable, Sendable {
         case hotkey, menu, workspace
+        case automation   // V0.7 — URL scheme + AppIntents fires
     }
     public let layoutID: UUID
     public let source: Source

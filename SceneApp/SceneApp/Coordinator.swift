@@ -154,8 +154,8 @@ final class Coordinator: ObservableObject {
     /// 30s cooldown. No-op with log line if the supervisor has not been wired
     /// yet (Block C runs before Block D's `AppDelegate` wiring).
     @MainActor
-    func applyWorkspace(id: UUID) async {
-        guard !freeMode else { return }
+    func applyWorkspace(id: UUID, force: Bool = false) async {
+        guard force || !freeMode else { return }
         guard let supervisor = triggerSupervisor else {
             log.info("applyWorkspace: supervisor not configured, dropping \(id.uuidString, privacy: .public)")
             return
@@ -169,18 +169,18 @@ final class Coordinator: ObservableObject {
     /// Bool is consumed by `WorkspaceActivator` so it can skip the success
     /// banner and `setActive` on failure; hotkey/menu callers discard it.
     @discardableResult
-    func applyLayout(id: UUID, from source: LayoutFiredPayload.Source = .menu) -> Bool {
+    func applyLayout(id: UUID, from source: LayoutFiredPayload.Source = .menu, force: Bool = false) -> Bool {
         guard let layout = layoutStore.layouts.first(where: { $0.id == id }) else {
             log.error("applyLayout: unknown id \(id.uuidString, privacy: .public)")
             return false
         }
-        return applyLayout(layout, from: source)
+        return applyLayout(layout, from: source, force: force)
     }
 
     @discardableResult
-    func applyLayout(_ custom: CustomLayout, from source: LayoutFiredPayload.Source = .menu) -> Bool {
+    func applyLayout(_ custom: CustomLayout, from source: LayoutFiredPayload.Source = .menu, force: Bool = false) -> Bool {
         guard permissionGranted else { onboarding.show(); return false }
-        guard !freeMode else { return false }
+        guard force || !freeMode else { return false }
         if let lastID = lastApplyCustomLayoutID, lastID == custom.id,
            let lastTime = lastApplyTime,
            Date().timeIntervalSince(lastTime) < repeatFireWindow {
@@ -260,6 +260,65 @@ final class Coordinator: ObservableObject {
         } catch {
             log.error("applyLayout error: \(String(describing: error), privacy: .public)")
             return false
+        }
+    }
+
+    // MARK: - Automation entry point (V0.7)
+
+    /// Resolves an `AutomationCommand` to concrete IDs and dispatches into the
+    /// existing `applyLayout` / `applyWorkspace` paths. Returns an outcome so
+    /// the URL handler or AppIntent can surface the result to the user.
+    @MainActor
+    func handleAutomationCommand(_ command: AutomationCommand) async -> AutomationOutcome {
+        guard permissionGranted else { return .blockedByMissingAX }
+
+        switch command {
+        case .applyLayout(let id, let force, _):
+            // `screen` is parsed forward-compatibly but currently unused —
+            // ScreenResolver.activeScreen() picks under-mouse regardless until
+            // per-display layouts ship.
+            switch id {
+            case .uuid(let uuid):
+                if !force, freeMode { return .blockedByFreeMode }
+                let applied = applyLayout(id: uuid, from: .automation, force: force)
+                return applied ? .ok : .notFoundLayout(uuid.uuidString)
+            case .name(let name):
+                guard let match = layoutStore.layouts.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame }) else {
+                    return .notFoundLayout(name)
+                }
+                if !force, freeMode { return .blockedByFreeMode }
+                let applied = applyLayout(id: match.id, from: .automation, force: force)
+                return applied ? .ok : .notFoundLayout(name)
+            }
+
+        case .activateWorkspace(let id, let force):
+            switch id {
+            case .uuid(let uuid):
+                if !force, freeMode { return .blockedByFreeMode }
+                await applyWorkspace(id: uuid, force: force)
+                return .ok
+            case .name(let name):
+                guard let store = workspaceStore,
+                      let match = store.workspaces.first(where: { $0.name.caseInsensitiveCompare(name) == .orderedSame })
+                else {
+                    return .notFoundWorkspace(name)
+                }
+                if !force, freeMode { return .blockedByFreeMode }
+                await applyWorkspace(id: match.id, force: force)
+                return .ok
+            }
+
+        case .listWorkspaces:
+            let names = workspaceStore?.workspaces.map(\.name).sorted() ?? []
+            return .okWithValue(names)
+
+        case .toggleFreeMode:
+            freeMode.toggle()
+            return .ok
+
+        case .setFreeMode(let enabled):
+            freeMode = enabled
+            return .ok
         }
     }
 

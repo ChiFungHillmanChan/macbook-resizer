@@ -26,3 +26,17 @@ public enum ScreenSelector: Equatable, Sendable {
     case primary
     case index(Int)
 }
+
+/// Result of dispatching an `AutomationCommand`. Distinguishes the failure
+/// modes the URL-scheme layer needs to surface (`notify`) from those the
+/// AppIntents layer needs to surface (`IntentDialog` / thrown error). The
+/// dispatcher returns this; URL/AppIntent translate it.
+public enum AutomationOutcome: Equatable, Sendable {
+    case ok
+    case okWithValue([String])         // for listWorkspaces
+    case notFoundWorkspace(String)
+    case notFoundLayout(String)
+    case blockedByFreeMode
+    case blockedByMissingAX
+    case invalidArgument(String)
+}
