@@ -47,11 +47,11 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 
 ▶ [Watch the 30-second demo](docs/media/scene-marketing.mp4) (MP4, 13 MB)
 
-## What's new in v0.6.1
+## What's new in v0.7.0
 
-**Free Mode** — a new menu bar toggle pauses every automatic Scene behavior (layout hotkeys, workspace hotkeys, drag-swap, seam-resize, calendar/time/monitor auto-triggers) without touching your saved data. The menu bar icon swaps to `pause.rectangle` so dormant state is visible at a glance. Tests: 317/317.
+**Automation surface** — Scene now exposes a `scene://` URL scheme and 5 AppIntents (Activate Workspace, Apply Layout, List Workspaces, Toggle Free Mode, Set Free Mode). Drive Scene from Terminal, Raycast, Alfred, Stream Deck, Shortcuts.app, or Siri voice. AppIntents require macOS 14.1+. Tests: 343/343.
 
-For the full version history (V0.4 → V0.6.1), see [`CHANGELOG.md`](CHANGELOG.md).
+For the full version history, see [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Features
 
@@ -151,6 +151,39 @@ Workspace hotkeys (defaults):
 | ⌘⌥4 | Streaming |
 
 All layout and workspace hotkeys are re-bindable in Settings → Hotkeys; chord conflicts across layouts **and** workspaces are blocked at save time.
+
+## Automation (v0.7+)
+
+Scene exposes two automation surfaces that any tool can drive:
+
+### URL scheme
+
+```bash
+open "scene://workspace/Coding"               # activate workspace by name
+open "scene://workspace/Friday%20review?force=1"   # bypass Free Mode
+open "scene://layout/Halves"                  # apply layout
+open "scene://free-mode/toggle"               # toggle Free Mode
+```
+
+Works from Terminal, Raycast script commands, Alfred file actions, Stream Deck "Open URL" buttons, Keyboard Maestro, and any other URL-aware tool.
+
+### Shortcuts.app + Siri (macOS 14.1+)
+
+Scene registers 5 AppIntents that appear in Shortcuts.app under the "Scene" section:
+
+- **Activate Workspace** — fire a workspace by picker selection
+- **Apply Layout** — apply a layout to the active screen
+- **List Workspaces** — return names as a string array (chain into other actions)
+- **Toggle Free Mode**
+- **Set Free Mode** (Bool param)
+
+The actions iCloud-sync to Shortcuts on iPhone, iPad, and Apple Watch. Voice command works via Siri:
+
+- "Hey Siri, activate Scene workspace Coding"
+- "Hey Siri, apply Scene layout Halves"
+- "Hey Siri, toggle Scene Free Mode"
+
+> AppIntents require macOS 14.1+. URL scheme works on all Scene-supported macOS versions (14.0+).
 
 ### Edge-case behavior
 

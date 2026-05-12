@@ -47,11 +47,11 @@ brew install --cask chifunghillmanchan/tap/scene
 
 ▶ [睇 30 秒示範片](docs/media/scene-marketing.mp4)（MP4，13 MB）
 
-## V0.6.1 新嘢
+## v0.7.0 嘅新功能
 
-**閒置模式（Free Mode）** — menu bar 多咗個 toggle，撳一下 Scene 所有自動行為（layout / workspace 快捷鍵、拖邊互換、seam resize、calendar/時間/monitor 自動觸發）即時暫停，但係已儲存嘅嘢全部留住。閒置時 menu bar icon 變 `pause.rectangle`，一眼睇得出停咗。Tests：317/317。
+**自動化界面** — Scene 而家提供 `scene://` URL scheme 同埋 5 個 AppIntents（Activate Workspace、Apply Layout、List Workspaces、Toggle Free Mode、Set Free Mode）。可以喺 Terminal、Raycast、Alfred、Stream Deck、Shortcuts.app 或者 Siri 語音操控 Scene。AppIntents 要 macOS 14.1+。Tests: 343/343。
 
-完整版本史（V0.4 → V0.6.1）：[`CHANGELOG.zh-HK.md`](CHANGELOG.zh-HK.md)
+完整版本歷史見 [`CHANGELOG.md`](CHANGELOG.md)。
 
 ## 功能
 
@@ -153,6 +153,39 @@ Workspace 默認 hotkey：
 | ⌘⌥4 | Streaming |
 
 所有 layout 同 workspace hotkey 喺 Settings → Hotkeys 入面 re-bind 得；layout **同** workspace 之間嘅 chord 衝突儲存時 block-save。
+
+## 自動化（v0.7+）
+
+Scene 提供兩個自動化入口，任何工具都可以叫 Scene 做嘢：
+
+### URL scheme
+
+```bash
+open "scene://workspace/Coding"               # 用名啟動情境
+open "scene://workspace/Friday%20review?force=1"   # 無視 Free Mode
+open "scene://layout/Halves"                  # 套用佈局
+open "scene://free-mode/toggle"               # 切換 Free Mode
+```
+
+Terminal、Raycast script command、Alfred file action、Stream Deck「Open URL」掣、Keyboard Maestro，任何識 URL 嘅工具都可以用。
+
+### Shortcuts.app + Siri（macOS 14.1+）
+
+Scene 喺 Shortcuts.app 註冊咗 5 個 actions（喺「Scene」分類入面）：
+
+- **Activate Workspace** — 揀一個情境啟動
+- **Apply Layout** — 套用佈局喺當前螢幕
+- **List Workspaces** — 攞晒情境名（用嚟接落後面其他 actions）
+- **Toggle Free Mode**
+- **Set Free Mode**（Bool 參數）
+
+呢啲 actions 會跟住 iCloud sync 去 iPhone / iPad / Apple Watch 嘅 Shortcuts，仲可以用 Siri：
+
+- 「Hey Siri, activate Scene workspace Coding」
+- 「Hey Siri, apply Scene layout Halves」
+- 「Hey Siri, toggle Scene Free Mode」
+
+> AppIntents 要 macOS 14.1+。URL scheme 喺 Scene 支援嘅所有 macOS 版本（14.0+）都用得。
 
 ### Edge case 行為
 
