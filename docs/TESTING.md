@@ -415,3 +415,52 @@ Manual verification — run after each `xcodebuild` of the SceneApp target. No `
 8. **Hotkey fires after toggling OFF.** Press ⌘⌃1. A layout fires normally.
 9. **Drag-swap works after toggling OFF.** Re-fire a layout (so observers re-attach to the new placed set), drag a window near a slot edge. Snap occurs.
 10. **Free Mode does NOT survive relaunch.** With Free Mode ON, ⌘Q the app, relaunch. Confirm Scene comes back with Free Mode OFF.
+
+## V0.7.0 — Automation Surface (2026-05)
+
+Manual smoke checklist for the URL scheme + AppIntents shipped in v0.7.
+
+### URL scheme (run from Terminal)
+
+- [ ] `open "scene://workspace/Coding"` activates the Coding workspace.
+- [ ] `open "scene://workspace/<uuid>"` works using a UUID copied from `~/Library/Application Support/Scene/workspaces.json`.
+- [ ] `open "scene://workspace/Friday%20review"` works on a workspace with a space in its name.
+- [ ] `open "scene://workspace/DoesNotExist"` shows a "no workspace named DoesNotExist" notification.
+- [ ] `open "scene://layout/Halves"` applies Halves to the active screen.
+- [ ] `open "scene://layout/Quads?screen=primary"` applies (currently treated as under-mouse — documented).
+- [ ] With Free Mode ON, `open "scene://workspace/Coding"` shows a Free Mode notification and does NOT fire.
+- [ ] `open "scene://workspace/Coding?force=1"` fires DESPITE Free Mode being on.
+- [ ] `open "scene://free-mode/on"` swaps menu bar icon to `pause.rectangle`.
+- [ ] `open "scene://free-mode/off"` swaps it back.
+- [ ] `open "scene://free-mode/toggle"` flips the current state.
+
+### Shortcuts.app (macOS 14.1+)
+
+- [ ] All 5 Scene actions visible in Shortcuts.app right-panel under "Scene".
+- [ ] "Activate Workspace" parameter dropdown lists current workspaces.
+- [ ] "Apply Layout" parameter dropdown lists current layouts.
+- [ ] "List Workspaces" returns the array; chaining into "Quick Look" displays it.
+- [ ] "Set Free Mode" with Enabled=true swaps the icon; false swaps it back.
+
+### Siri / Spotlight
+
+- [ ] Spotlight: typing "Activate Scene workspace Coding" surfaces the intent.
+- [ ] Siri voice: "Hey Siri, activate Scene workspace Coding" fires Coding.
+- [ ] Siri voice: "Hey Siri, toggle Scene Free Mode" toggles it.
+
+### Localization (zh-HK)
+
+- [ ] System language set to 繁體中文 (香港): Shortcuts.app shows zh-HK localized intent titles.
+- [ ] URL "not found" notifications render in 粵語 ("搵唔到名叫…嘅情境").
+
+### Permission interactions
+
+- [ ] Revoke Accessibility mid-session, then `open "scene://workspace/Coding"` shows the AX-missing notification, does NOT crash.
+- [ ] Re-grant Accessibility, fire same URL, workspace activates normally.
+
+### Regression checks (existing flows still work)
+
+- [ ] Hotkey ⌘⌃2 still fires Halves.
+- [ ] Workspace hotkey ⌘⌥1 still fires Coding.
+- [ ] Drag-swap still works after a layout fired by URL scheme.
+- [ ] Free Mode still pauses everything when toggled via menu bar (not just via URL).
