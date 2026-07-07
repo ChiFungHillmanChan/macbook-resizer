@@ -33,6 +33,13 @@ public final class DragSwapController {
     private let modifierFlagsProbe: () -> NSEvent.ModifierFlags
     private let mouseButtonsProbe: () -> Int
     private let visibleFrameOverride: ((NSScreen) -> CGRect)?
+    /// Invoked after a successful swap with the window→slot entries that
+    /// changed, so the composition root can keep its authoritative snapshot
+    /// (`windowToSlotIdx`) in sync. Without this the snapshot only refreshes
+    /// on `applyLayout`; the *second* consecutive swap then reads stale slot
+    /// positions — the dragged window's "original slot" is wrong and the
+    /// displaced-window lookup misses — so the swap silently half-completes.
+    private let onSwap: (([CGWindowID: Int]) -> Void)?
     private let preview: DragPreviewOverlay
     private var mouseUpMonitor: Any?
     private var activeDrag: ActiveDrag?
@@ -44,6 +51,7 @@ public final class DragSwapController {
         contextProvider: @escaping () -> Context?,
         config: @escaping () -> DragSwapConfig = { .default },
         animationSink: (any WindowAnimationSink)? = nil,
+        onSwap: (([CGWindowID: Int]) -> Void)? = nil,
         modifierFlagsProbe: @escaping () -> NSEvent.ModifierFlags = { NSEvent.modifierFlags },
         mouseButtonsProbe: @escaping () -> Int = { NSEvent.pressedMouseButtons },
         visibleFrameOverride: ((NSScreen) -> CGRect)? = nil
@@ -51,6 +59,7 @@ public final class DragSwapController {
         self.contextProvider = contextProvider
         self.config = config
         self.animationSink = animationSink
+        self.onSwap = onSwap
         self.modifierFlagsProbe = modifierFlagsProbe
         self.mouseButtonsProbe = mouseButtonsProbe
         self.visibleFrameOverride = visibleFrameOverride
@@ -195,6 +204,16 @@ public final class DragSwapController {
                 catch { log.error("swap other setFrame failed: \(String(describing: error), privacy: .public)") }
             }
         }
+
+        // Publish the new positions so the composition root's snapshot stays
+        // authoritative for the NEXT swap (and for seam-resize, which shares the
+        // same map). `source` always lands in `targetSlotIdx`; the displaced
+        // window — when there is one — takes source's original slot.
+        var mapUpdates: [CGWindowID: Int] = [source.id: drag.targetSlotIdx]
+        if let other, let sourceOriginalSlotIdx {
+            mapUpdates[other.id] = sourceOriginalSlotIdx
+        }
+        onSwap?(mapUpdates)
     }
 }
 

@@ -8,6 +8,7 @@ struct SceneAppEntry: App {
     var body: some Scene {
         MenuBarExtra {
             MenuBarContentView(
+                coordinator: delegate.coordinator,
                 workspaceStore: delegate.workspaceVM,
                 layoutStore: delegate.layoutVM
             )

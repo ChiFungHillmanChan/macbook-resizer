@@ -2,7 +2,13 @@ import SwiftUI
 import SceneCore
 
 struct MenuBarContentView: View {
-    @EnvironmentObject var coordinator: Coordinator
+    // Observe the coordinator directly rather than via @EnvironmentObject.
+    // MenuBarExtra's menu (like its label — see MenuBarLabel) does NOT reliably
+    // re-subscribe to @Published changes from environment objects, so toggling
+    // Free Mode from the menu could leave the menu showing stale state (the
+    // "Free Mode won't toggle back" report). A direct @ObservedObject binding
+    // makes freeMode changes invalidate the menu the same way the icon updates.
+    @ObservedObject var coordinator: Coordinator
     @EnvironmentObject var appDelegate: AppDelegate
     @EnvironmentObject var updateChecker: UpdateChecker
     @EnvironmentObject var updateInstaller: UpdateInstaller

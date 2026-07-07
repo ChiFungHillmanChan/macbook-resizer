@@ -309,6 +309,67 @@ final class DragSwapControllerTests: XCTestCase {
                        "no further sink calls — the guard short-circuited each re-entry")
     }
 
+    /// Regression for the field bug "drag-to-swap breaks after 1–2 uses,
+    /// inconsistently". In production the composition root only refreshed the
+    /// `windowToSlotIdx` snapshot on `applyLayout` — never after a swap — so the
+    /// SECOND consecutive swap read stale slot positions: the dragged window's
+    /// "original slot" was wrong and the displaced-window lookup missed, leaving
+    /// two windows overlapping in one slot. Wiring `onSwap` back into a mutable
+    /// snapshot (as the Coordinator now does) fixes it. This test mirrors that
+    /// mutable snapshot and asserts the second swap still moves the displaced
+    /// window; without the `onSwap` write-back it produces zero displaced-window
+    /// animations on swap #2.
+    func testConsecutiveSwapsUseUpdatedSlotMap() {
+        let wA = MockWindow(id: 1, frame: slot0Rect)
+        let wB = MockWindow(id: 2, frame: slot1Rect)
+        // Mutable snapshot: windows[i] occupies slot i initially, exactly like
+        // the Coordinator builds from `Plan.placements` after `applyLayout`.
+        var map: [CGWindowID: Int] = [1: 0, 2: 1]
+        let sink = RecordingSink()
+        let controller = DragSwapController(
+            contextProvider: {
+                DragSwapController.Context(
+                    layout: self.makeLayout(),
+                    screen: self.makeScreen(),
+                    windows: [wA, wB],
+                    windowToSlotIdx: map
+                )
+            },
+            config: { .default },
+            animationSink: sink,
+            onSwap: { updates in for (id, slot) in updates { map[id] = slot } },
+            modifierFlagsProbe: { [] },
+            mouseButtonsProbe: { 0b1 },
+            visibleFrameOverride: { _ in self.vf }
+        )
+
+        // Swap 1: drag A (slot 0) across to slot 1. B is displaced to slot 0.
+        controller.handleWindowMoved(windowID: 1, currentFrame: slot0Rect)
+        controller.handleWindowMoved(windowID: 1, currentFrame: slot0Rect.offsetBy(dx: 400, dy: 0))
+        controller.simulateMouseUp()
+
+        XCTAssertEqual(map[1], 1, "after swap 1, A is recorded in slot 1")
+        XCTAssertEqual(map[2], 0, "after swap 1, B is recorded in slot 0")
+        XCTAssertEqual(sink.calls.count, 1)
+        XCTAssertEqual(sink.calls.last?.windowID, 2)
+        XCTAssertEqual(sink.calls.last?.target, slot0Rect)
+
+        // Swap 2: drag A (now in slot 1) back to slot 0. The displaced window B
+        // must animate to slot 1 — this only works if the snapshot from swap 1
+        // was applied. Under the stale-map bug, B would not move at all.
+        let priorCalls = sink.calls.count
+        controller.handleWindowMoved(windowID: 1, currentFrame: slot1Rect)
+        controller.handleWindowMoved(windowID: 1, currentFrame: slot1Rect.offsetBy(dx: -400, dy: 0))
+        controller.simulateMouseUp()
+
+        let newCalls = Array(sink.calls.suffix(from: priorCalls))
+        XCTAssertEqual(newCalls.count, 1, "swap 2 must animate the displaced window — stale map would drop it")
+        XCTAssertEqual(newCalls.first?.windowID, 2, "displaced window on swap 2 is B")
+        XCTAssertEqual(newCalls.first?.target, slot1Rect, "B animates to slot 1 (A's slot before swap 2)")
+        XCTAssertEqual(map[1], 0, "after swap 2, A is back in slot 0")
+        XCTAssertEqual(map[2], 1, "after swap 2, B is back in slot 1")
+    }
+
     func testFinishDragWithoutActiveDragIsNoop() {
         let wA = MockWindow(id: 1, frame: slot0Rect)
         let (controller, sink) = makeController(

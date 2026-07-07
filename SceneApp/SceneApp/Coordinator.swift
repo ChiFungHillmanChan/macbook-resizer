@@ -177,6 +177,20 @@ final class Coordinator: ObservableObject {
         return applyLayout(layout, from: source, force: force)
     }
 
+    /// Per-display variant: applies a layout to a specific screen rather than
+    /// the screen under the mouse. Used by `WorkspaceActivator` when the
+    /// workspace has `displayLayouts` configured.
+    @discardableResult
+    func applyLayout(id: UUID, on screen: NSScreen, from source: LayoutFiredPayload.Source = .menu, force: Bool = false) -> Bool {
+        guard let layout = layoutStore.layouts.first(where: { $0.id == id }) else {
+            log.error("applyLayout: unknown id \(id.uuidString, privacy: .public)")
+            return false
+        }
+        guard permissionGranted else { onboarding.show(); return false }
+        guard force || !freeMode else { return false }
+        return performApplyLayout(layout, on: screen, source: source)
+    }
+
     @discardableResult
     func applyLayout(_ custom: CustomLayout, from source: LayoutFiredPayload.Source = .menu, force: Bool = false) -> Bool {
         guard permissionGranted else { onboarding.show(); return false }
@@ -203,8 +217,11 @@ final class Coordinator: ObservableObject {
     }
 
     private func performApplyLayout(_ custom: CustomLayout, source: LayoutFiredPayload.Source) -> Bool {
+        return performApplyLayout(custom, on: ScreenResolver.activeScreen(), source: source)
+    }
+
+    private func performApplyLayout(_ custom: CustomLayout, on screen: NSScreen, source: LayoutFiredPayload.Source) -> Bool {
         guard permissionGranted else { onboarding.show(); return false }
-        let screen = ScreenResolver.activeScreen()
         do {
             let windows = try AXWindowEnumerator.listVisibleWindows(on: screen)
             if windows.isEmpty {
@@ -423,7 +440,15 @@ final class Coordinator: ObservableObject {
                 )
             },
             config: { [weak self] in self?.settingsStore.dragSwap ?? .default },
-            animationSink: dragSwapSink
+            animationSink: dragSwapSink,
+            onSwap: { [weak self] updates in
+                // Keep the authoritative snapshot in sync after each swap so
+                // consecutive drag-swaps (and seam-resize, which reads the same
+                // map) don't operate on stale slot positions. Previously this
+                // map only refreshed on `applyLayout`, so the 2nd swap broke.
+                guard let self else { return }
+                for (id, slot) in updates { self.lastWindowToSlotIdx[id] = slot }
+            }
         )
     }
 
