@@ -283,9 +283,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, ObservableObject {
             focusController: focus,
             workspaceStore: workspaceStore,
             layoutStore: layoutStore,
-            applyLayout: { [weak self] id in
+            applyLayout: { [weak self] id, screen in
                 await MainActor.run {
-                    self?.coordinator.applyLayout(id: id, from: .workspace) ?? false
+                    if let screen {
+                        self?.coordinator.applyLayout(id: id, on: screen, from: .workspace) ?? false
+                    } else {
+                        self?.coordinator.applyLayout(id: id, from: .workspace) ?? false
+                    }
                 }
             },
             notifier: notifier,

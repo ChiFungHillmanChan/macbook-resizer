@@ -41,6 +41,11 @@ public struct Workspace: Codable, Equatable, Identifiable, Sendable {
     public var focusMode: FocusModeReference?
     public var hotkey: HotkeyBinding?
     public var triggers: [WorkspaceTrigger]
+    /// Per-display layout overrides. When non-empty, workspace activation
+    /// applies the matched layout to each connected screen instead of applying
+    /// `layoutID` to the screen under the mouse. Screens not listed here fall
+    /// back to `layoutID`.
+    public var displayLayouts: [DisplayLayoutAssignment]
     public var isPresetSeed: Bool
     public var isModified: Bool
 
@@ -56,6 +61,7 @@ public struct Workspace: Codable, Equatable, Identifiable, Sendable {
         focusMode: FocusModeReference? = nil,
         hotkey: HotkeyBinding? = nil,
         triggers: [WorkspaceTrigger] = [],
+        displayLayouts: [DisplayLayoutAssignment] = [],
         isPresetSeed: Bool = false,
         isModified: Bool = false
     ) {
@@ -70,8 +76,16 @@ public struct Workspace: Codable, Equatable, Identifiable, Sendable {
         self.focusMode = focusMode
         self.hotkey = hotkey
         self.triggers = triggers
+        self.displayLayouts = displayLayouts
         self.isPresetSeed = isPresetSeed
         self.isModified = isModified
+    }
+
+    /// Returns the layout ID to use for a given display name.
+    /// If the display has an explicit assignment in `displayLayouts`, that ID
+    /// is returned; otherwise falls back to the workspace's primary `layoutID`.
+    public func resolvedLayoutID(forDisplay name: String) -> UUID {
+        displayLayouts.first(where: { $0.displayName == name })?.layoutID ?? layoutID
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -86,6 +100,7 @@ public struct Workspace: Codable, Equatable, Identifiable, Sendable {
         case focusMode
         case hotkey
         case triggers
+        case displayLayouts
         case isPresetSeed
         case isModified
     }
@@ -106,6 +121,10 @@ public struct Workspace: Codable, Equatable, Identifiable, Sendable {
         self.focusMode = try c.decodeIfPresent(FocusModeReference.self, forKey: .focusMode)
         self.hotkey = try c.decodeIfPresent(HotkeyBinding.self, forKey: .hotkey)
         self.triggers = try c.decodeIfPresent([WorkspaceTrigger].self, forKey: .triggers) ?? []
+        self.displayLayouts = try c.decodeIfPresent(
+            [DisplayLayoutAssignment].self,
+            forKey: .displayLayouts
+        ) ?? []
         self.isPresetSeed = try c.decodeIfPresent(Bool.self, forKey: .isPresetSeed) ?? false
         self.isModified = try c.decodeIfPresent(Bool.self, forKey: .isModified) ?? false
     }
@@ -123,6 +142,7 @@ public struct Workspace: Codable, Equatable, Identifiable, Sendable {
         try c.encodeIfPresent(focusMode, forKey: .focusMode)
         try c.encodeIfPresent(hotkey, forKey: .hotkey)
         try c.encode(triggers, forKey: .triggers)
+        try c.encode(displayLayouts, forKey: .displayLayouts)
         try c.encode(isPresetSeed, forKey: .isPresetSeed)
         try c.encode(isModified, forKey: .isModified)
     }

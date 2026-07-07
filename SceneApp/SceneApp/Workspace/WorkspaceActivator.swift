@@ -24,7 +24,9 @@ final class WorkspaceActivator {
     /// Production wire passes `coordinator.applyLayout`. Returns `true` when
     /// the layout was actually applied — the activator uses this to decide
     /// whether to show the success banner and persist `activeWorkspaceID`.
-    private let applyLayout: (UUID) async -> Bool
+    /// The optional `NSScreen?` parameter targets a specific display; `nil`
+    /// means "use ScreenResolver.activeScreen()" (legacy single-display path).
+    private let applyLayout: (UUID, NSScreen?) async -> Bool
     private let notifier: NotificationHelper
     private let desktopSwitcher: DesktopSwitching?
     private weak var appPolicyEnforcer: WorkspaceAppPolicyEnforcing?
@@ -36,7 +38,7 @@ final class WorkspaceActivator {
         focusController: FocusController,
         workspaceStore: WorkspaceStore,
         layoutStore: LayoutStore,
-        applyLayout: @escaping (UUID) async -> Bool,
+        applyLayout: @escaping (UUID, NSScreen?) async -> Bool,
         notifier: NotificationHelper,
         desktopSwitcher: DesktopSwitching? = nil,
         appPolicyEnforcer: WorkspaceAppPolicyEnforcing? = nil,
@@ -122,27 +124,44 @@ final class WorkspaceActivator {
             )))
         }
 
-        // 4. Apply layout (validate layout still exists; warn if not).
-        // On failure, skip steps 6/7 so we don't falsely banner "Activated"
-        // or persist `activeWorkspaceID` when no windows were placed. Focus
-        // (step 5) still runs — it's independent of layout state and the
-        // user explicitly opted in to the Shortcut.
+        // 4. Apply layout(s).
+        // When `displayLayouts` is non-empty, iterate connected screens and
+        // apply the per-display layout (falling back to `layoutID` for screens
+        // without an explicit assignment). Otherwise use the legacy single-
+        // display path (applies to the screen under the mouse).
         let layoutApplied: Bool
         let applyStart = Date()
-        if layoutStore.layouts.contains(where: { $0.id == workspace.layoutID }) {
-            layoutApplied = await applyLayout(workspace.layoutID)
-            if !layoutApplied {
+        if workspace.displayLayouts.isEmpty {
+            if layoutStore.layouts.contains(where: { $0.id == workspace.layoutID }) {
+                layoutApplied = await applyLayout(workspace.layoutID, nil)
+                if !layoutApplied {
+                    notifier.notify(
+                        title: String(localized: "workspace.apply_failed.title"),
+                        body: String(format: String(localized: "workspace.apply_failed.body"), workspace.name)
+                    )
+                }
+            } else {
+                layoutApplied = false
+                notifier.notify(
+                    title: String(localized: "workspace.missing_layout.title"),
+                    body: String(format: String(localized: "workspace.missing_layout.body"), workspace.name)
+                )
+            }
+        } else {
+            var anyApplied = false
+            for screen in NSScreen.screens {
+                let targetID = workspace.resolvedLayoutID(forDisplay: screen.localizedName)
+                guard layoutStore.layouts.contains(where: { $0.id == targetID }) else { continue }
+                let ok = await applyLayout(targetID, screen)
+                anyApplied = anyApplied || ok
+            }
+            if !anyApplied {
                 notifier.notify(
                     title: String(localized: "workspace.apply_failed.title"),
                     body: String(format: String(localized: "workspace.apply_failed.body"), workspace.name)
                 )
             }
-        } else {
-            layoutApplied = false
-            notifier.notify(
-                title: String(localized: "workspace.missing_layout.title"),
-                body: String(format: String(localized: "workspace.missing_layout.body"), workspace.name)
-            )
+            layoutApplied = anyApplied
         }
         diagnostics.log(.workspaceStep(.init(
             workspaceID: workspaceID, step: .applyLayout,

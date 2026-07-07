@@ -50,6 +50,13 @@ struct WorkspaceEditorView: View {
                 )
                 HotkeyField(chord: $draft.hotkey)
             }
+            Section("workspace.editor.section.displays") {
+                DisplayLayoutsEditor(
+                    displayLayouts: $draft.displayLayouts,
+                    fallbackLayoutID: draft.layoutID,
+                    layoutStore: layoutStore
+                )
+            }
             Section("workspace.editor.section.apps") {
                 AppPickerView(bundleIDs: $draft.appsToLaunch, label: "workspace.editor.apps_to_launch")
                 AppPickerView(bundleIDs: $draft.appsToQuit,   label: "workspace.editor.apps_to_quit")
