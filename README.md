@@ -37,7 +37,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 Quarantine is stripped automatically — no "cannot be verified" prompt. On first launch, grant Accessibility in **System Settings → Privacy & Security → Accessibility**.
 
-**Or download the DMG directly**: **[Scene-0.6.1.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.6.1/Scene-0.6.1.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
+**Or download the DMG directly**: **[Scene-0.7.0.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.7.0/Scene-0.7.0.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
 
 All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · DMG users, see [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
 
@@ -49,7 +49,11 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 
 ## What's new in v0.7.0
 
-**Automation surface** — Scene now exposes a `scene://` URL scheme and 5 AppIntents (Activate Workspace, Apply Layout, List Workspaces, Toggle Free Mode, Set Free Mode). Drive Scene from Terminal, Raycast, Alfred, Stream Deck, Shortcuts.app, or Siri voice. AppIntents require macOS 14.1+. Tests: 343/343.
+**Automation surface** — Scene now exposes a `scene://` URL scheme and 5 AppIntents (Activate Workspace, Apply Layout, List Workspaces, Toggle Free Mode, Set Free Mode). Drive Scene from Terminal, Raycast, Alfred, Stream Deck, Shortcuts.app, or Siri voice. AppIntents require macOS 14.1+.
+
+**Per-display layouts** — Workspaces can assign a different layout to each connected display, applied together on activation. Screens without an explicit assignment fall back to the workspace's primary layout.
+
+**Fixes** — Drag-to-swap now stays reliable across repeated swaps (the window→slot snapshot no longer goes stale after the first one), and Free Mode reliably toggles back off from the menu. Tests: 357/357.
 
 For the full version history, see [`CHANGELOG.md`](CHANGELOG.md).
 
@@ -104,7 +108,7 @@ In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu ba
 ### Build a distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.6.1    # produces dist/Scene-0.6.1.dmg (universal, notarized)
+./scripts/build-dmg.sh 0.7.0    # produces dist/Scene-0.7.0.dmg (universal, notarized)
 ```
 
 This builds a universal (arm64 + x86_64) binary, Developer ID-signs it, submits it to Apple for notarization, and packages it into a DMG with an `Applications` drop shortcut. Both Apple Silicon and Intel Macs install from the same DMG. Set `SKIP_NOTARY=1` for a local ad-hoc build that skips the Apple notary submission (useful while iterating on DMG layout).

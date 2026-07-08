@@ -37,7 +37,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 自動幫你清走 quarantine flag，唔會彈「cannot be verified」嘅 Gatekeeper 警告。首次開 Scene 嗰陣，去 **System Settings → Privacy & Security → Accessibility** 撳着 Scene 就得。
 
-**或者直接下載 DMG**：**[Scene-0.6.1.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.6.1/Scene-0.6.1.dmg)**（Universal：Apple Silicon + Intel，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
+**或者直接下載 DMG**：**[Scene-0.7.0.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.7.0/Scene-0.7.0.dmg)**（Universal：Apple Silicon + Intel，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
 
 所有版本：[Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · 用 DMG 嘅話，跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
 
@@ -49,7 +49,11 @@ brew install --cask chifunghillmanchan/tap/scene
 
 ## v0.7.0 嘅新功能
 
-**自動化界面** — Scene 而家提供 `scene://` URL scheme 同埋 5 個 AppIntents（Activate Workspace、Apply Layout、List Workspaces、Toggle Free Mode、Set Free Mode）。可以喺 Terminal、Raycast、Alfred、Stream Deck、Shortcuts.app 或者 Siri 語音操控 Scene。AppIntents 要 macOS 14.1+。Tests: 343/343。
+**自動化界面** — Scene 而家提供 `scene://` URL scheme 同埋 5 個 AppIntents（Activate Workspace、Apply Layout、List Workspaces、Toggle Free Mode、Set Free Mode）。可以喺 Terminal、Raycast、Alfred、Stream Deck、Shortcuts.app 或者 Siri 語音操控 Scene。AppIntents 要 macOS 14.1+。
+
+**每個螢幕獨立 layout** — Workspace 而家可以幫每個駁咗嘅螢幕分配唔同 layout，啟動情境時一齊套用。冇特別設定嘅螢幕會用返 Workspace 嘅主 layout。
+
+**修正** — 拖拽對調而家連續用都唔會壞（window→slot 嘅記錄唔會喺第一次對調之後變舊），Free Mode 喺 menu 度撳都可以穩定咁熄返。Tests: 357/357。
 
 完整版本歷史見 [`CHANGELOG.md`](CHANGELOG.md)。
 
@@ -106,7 +110,7 @@ Xcode 揀 `SceneApp` scheme → ⌘R。App 以 menu bar extra 形式行（冇 Do
 ### Build distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.6.1    # 出 dist/Scene-0.6.1.dmg（universal + notarized）
+./scripts/build-dmg.sh 0.7.0    # 出 dist/Scene-0.7.0.dmg（universal + notarized）
 ```
 
 Build universal（arm64 + x86_64）binary，Developer ID sign，submit 去 Apple notary，pack 入 DMG 連 `Applications` drop shortcut。Apple Silicon 同 Intel Mac 用同一個 DMG。如果想 local iterate DMG layout，set `SKIP_NOTARY=1` 會 skip Apple notary submission，改用 ad-hoc sign。
