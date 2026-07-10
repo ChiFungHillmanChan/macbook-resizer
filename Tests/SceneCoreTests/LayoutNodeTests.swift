@@ -103,6 +103,45 @@ final class LayoutNodeTests: XCTestCase {
         XCTAssertEqual(slots[4].rect, CGRect(x: 0.5, y: 0.5, width: 0.5, height: 0.5))
     }
 
+    // MARK: - materialization orientation (regression: top/bottom mirror bug)
+
+    /// Regression for the V0.7 vertical-flip bug: a custom tree authored as
+    /// "2 slots on top, 3 slots on bottom" applied upside down (3 on top,
+    /// 2 on bottom) because `flatten()` emits top-left-origin unit rects while
+    /// `Slot.absoluteRect` used to map unit y straight into the bottom-left-
+    /// origin NS visibleFrame. The materialized top-row slots must sit ABOVE
+    /// the bottom-row slots in NS coordinates (higher y = higher on screen).
+    func testTwoTopThreeBottomTreeMaterializesTopRowAboveBottomRow() {
+        let tree: LayoutNode = .hSplit(
+            ratio: 0.5,
+            top: .splitV(ratio: 0.5),
+            bottom: .vSplit(
+                ratio: 1.0 / 3.0,
+                left: .leaf,
+                right: .splitV(ratio: 0.5)
+            )
+        )
+        let slots = tree.flatten()
+        XCTAssertEqual(slots.count, 5)
+
+        let vf = CGRect(x: 0, y: 24, width: 2000, height: 1070)
+        let rects = slots.map { $0.absoluteRect(in: vf) }
+
+        // Slots 0-1 are the authored TOP row; slots 2-4 the BOTTOM row.
+        for topRect in rects[0...1] {
+            XCTAssertEqual(topRect.maxY, vf.maxY, accuracy: 0.001,
+                           "top-row slots must touch the top of the visibleFrame")
+            for bottomRect in rects[2...4] {
+                XCTAssertGreaterThan(topRect.midY, bottomRect.midY,
+                                     "authored top row must materialize above the bottom row")
+            }
+        }
+        for bottomRect in rects[2...4] {
+            XCTAssertEqual(bottomRect.minY, vf.minY, accuracy: 0.001,
+                           "bottom-row slots must touch the bottom of the visibleFrame")
+        }
+    }
+
     // MARK: - 100% coverage invariant
 
     func testFlattenAlwaysTilesUnitSquareFullyAndExclusively() {

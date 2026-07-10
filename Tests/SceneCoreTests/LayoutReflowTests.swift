@@ -93,24 +93,29 @@ final class LayoutReflowTests: XCTestCase {
     // MARK: - twoRow
 
     func testTwoRowSlot0BottomEdge() {
-        // Slot 0 of twoRow at proportion 0.5: rect y=[0, 0.5] × height.
-        // User drags max-y edge to 300 (in vf coords). Expect new proportion = 0.375.
+        // Slot 0 of twoRow is the TOP row on screen: at proportion 0.5 its NS
+        // rect is (0, 400, 1000, 400). The user drags its bottom edge (NS minY)
+        // up to y=500, shrinking the top row. New proportion (top row's share,
+        // measured from the top of the visibleFrame) = (800 - 500) / 800 = 0.375.
         let result = LayoutReflow.reflow(
             template: .twoRow,
             proportions: [0.5],
             slotIdx: 0,
-            newWindowFrame: CGRect(x: 0, y: 0, width: 1000, height: 300),
+            newWindowFrame: CGRect(x: 0, y: 500, width: 1000, height: 300),
             visibleFrame: vf
         )
         XCTAssertEqual(result, [0.375])
     }
 
     func testTwoRowSlot1TopEdge() {
+        // Slot 1 is the BOTTOM row: NS rect (0, 0, 1000, 400). The user drags
+        // its top edge (NS maxY) up to y=500 — the seam moves up, so the top
+        // row's share shrinks to (800 - 500) / 800 = 0.375.
         let result = LayoutReflow.reflow(
             template: .twoRow,
             proportions: [0.5],
             slotIdx: 1,
-            newWindowFrame: CGRect(x: 0, y: 300, width: 1000, height: 500),
+            newWindowFrame: CGRect(x: 0, y: 0, width: 1000, height: 500),
             visibleFrame: vf
         )
         XCTAssertEqual(result, [0.375])
@@ -192,16 +197,67 @@ final class LayoutReflowTests: XCTestCase {
     // MARK: - threeRow
 
     func testThreeRowSlot0BottomEdge() {
+        // Slot 0 is the TOP band: NS rect (0, 533.3, 1000, 266.7). The user
+        // drags its bottom edge (NS minY) up to y=600, shrinking the top band.
+        // New p[0] = (800 - 600) / 800 = 0.25.
         let result = LayoutReflow.reflow(
             template: .threeRow,
             proportions: [1.0/3.0, 2.0/3.0],
             slotIdx: 0,
-            newWindowFrame: CGRect(x: 0, y: 0, width: 1000, height: 200),
+            newWindowFrame: CGRect(x: 0, y: 600, width: 1000, height: 200),
             visibleFrame: vf
         )
         XCTAssertNotNil(result)
         XCTAssertEqual(result![0], 0.25, accuracy: 0.001)
         XCTAssertEqual(result![1], 2.0/3.0, accuracy: 0.001)
+    }
+
+    func testThreeRowSlot2TopEdge() {
+        // Slot 2 is the BOTTOM band: NS rect (0, 0, 1000, 266.7). The user
+        // drags its top edge (NS maxY) up to y=400. New p[1] = (800 - 400) / 800 = 0.5.
+        let result = LayoutReflow.reflow(
+            template: .threeRow,
+            proportions: [1.0/3.0, 2.0/3.0],
+            slotIdx: 2,
+            newWindowFrame: CGRect(x: 0, y: 0, width: 1000, height: 400),
+            visibleFrame: vf
+        )
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result![0], 1.0/3.0, accuracy: 0.001)
+        XCTAssertEqual(result![1], 0.5, accuracy: 0.001)
+    }
+
+    func testThreeRowMiddleSlotUpperSeamMoves() {
+        // Middle band NS rect = (0, 266.7, 1000, 266.7). Its UPPER edge (NS
+        // maxY, shared with slot 0) corresponds to p[0]; the user drags it up
+        // to y=600 while the lower edge stays. New p[0] = (800 - 600) / 800 = 0.25.
+        let result = LayoutReflow.reflow(
+            template: .threeRow,
+            proportions: [1.0/3.0, 2.0/3.0],
+            slotIdx: 1,
+            newWindowFrame: CGRect(x: 0, y: 800.0/3.0, width: 1000, height: 600 - 800.0/3.0),
+            visibleFrame: vf
+        )
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result![0], 0.25, accuracy: 0.001)
+        XCTAssertEqual(result![1], 2.0/3.0, accuracy: 0.001)
+    }
+
+    func testThreeRowMiddleSlotLowerSeamMoves() {
+        // Middle band's LOWER edge (NS minY, shared with slot 2) corresponds to
+        // p[1]; the user drags it down to y=100 while the upper edge stays.
+        // New p[1] = (800 - 100) / 800 = 0.875 → clamped? No: within [0.1, 0.9]
+        // and > p[0] + minGap, so it lands as-is.
+        let result = LayoutReflow.reflow(
+            template: .threeRow,
+            proportions: [1.0/3.0, 2.0/3.0],
+            slotIdx: 1,
+            newWindowFrame: CGRect(x: 0, y: 100, width: 1000, height: 800 - 800.0/3.0 - 100),
+            visibleFrame: vf
+        )
+        XCTAssertNotNil(result)
+        XCTAssertEqual(result![0], 1.0/3.0, accuracy: 0.001)
+        XCTAssertEqual(result![1], 0.875, accuracy: 0.001)
     }
 
     // MARK: - non-zero visibleFrame origin

@@ -12,11 +12,14 @@ import CoreGraphics
 /// and respects `LayoutTemplate.proportionMinGap` for 3-way splits so the
 /// middle slot never collapses.
 ///
-/// Coordinate convention: `newWindowFrame` and `visibleFrame` must be in the
-/// same coordinate space (whatever Scene's AX / `NSScreen.visibleFrame`
-/// pipeline uses). The math is invariant to top-left vs bottom-left origin
-/// because slot rects, window frames, and the visible frame all use a single
-/// consistent orientation throughout Scene's plumbing.
+/// Coordinate convention: `newWindowFrame` and `visibleFrame` are in NS
+/// coordinates (bottom-left origin, y-up). Proportions, however, live in the
+/// unit slot space, which is authored **top-left origin** (y-down) — see
+/// `Slot.absoluteRect(in:)`, which performs the flip when materializing.
+/// This function is the inverse map, so `yFrac` measures from the TOP of the
+/// visibleFrame: for row templates, slot 0 is the topmost band on screen and
+/// its seam is the window's NS bottom edge (`minY`). The x-axis needs no
+/// flip — both spaces agree on left-to-right.
 ///
 /// V0.6 scope:
 /// - Supported: `.twoCol`, `.twoRow`, `.threeCol`, `.threeRow` (single
@@ -76,8 +79,10 @@ public enum LayoutReflow {
         let xFrac: (CGFloat) -> Double = { abs in
             Double((abs - visibleFrame.minX) / visibleFrame.width)
         }
+        // Unit y is measured from the TOP of the visibleFrame (top-left-origin
+        // authoring space), while `abs` is an NS (bottom-left-origin) y value.
         let yFrac: (CGFloat) -> Double = { abs in
-            Double((abs - visibleFrame.minY) / visibleFrame.height)
+            Double((visibleFrame.maxY - abs) / visibleFrame.height)
         }
 
         switch template {
@@ -89,9 +94,11 @@ public enum LayoutReflow {
             }
 
         case .twoRow:
+            // Slot 0 = TOP band on screen: its seam is its NS bottom edge (minY).
+            // Slot 1 = BOTTOM band: its seam is its NS top edge (maxY).
             switch slotIdx {
-            case 0: return InferredSeam(proportionIdx: 0, newValue: yFrac(newWindowFrame.maxY))
-            case 1: return InferredSeam(proportionIdx: 0, newValue: yFrac(newWindowFrame.minY))
+            case 0: return InferredSeam(proportionIdx: 0, newValue: yFrac(newWindowFrame.minY))
+            case 1: return InferredSeam(proportionIdx: 0, newValue: yFrac(newWindowFrame.maxY))
             default: return nil
             }
 
@@ -119,21 +126,25 @@ public enum LayoutReflow {
             }
 
         case .threeRow:
+            // Slot 0 = TOP band, slot 2 = BOTTOM band. p[0] is the upper seam
+            // (between slots 0/1), p[1] the lower seam (between slots 1/2) —
+            // both measured from the top. In NS space the upper seam is the
+            // middle window's maxY and the lower seam its minY.
             switch slotIdx {
             case 0:
-                return InferredSeam(proportionIdx: 0, newValue: yFrac(newWindowFrame.maxY))
+                return InferredSeam(proportionIdx: 0, newValue: yFrac(newWindowFrame.minY))
             case 1:
-                let origTopAbs    = visibleFrame.minY + CGFloat(proportions[0]) * visibleFrame.height
-                let origBottomAbs = visibleFrame.minY + CGFloat(proportions[1]) * visibleFrame.height
-                let topDelta    = abs(newWindowFrame.minY - origTopAbs)
-                let bottomDelta = abs(newWindowFrame.maxY - origBottomAbs)
-                if topDelta >= bottomDelta {
-                    return InferredSeam(proportionIdx: 0, newValue: yFrac(newWindowFrame.minY))
+                let origUpperAbs = visibleFrame.maxY - CGFloat(proportions[0]) * visibleFrame.height
+                let origLowerAbs = visibleFrame.maxY - CGFloat(proportions[1]) * visibleFrame.height
+                let upperDelta = abs(newWindowFrame.maxY - origUpperAbs)
+                let lowerDelta = abs(newWindowFrame.minY - origLowerAbs)
+                if upperDelta >= lowerDelta {
+                    return InferredSeam(proportionIdx: 0, newValue: yFrac(newWindowFrame.maxY))
                 } else {
-                    return InferredSeam(proportionIdx: 1, newValue: yFrac(newWindowFrame.maxY))
+                    return InferredSeam(proportionIdx: 1, newValue: yFrac(newWindowFrame.minY))
                 }
             case 2:
-                return InferredSeam(proportionIdx: 1, newValue: yFrac(newWindowFrame.minY))
+                return InferredSeam(proportionIdx: 1, newValue: yFrac(newWindowFrame.maxY))
             default:
                 return nil
             }

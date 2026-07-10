@@ -20,13 +20,15 @@ final class LayoutTests: XCTestCase {
     }
 
     func testQuadsOnFullHDVisibleFrame() {
+        // Slots 0-1 are the authored TOP row (unit y=0) and must materialize
+        // in the UPPER half of the NS visibleFrame (higher y).
         let visibleFrame = CGRect(x: 0, y: 24, width: 1920, height: 1056)
         let rects = Layout.quads.slots.map { $0.absoluteRect(in: visibleFrame) }
         XCTAssertEqual(rects, [
-            CGRect(x: 0,   y: 24,       width: 960, height: 528),
-            CGRect(x: 960, y: 24,       width: 960, height: 528),
             CGRect(x: 0,   y: 24 + 528, width: 960, height: 528),
             CGRect(x: 960, y: 24 + 528, width: 960, height: 528),
+            CGRect(x: 0,   y: 24,       width: 960, height: 528),
+            CGRect(x: 960, y: 24,       width: 960, height: 528),
         ])
     }
 
