@@ -37,7 +37,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 Quarantine is stripped automatically — no "cannot be verified" prompt. On first launch, grant Accessibility in **System Settings → Privacy & Security → Accessibility**.
 
-**Or download the DMG directly**: **[Scene-0.7.0.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.7.0/Scene-0.7.0.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
+**Or download the DMG directly**: **[Scene-0.7.1.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.7.1/Scene-0.7.1.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
 
 All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · DMG users, see [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
 
@@ -47,13 +47,11 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 
 ▶ [Watch the 30-second demo](docs/media/scene-marketing.mp4) (MP4, 13 MB)
 
-## What's new in v0.7.0
+## What's new in v0.7.1
 
-**Automation surface** — Scene now exposes a `scene://` URL scheme and 5 AppIntents (Activate Workspace, Apply Layout, List Workspaces, Toggle Free Mode, Set Free Mode). Drive Scene from Terminal, Raycast, Alfred, Stream Deck, Shortcuts.app, or Siri voice. AppIntents require macOS 14.1+.
+**Layout orientation fix** — vertically asymmetric layouts (custom canvas layouts, Main + Side (Vertical), the L-shape templates) no longer apply upside down. The editor, the thumbnails, and the on-screen result now always agree. If you had rebuilt a layout mirrored to compensate, re-edit it once — layouts apply exactly as drawn from now on.
 
-**Per-display layouts** — Workspaces can assign a different layout to each connected display, applied together on activation. Screens without an explicit assignment fall back to the workspace's primary layout.
-
-**Fixes** — Drag-to-swap now stays reliable across repeated swaps (the window→slot snapshot no longer goes stale after the first one), and Free Mode reliably toggles back off from the menu. Tests: 357/357.
+**Custom-layout stability** — resizing a window placed by a canvas-built custom layout no longer lets the seam-drag reflow shove other windows to positions from a different layout. Tree-based layouts resize freely; template layouts keep the companion-resize behavior. Tests: 363/363.
 
 For the full version history, see [`CHANGELOG.md`](CHANGELOG.md).
 
@@ -108,7 +106,7 @@ In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu ba
 ### Build a distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.7.0    # produces dist/Scene-0.7.0.dmg (universal, notarized)
+./scripts/build-dmg.sh 0.7.1    # produces dist/Scene-0.7.1.dmg (universal, notarized)
 ```
 
 This builds a universal (arm64 + x86_64) binary, Developer ID-signs it, submits it to Apple for notarization, and packages it into a DMG with an `Applications` drop shortcut. Both Apple Silicon and Intel Macs install from the same DMG. Set `SKIP_NOTARY=1` for a local ad-hoc build that skips the Apple notary submission (useful while iterating on DMG layout).
@@ -121,7 +119,7 @@ The layout logic lives in `SceneCore`, a Swift package that works without Xcode:
 swift test
 ```
 
-317 unit tests cover layout math, window-to-slot mapping, animation state machine, JSON persistence, hotkey conflicts, drag-to-swap logic, seam reflow, custom-layout tree round-trip, diagnostics writer + sanitizer, semver comparison for the update nudge, and edge cases.
+363 unit tests cover layout math, window-to-slot mapping, animation state machine, JSON persistence, hotkey conflicts, drag-to-swap logic, seam reflow, custom-layout tree round-trip, diagnostics writer + sanitizer, semver comparison for the update nudge, and edge cases.
 
 ## Usage
 
@@ -217,7 +215,7 @@ macbook-resizer/
 │   │                           #   SettingsStore, Cancellable
 │   └── Workspace/              # Workspace, WorkspaceTrigger, WorkspaceSeeds,
 │                               #   WorkspaceStore, FocusModeReference
-├── Tests/SceneCoreTests/       # 317 XCTest cases
+├── Tests/SceneCoreTests/       # 363 XCTest cases
 ├── SceneApp/                   # Xcode project — menu bar shell + settings window
 │   └── SceneApp/
 │       ├── Animation/                 # WindowAnimator (CVDisplayLink + AX bridge)
@@ -247,7 +245,7 @@ macbook-resizer/
     └── media/                         # demo video + screenshots
 ```
 
-The split is deliberate: `SceneCore` is framework-neutral and owns all the hard logic (AX calls, layout math, hotkey plumbing, animation state machine, JSON persistence, drag-swap, seam reflow, diagnostics). 317 unit tests run via `swift test` without Xcode. `SceneApp` is a thin SwiftUI/AppKit shell — only UI, app lifecycle, and the AppKit/AX bridges (`WindowAnimator`, `AXMoveObserverGroup`, `AXWindowLookup`, `DragSwapAnimationSink`) that can't live in a framework-neutral library. Only the final `.app` build needs Xcode.
+The split is deliberate: `SceneCore` is framework-neutral and owns all the hard logic (AX calls, layout math, hotkey plumbing, animation state machine, JSON persistence, drag-swap, seam reflow, diagnostics). 363 unit tests run via `swift test` without Xcode. `SceneApp` is a thin SwiftUI/AppKit shell — only UI, app lifecycle, and the AppKit/AX bridges (`WindowAnimator`, `AXMoveObserverGroup`, `AXWindowLookup`, `DragSwapAnimationSink`) that can't live in a framework-neutral library. Only the final `.app` build needs Xcode.
 
 ## Persistence
 

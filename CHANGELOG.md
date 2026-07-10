@@ -4,6 +4,19 @@ All notable changes to Scene. Newest releases are listed first.
 
 For binaries, see the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases).
 
+## V0.7.1 — Layout Orientation Fix
+
+- **Vertically asymmetric layouts no longer apply upside down.** Every authoring surface — the canvas editor, the layout thumbnails, the built-in template definitions — describes slots in top-left-origin unit space, but the materialization step (`Slot.absoluteRect(in:)`) mapped unit y straight into macOS's bottom-left-origin `visibleFrame`. Any layout whose top half differed from its bottom half therefore applied vertically mirrored: a custom "2 slots on top, 3 on bottom" landed as 3-top/2-bottom, "Main + Side (Vertical)" put the main window at the bottom, and the L-shape top/bottom templates swapped. The symmetric presets (Halves/Thirds Vertical) masked the bug. The y-axis now flips exactly once at the unit→screen boundary, and `LayoutReflow` (the seam-drag inverse mapping) flips to match. If you rebuilt a layout upside down to compensate, re-edit it — layouts now apply exactly as drawn.
+- **Seam-resize no longer scrambles tree-based custom layouts.** Canvas-built custom layouts carry leftover `template`/`slotProportions` fields from whatever they were duplicated from; seam-drag reflow read those stale fields and could push windows to rects belonging to a completely different layout, depending on which window echoed a resize event. Tree-based layouts now opt out of seam reflow entirely (windows resize freely) until the reflow math learns arbitrary trees.
+- **Tests: 357 → 363.** Six new cases pin the orientation contract, including a regression test for the exact reported 5-slot scenario.
+
+## V0.7.0 — Automation Surface + Per-Display Layouts
+
+- **`scene://` URL scheme + 5 AppIntents.** Activate Workspace, Apply Layout, List Workspaces, Toggle Free Mode, Set Free Mode — drive Scene from Terminal, Raycast, Alfred, Stream Deck, Shortcuts.app, or Siri voice. AppIntents require macOS 14.1+.
+- **Per-display layouts.** Workspaces can assign a different layout to each connected display, applied together on activation. Screens without an explicit assignment fall back to the workspace's primary layout.
+- **Fixes.** Drag-to-swap stays reliable across repeated swaps (the window→slot snapshot no longer goes stale after the first one), and Free Mode reliably toggles back off from the menu.
+- **Tests: 317 → 357.**
+
 ## V0.6.1 — Free Mode
 
 - **Free Mode toggle.** New "Free Mode" entry in the menu bar (between Layouts and Settings). One click pauses every automatic Scene behavior: layout hotkeys (⌘⌃1-9,0), workspace hotkeys (⌘⌥1-4), drag-swap, seam-resize, and workspace auto-triggers (monitor connect / time / calendar). Saved layouts, workspaces, hotkey bindings, and settings are all preserved — they just don't fire until you toggle back on. The Free Mode row gains a leading checkmark when active, the Layouts and Workspaces rows visibly dim, and the menu bar icon swaps from `rectangle.3.group` to `pause.rectangle` so dormant state is visible at a glance.
