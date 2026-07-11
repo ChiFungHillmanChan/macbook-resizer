@@ -37,7 +37,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 自動幫你清走 quarantine flag，唔會彈「cannot be verified」嘅 Gatekeeper 警告。首次開 Scene 嗰陣，去 **System Settings → Privacy & Security → Accessibility** 撳着 Scene 就得。
 
-**或者直接下載 DMG**：**[Scene-0.7.1.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.7.1/Scene-0.7.1.dmg)**（Universal：Apple Silicon + Intel，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
+**或者直接下載 DMG**：**[Scene-0.7.2.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.7.2/Scene-0.7.2.dmg)**（Universal：Apple Silicon + Intel，macOS 14+，Apple notarized — 唔會彈 Gatekeeper 警告）
 
 所有版本：[Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · 用 DMG 嘅話，跟住 [`docs/INSTALL.md`](docs/INSTALL.md) 做一次性嘅 Gatekeeper + Accessibility 授權步驟。
 
@@ -47,11 +47,11 @@ brew install --cask chifunghillmanchan/tap/scene
 
 ▶ [睇 30 秒示範片](docs/media/scene-marketing.mp4)（MP4，13 MB）
 
-## v0.7.1 嘅新功能
+## v0.7.2 嘅新功能
 
-**Layout 方向修正** — 上下唔對稱嘅 layout（canvas 自訂 layout、Main + Side（縱向）、L 形 template）唔會再上下倒轉咁 apply。Editor、縮圖同實際上螢幕嘅結果而家完全一致。如果你之前為咗遷就個 bug 而倒轉咗自己個 layout，記得改返一次 — 以後點畫就點 apply。
+**Liquid Glass 設定視窗（macOS 26 Tahoe）** — 喺 macOS Tahoe 上面，Settings 視窗用埋系統嘅 Liquid Glass 設計：冇咗 title bar（紅黃綠掣直接浮喺 sidebar 上面）、sidebar 變咗浮起嘅玻璃 panel，成個視窗仲會半透明咁 blur 住後面嘅嘢。macOS 14/15 就一切照舊。
 
-**自訂 layout 穩定性** — 用 canvas 整嘅自訂 layout apply 咗之後,resize 入面嘅窗口唔會再觸發 seam-drag 亂咁推第啲窗口去另一個 layout 嘅位置。Tree 形 layout 而家自由 resize;template layout 保留原有嘅聯動 resize。Tests: 363/363。
+**設定頁執靚咗（所有 macOS 版本）** — 五個 tab 而家統一晒頂部 chrome，全部由頂開始排；之前 About 同 Interaction 係垂直置中嘅。Tests: 363/363。
 
 完整版本歷史見 [`CHANGELOG.md`](CHANGELOG.md)。
 
@@ -108,7 +108,7 @@ Xcode 揀 `SceneApp` scheme → ⌘R。App 以 menu bar extra 形式行（冇 Do
 ### Build distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.7.1    # 出 dist/Scene-0.7.1.dmg（universal + notarized）
+./scripts/build-dmg.sh 0.7.2    # 出 dist/Scene-0.7.2.dmg（universal + notarized）
 ```
 
 Build universal（arm64 + x86_64）binary，Developer ID sign，submit 去 Apple notary，pack 入 DMG 連 `Applications` drop shortcut。Apple Silicon 同 Intel Mac 用同一個 DMG。如果想 local iterate DMG layout，set `SKIP_NOTARY=1` 會 skip Apple notary submission，改用 ad-hoc sign。

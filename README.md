@@ -37,7 +37,7 @@ brew install --cask chifunghillmanchan/tap/scene
 
 Quarantine is stripped automatically — no "cannot be verified" prompt. On first launch, grant Accessibility in **System Settings → Privacy & Security → Accessibility**.
 
-**Or download the DMG directly**: **[Scene-0.7.1.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.7.1/Scene-0.7.1.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
+**Or download the DMG directly**: **[Scene-0.7.2.dmg](https://github.com/ChiFungHillmanChan/macbook-resizer/releases/download/v0.7.2/Scene-0.7.2.dmg)** (Universal: Apple Silicon + Intel, macOS 14+, notarized by Apple — no Gatekeeper prompt)
 
 All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases) · DMG users, see [`docs/INSTALL.md`](docs/INSTALL.md) for the one-time Gatekeeper + Accessibility-permission steps.
 
@@ -47,11 +47,11 @@ All versions: [Releases page](https://github.com/ChiFungHillmanChan/macbook-resi
 
 ▶ [Watch the 30-second demo](docs/media/scene-marketing.mp4) (MP4, 13 MB)
 
-## What's new in v0.7.1
+## What's new in v0.7.2
 
-**Layout orientation fix** — vertically asymmetric layouts (custom canvas layouts, Main + Side (Vertical), the L-shape templates) no longer apply upside down. The editor, the thumbnails, and the on-screen result now always agree. If you had rebuilt a layout mirrored to compensate, re-edit it once — layouts apply exactly as drawn from now on.
+**Liquid Glass Settings on macOS 26 (Tahoe)** — the Settings window adopts the system's Liquid Glass design: the title bar disappears (traffic lights float over the sidebar), the sidebar becomes the floating glass panel, and the whole window sits on a translucent blur of whatever is behind it. On macOS 14/15 the window keeps its existing look.
 
-**Custom-layout stability** — resizing a window placed by a canvas-built custom layout no longer lets the seam-drag reflow shove other windows to positions from a different layout. Tree-based layouts resize freely; template layouts keep the companion-resize behavior. Tests: 363/363.
+**Settings polish on every macOS version** — all five tabs now share the same top chrome and start from the top; About and Interaction were previously vertically centered. Tests: 363/363.
 
 For the full version history, see [`CHANGELOG.md`](CHANGELOG.md).
 
@@ -106,7 +106,7 @@ In Xcode, select the `SceneApp` scheme and press ⌘R. The app runs as a menu ba
 ### Build a distributable DMG
 
 ```bash
-./scripts/build-dmg.sh 0.7.1    # produces dist/Scene-0.7.1.dmg (universal, notarized)
+./scripts/build-dmg.sh 0.7.2    # produces dist/Scene-0.7.2.dmg (universal, notarized)
 ```
 
 This builds a universal (arm64 + x86_64) binary, Developer ID-signs it, submits it to Apple for notarization, and packages it into a DMG with an `Applications` drop shortcut. Both Apple Silicon and Intel Macs install from the same DMG. Set `SKIP_NOTARY=1` for a local ad-hoc build that skips the Apple notary submission (useful while iterating on DMG layout).

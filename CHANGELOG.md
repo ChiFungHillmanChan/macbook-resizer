@@ -4,6 +4,13 @@ All notable changes to Scene. Newest releases are listed first.
 
 For binaries, see the [Releases page](https://github.com/ChiFungHillmanChan/macbook-resizer/releases).
 
+## V0.7.2 — Liquid Glass Settings
+
+- **Liquid Glass Settings window on macOS 26 (Tahoe).** The Settings window adopts the system's Liquid Glass design: the title bar disappears (traffic lights float over the sidebar), the sidebar renders as the floating glass panel, and the whole window sits on a translucent blur of whatever is behind it. Implementation note: SwiftUI's `containerBackground(for: .window)` does not bridge into a manually hosted `NSWindow`, so the backdrop is an `NSVisualEffectView` (`.behindWindow`, `.underWindowBackground`) beneath the hosting view. macOS 14/15 keep the existing opaque window.
+- **Consistent tab chrome.** All five Settings tabs now share the same top strip and title. Previously only Workspaces and Layouts (the tabs that declare toolbar items) got one; Hotkeys, Interaction, and About rendered with no strip and a different inset. Scroll backgrounds are cleared on Tahoe so the material shows through, and the workspace list gains a small top inset so the first row clears the floating glass panel.
+- **Top-aligned tabs on every macOS version.** About and Interaction were vertically centered while the List-based tabs hugged the top; every tab now starts from the top.
+- **Tests: 363/363** — window chrome only, no SceneCore changes.
+
 ## V0.7.1 — Layout Orientation Fix
 
 - **Vertically asymmetric layouts no longer apply upside down.** Every authoring surface — the canvas editor, the layout thumbnails, the built-in template definitions — describes slots in top-left-origin unit space, but the materialization step (`Slot.absoluteRect(in:)`) mapped unit y straight into macOS's bottom-left-origin `visibleFrame`. Any layout whose top half differed from its bottom half therefore applied vertically mirrored: a custom "2 slots on top, 3 on bottom" landed as 3-top/2-bottom, "Main + Side (Vertical)" put the main window at the bottom, and the L-shape top/bottom templates swapped. The symmetric presets (Halves/Thirds Vertical) masked the bug. The y-axis now flips exactly once at the unit→screen boundary, and `LayoutReflow` (the seam-drag inverse mapping) flips to match. If you rebuilt a layout upside down to compensate, re-edit it — layouts now apply exactly as drawn.
