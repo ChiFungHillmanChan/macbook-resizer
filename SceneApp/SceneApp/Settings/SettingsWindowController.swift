@@ -37,6 +37,14 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         window.title = String(localized: "settings.window.title")
         window.isReleasedWhenClosed = false
+        if #available(macOS 26.0, *) {
+            // Tahoe-style chrome: sidebar glass floats edge-to-edge under a
+            // transparent title bar. window.title stays set above for Mission
+            // Control / App Exposé / accessibility.
+            window.styleMask.insert(.fullSizeContentView)
+            window.titlebarAppearsTransparent = true
+            window.titleVisibility = .hidden
+        }
         super.init(window: window)
         window.delegate = self
     }
