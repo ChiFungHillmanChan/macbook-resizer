@@ -38,6 +38,7 @@ struct WorkspacesTab: View {
                 }
             }
             .navigationSplitViewColumnWidth(min: 200, ideal: 240)
+            .modifier(WorkspaceListTopInset())
             .toolbar {
                 ToolbarItemGroup {
                     Button(action: newWorkspace) {
@@ -145,6 +146,19 @@ struct WorkspacesTab: View {
                     Image(systemName: "bolt.fill").foregroundStyle(.secondary)
                 }
             }
+        }
+    }
+}
+
+/// Keeps the first workspace row clear of the floating glass panel's top
+/// edge on macOS 26; pre-Tahoe the list sits under a real title bar and
+/// needs no extra inset.
+private struct WorkspaceListTopInset: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(macOS 26.0, *) {
+            content.contentMargins(.top, 8, for: .scrollContent)
+        } else {
+            content
         }
     }
 }

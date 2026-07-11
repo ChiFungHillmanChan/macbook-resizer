@@ -59,8 +59,25 @@ struct SettingsRoot: View {
                 case .about:       AboutTab(reopenWelcome: reopenWelcome, exportDiagnostics: exportDiagnostics)
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             .padding()
+            .modifier(DetailTabChrome())
+        }
+    }
+}
+
+/// Identical top chrome for every detail tab. Workspaces/Layouts declare
+/// their own toolbar items and would otherwise be the only tabs with a
+/// title strip; List/Form tabs would also paint opaque scroll backgrounds
+/// over the window material. No-op on macOS 14/15.
+private struct DetailTabChrome: ViewModifier {
+    func body(content: Content) -> some View {
+        if #available(macOS 26.0, *) {
+            content
+                .navigationTitle("settings.window.title")
+                .scrollContentBackground(.hidden)
+        } else {
+            content
         }
     }
 }

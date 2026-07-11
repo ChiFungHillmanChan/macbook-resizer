@@ -32,7 +32,32 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
                 .environmentObject(settingsVM)
                 .environmentObject(workspaceVM)
         )
-        let window = NSWindow(contentViewController: host)
+        let window: NSWindow
+        if #available(macOS 26.0, *) {
+            // Whole-window translucency. SwiftUI's containerBackground(for:
+            // .window) does not bridge into a manually hosted NSWindow, so
+            // the material backdrop is an NSVisualEffectView underneath the
+            // hosting view; the SwiftUI layer keeps its backgrounds clear
+            // (see DetailTabChrome in SettingsRoot).
+            let effect = NSVisualEffectView()
+            effect.material = .underWindowBackground
+            effect.blendingMode = .behindWindow
+            effect.state = .followsWindowActiveState
+            let container = NSViewController()
+            container.view = effect
+            container.addChild(host)
+            effect.addSubview(host.view)
+            host.view.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                host.view.topAnchor.constraint(equalTo: effect.topAnchor),
+                host.view.bottomAnchor.constraint(equalTo: effect.bottomAnchor),
+                host.view.leadingAnchor.constraint(equalTo: effect.leadingAnchor),
+                host.view.trailingAnchor.constraint(equalTo: effect.trailingAnchor),
+            ])
+            window = NSWindow(contentViewController: container)
+        } else {
+            window = NSWindow(contentViewController: host)
+        }
         window.setContentSize(NSSize(width: 760, height: 540))
         window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
         window.title = String(localized: "settings.window.title")
